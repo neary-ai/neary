@@ -1,0 +1,29 @@
+version: "3.9"
+
+services:
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: neary-frontend
+    ports:
+      - "80:80"
+    environment:
+      - BACKEND_SERVICE_ENDPOINT=backend:8000
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: neary-backend
+    environment:
+      - OPENAI_API_KEY
+      - BASE_URL
+      - JWT_SECRET
+    ports:
+      - "8000:8000"
+    volumes:
+      - data_volume:/backend/data
+
+volumes:
+  data_volume:

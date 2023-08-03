@@ -1,0 +1,174 @@
+<template>
+  <div class="h-full flex flex-col bg-nearyblue-300">
+    <Sidebar />
+    <NavBar />
+    <main class="relative flex flex-col flex-grow" :class="[(store.sidebarOpen && !store.isMobile) ? 'ml-44' : 'ml-0']"
+      :style="{ height: `calc(${windowHeight}px - ${store.textInputHeight}px)` }">
+      <router-view></router-view>
+      <ToolbarAlert />
+    </main>
+    <TextInput v-if="inChatWindow" />
+  </div>
+</template>
+
+<script setup>
+import { onMounted, watch, ref, computed, nextTick } from 'vue';
+import { useRoute } from 'vue-router';
+import { scrollToBottom } from '../services/scrollFunction.js';
+import { useAppStore } from '@/store/index.js';
+import Sidebar from '@/components/Sidebar.vue';
+import NavBar from '@/components/NavBar.vue';
+import TextInput from '@/components/TextInput.vue';
+import ToolbarAlert from '@/components/common/ToolbarAlert.vue';
+
+const store = useAppStore();
+const route = useRoute();
+
+const bufferedMessages = ref([]);
+const windowHeight = ref(window.innerHeight);
+const inChatWindow = computed(() => {
+  return route.path === '/'
+});
+
+const handleMessage = async (event) => {
+  clearTimeout(store.messageTimeout);
+
+  if (store.highlighting) {
+    bufferedMessages.value.push(event);
+    return;
+  }
+
+  const message = JSON.parse(event.data);
+  if (!message || !message.content) {
+    return;
+  }
+
+  const conversation = store.conversations[message.conversation_id];
+
+  if (message.role == 'command') {
+    await handleCommand(message);
+    return;
+  }
+
+  else if (message.role == 'error') {
+    await handleApiError(message);
+    return
+  }
+
+  if (message.status == "incomplete" || message.status == "complete") {
+    if (message.status == "incomplete") {
+      store.messageTimeout = setTimeout(() => {
+        store.notification = { 'type': 'error', 'message': 'Looks like an error :/. Please refresh and try again.' };
+      }, 3500);
+      conversation.isLoading = true;
+    }
+    else {
+      conversation.isLoading = false;
+    }
+
+    if (conversation.messages.length > 0) {
+      let lastMessageId = conversation.messages[conversation.messages.length - 1]
+      let lastMessage = store.messages[lastMessageId];
+
+      if (lastMessage && lastMessage.role === 'assistant' && lastMessage.status == 'incomplete') {
+        store.updateLastMessage(message, lastMessageId);
+      } else {
+        store.addMessage(message, message.conversation_id);
+      }
+    }
+    return;
+  }
+  else {
+    store.addMessage(message, message.conversation_id);
+  }
+
+  if (message.conversation_id != store.selectedConversationId) {
+    conversation.unreadMessages = true;
+  }
+};
+
+const handleCommand = async (message) => {
+  if (message.content == 'reload') {
+    await store.reinitialize();
+  }
+}
+
+const handleApiError = async (message) => {
+  store.notification = { "type": "error", "message": message.content, "sticky": true };
+}
+
+const getWebSocketUrl = () => {
+  if (import.meta.env.VITE_USE_DYNAMIC_BACKEND === 'true') {
+    const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+    const currentDomain = window.location.hostname;
+    const backendSubdomain = 'backend';
+    return `${protocol}${backendSubdomain}.${currentDomain}/ws`;
+  }
+
+  if (import.meta.env.VITE_API_BASE_URL === '') {
+    const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    return `${wsProtocol}//${window.location.host}/ws`;
+  }
+
+  return import.meta.env.VITE_WS_URL;
+}
+
+const initWebSocket = async () => {
+  if (!store.ws || store.ws.readyState === WebSocket.CLOSED) {
+    const ws = new WebSocket(getWebSocketUrl());
+    ws.onmessage = handleMessage;
+
+    store.ws = ws;
+    await reconnectWebSocket();
+  }
+};
+
+const reconnectWebSocket = async () => {
+  let backoff = 500;
+  store.ws.onclose = async () => {
+    await new Promise((resolve) => setTimeout(resolve, backoff));
+    backoff *= 2;
+    await initWebSocket();
+  };
+};
+
+watch(route, async (to) => {
+  await nextTick();
+  if (to.path === '/') {
+    scrollToBottom(store.highlighting, true);
+  }
+}, { immediate: true });
+
+watch(() => store.notification, (newNotification, oldNotification) => {
+  if (newNotification !== oldNotification && newNotification !== null && !('sticky' in newNotification)) {
+    setTimeout(() => store.notification = null, 4000);
+  }
+});
+
+onMounted(async () => {
+  await store.initialize();
+  await initWebSocket();
+  
+  window.addEventListener('resize', () => {
+    store.isMobile = (window.innerWidth <= 640);
+    windowHeight.value = window.innerHeight;
+  });
+  document.addEventListener('mousedown', () => {
+    store.highlighting = true;
+  });
+  document.addEventListener('mouseup', () => {
+    store.highlighting = false;
+    while (bufferedMessages.value.length > 0) {
+      const bufferedEvent = bufferedMessages.value.shift();
+      handleMessage(bufferedEvent);
+    }
+  });
+  document.addEventListener('selectionchange', function (e) {
+    var selected = window.getSelection().toString();
+    if (selected.length < 1) {
+      return;
+    }
+    navigator.clipboard.writeText(selected);
+  });
+});
+</script>

@@ -1,0 +1,26 @@
+[
+    {
+        "class_name": "DefaultProgram",
+        "display_name": "Default Program",
+        "description": "General chat functions, enabled by default.",
+        "icon": "ChatBubbleLeftRightIcon"
+    },
+    {
+        "class_name": "DocumentChat",
+        "display_name": "Document Chat",
+        "description": "Add files and webpages, then ask the AI questions about them.",
+        "icon": "DocumentMagnifyingGlassIcon"
+    },
+    {
+        "class_name": "CalendarChat",
+        "display_name": "Calendar Chat",
+        "description": "Have your AI schedule meetings and help with your Google Calendar.",
+        "icon": "CalendarDaysIcon"
+    },
+    {
+        "class_name": "SupportChat",
+        "display_name": "Support",
+        "description": "Have questions about Neary? Just ask.",
+        "icon": "LifebuoyIcon"
+    }
+]

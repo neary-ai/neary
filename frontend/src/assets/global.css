@@ -1,0 +1,24 @@
+::selection {
+    background-color: #00c5bb;
+    color: #000000;
+}
+
+::-moz-selection {
+    background-color: #00c5bb;
+    color: #000000;
+}
+
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background-color: rgba(155, 155, 155, 0.5);
+    border-radius: 20px;
+    border: transparent;
+}
