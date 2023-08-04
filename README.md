@@ -12,7 +12,7 @@ Neary is a chat-based app that helps users **get more done** with large language
    
 3. Run `docker compose up` in the project root
    
-4. Point your browser to http://localhost
+4. Point your browser to http://localhost:8000
 
 For more options, check out the [full installation guide](#installation-guide).
 
@@ -118,23 +118,21 @@ Note: Messages are sent to OpenAI via the API, but aren't used for training. Rea
    
 3. Run `docker compose up` in the project root
    
-4. Point your browser to http://localhost
+4. Point your browser to http://localhost:8000
 
 ### Manual installation
 
 1. Clone this respository
   
-2. Set your OpenAI API key: `export OPENAI_API_KEY=your-key-here`
-   
-3. Run `pip install -r requirements.txt` in /backend
+2. Add your OpenAI API key to the .env file in the project root
 
-4. Start the backend with `python main.py`
+3. Change directory to /backend 
    
-5. Run `npm install` in /frontend
+4. Run `pip install -r requirements.txt`
+
+5. Run `python main.py`
    
-6. Start the frontend with `npm run dev`
-   
-7. Point your browser to http://localhost:3000
+6. Point your browser to http://localhost:8000
 
 ## Usage
 

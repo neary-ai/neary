@@ -416,5 +416,5 @@ async def oauth2_callback(request: Request, code=None):
         data=auth_data,
     )
     await auth_credential.save()
-    base_url = os.environ.get("BASE_URL", "http://localhost:3000")
+    base_url = os.environ.get("BASE_URL", "http://localhost:8000")
     return RedirectResponse(url=base_url, status_code=302)

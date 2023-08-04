@@ -17,7 +17,7 @@ To use the 'Google Calendar' program, you need to have a Google Cloud account wi
 
 7. Click "Create Credentials" and select "OAuth client ID".
 
-8. Choose "Web application" for the application type, then choose a name for your client (any name will do). Finally, add `http://localhost/api/oauth2/callback` as a URI under "Authorized redirect URIs". Change your base URL to match your setup, if necessary.
+8. Choose "Web application" for the application type, then choose a name for your client (any name will do). Finally, add `http://localhost:8000/api/oauth2/callback` as a URI under "Authorized redirect URIs". Change your base URL to match your setup, if necessary.
 
 9.  Click "Create". Your client ID and client secret will be shown.
 

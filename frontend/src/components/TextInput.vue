@@ -162,11 +162,12 @@ const sendMessage = async () => {
     resize();
 
     store.messageTimeout = setTimeout(() => {
-      store.notification = { 'type': 'error', 'message': 'Eek, server issues. Please refresh and try again.', 'sticky': true };
-    }, 6500);
+      store.notification = { 'type': 'error', 'message': 'The server is being slow to respond. Wait a moment then try again.' };
+    }, 8000);
 
   } else {
-    console.error("WebSocket not connected");
+    console.error('WebSocket not open!');
+    store.notification = { 'type': 'error', 'message': 'Connecting to server, one moment..'};
   }
 };
 

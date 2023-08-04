@@ -54,9 +54,6 @@ async def register(request: Request):
             "max_age": round(access_token_expires.total_seconds()),
         }
 
-        if os.environ.get("COOKIE_DOMAIN"):
-            cookie_attrs["domain"] = os.environ.get("COOKIE_DOMAIN")
-
         response.set_cookie(**cookie_attrs)
 
         return response
@@ -98,9 +95,6 @@ async def login(
         "samesite": "lax",
         "max_age": round(access_token_expires.total_seconds()),
     }
-
-    if os.environ.get("COOKIE_DOMAIN"):
-        cookie_attrs["domain"] = os.environ.get("COOKIE_DOMAIN")
 
     response.set_cookie(**cookie_attrs)
 

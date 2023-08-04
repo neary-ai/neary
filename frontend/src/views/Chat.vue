@@ -98,13 +98,6 @@ const handleApiError = async (message) => {
 }
 
 const getWebSocketUrl = () => {
-  if (import.meta.env.VITE_USE_DYNAMIC_BACKEND === 'true') {
-    const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
-    const currentDomain = window.location.hostname;
-    const backendSubdomain = 'backend';
-    return `${protocol}${backendSubdomain}.${currentDomain}/ws`;
-  }
-
   if (import.meta.env.VITE_API_BASE_URL === '') {
     const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     return `${wsProtocol}//${window.location.host}/ws`;
@@ -115,6 +108,7 @@ const getWebSocketUrl = () => {
 
 const initWebSocket = async () => {
   if (!store.ws || store.ws.readyState === WebSocket.CLOSED) {
+    console.log('Opening WebSocket..');
     const ws = new WebSocket(getWebSocketUrl());
     ws.onmessage = handleMessage;
 

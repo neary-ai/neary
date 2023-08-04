@@ -2,11 +2,6 @@ import axios from 'axios';
 import router from '../router.js';
 
 function getApiBaseUrl() {
-    if (import.meta.env.VITE_USE_DYNAMIC_BACKEND === 'true') {
-        const currentDomain = window.location.hostname;
-        const backendSubdomain = 'backend';
-        return `https://${backendSubdomain}.${currentDomain}`;
-    }
     return import.meta.env.VITE_API_BASE_URL;
 }
 

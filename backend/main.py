@@ -1,11 +1,18 @@
+import os
 import sys
 from pathlib import Path
+current_dir = Path(__file__).resolve().parent
 sys.path.append(str(Path(__file__).parent.parent))
+
+from dotenv import load_dotenv
+load_dotenv(current_dir / ".." / ".env")
 
 import os
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 
 from backend.config import init_db
 from backend.auth import AuthMiddleware
@@ -20,6 +27,8 @@ init_db(app)
 app.include_router(auth_router, prefix="/auth")
 app.include_router(api_router, prefix="/api")
 app.include_router(ws_router)
+
+app.mount("/", StaticFiles(directory=str(current_dir / ".." / "frontend" / "dist"), html=True), name="dist")
 
 app.add_middleware(AuthMiddleware)
 
