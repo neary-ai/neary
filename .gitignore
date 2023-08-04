@@ -1,7 +1,7 @@
 .vscode
+.env
 backend/credentials/*
 !/backend/credentials/.gitkeep
 backend/data/*
 !/backend/data/.gitkeep
-frontend/dist
 frontend/node_modules
