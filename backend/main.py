@@ -9,9 +9,9 @@ load_dotenv(current_dir / ".." / ".env")
 
 import os
 import uvicorn
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
+from fastapi.responses import HTMLResponse
 from fastapi.responses import FileResponse
 
 from backend.config import init_db
@@ -28,7 +28,16 @@ app.include_router(auth_router, prefix="/auth")
 app.include_router(api_router, prefix="/api")
 app.include_router(ws_router)
 
-app.mount("/", StaticFiles(directory=str(current_dir / ".." / "frontend" / "dist"), html=True), name="dist")
+# Serve our static files from the frontend
+@app.get("/{catch_all:path}", response_class=HTMLResponse)
+async def catch_all(request: Request, catch_all: str):
+    path = os.path.join(str(current_dir / ".." / "frontend" / "dist"), catch_all)
+    if os.path.isfile(path):
+        return FileResponse(path)
+    else:
+        with open(os.path.join(str(current_dir / ".." / "frontend" / "dist"), 'index.html'), 'r') as f:
+            content = f.read()
+        return HTMLResponse(content=content)
 
 app.add_middleware(AuthMiddleware)
 
