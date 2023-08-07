@@ -7,7 +7,7 @@
         <template v-else>In All Spaces</template>
       </div>
       <ul v-if="conversations && conversations.length > 0" role="list" class="rounded-lg flex flex-col divide-y divide-field-divide max-w-3xl mt-2">
-        <li @click="store.loadConversation(conversation.id)" v-for="conversation in conversations" :key="conversation.id" class="flex-grow group w-full cursor-pointer hover:bg-nearyblue-50/20 text-nearygray-300 flex items-center justify-start py-4 pr-4">
+        <li @click="store.loadConversation(conversation.id)" v-for="conversation in conversations" :key="conversation.id" class="flex-grow group w-full cursor-pointer hover:bg-nearyblue-50/20 text-nearygray-300 flex items-center justify-start py-4 pr-4 sm:pl-2">
             <div class="flex items-center justify-center mr-3 flex-grow h-full">  
               <component :is="iconComponents[conversation.program.metadata.icon]" class="w-7 h-7 text-nearygray-500" />
             </div>

@@ -1,11 +1,10 @@
 <template>
   <div ref="chatWindow" id="chat-window" v-touch:swipe="swipeToConversation" class="flex flex-col overflow-y-auto">
     <div class="pt-12 bg-nearyblue-300"></div>
-    <div v-if="!emptyState" class="flex flex-col">
-      <div class="text-white text-lg"></div>
-      <div v-if="showArchivedMessages">
-        <ChatMessage :chatWindowHeight="chatWindowHeight" v-for="(message, index) in archivedMessages"
-          :key="'archived-' + index" :message="message" />
+    <div v-if="!emptyState" class="flex flex-col items-start divide-y divide-neutral-500/60 px-0">
+      <div v-if="showArchivedMessages" class="divide-y divide-neutral-500/60">
+        <component :is="selectMessageComponent(message)" :chatWindowHeight="chatWindowHeight"
+          v-for="(message, index) in archivedMessages" :key="'archived-' + index" :message="message" />
         <div class="relative py-4">
           <div class="absolute inset-0 flex items-center" aria-hidden="true">
           </div>
@@ -19,8 +18,8 @@
           </div>
         </div>
       </div>
-      <ChatMessage :chatWindowHeight="chatWindowHeight" v-for="(message, index) in nonArchivedMessages"
-        :key="'non-archived-' + index" :message="message" />
+      <component :is="selectMessageComponent(message)" :chatWindowHeight="chatWindowHeight"
+        v-for="(message, index) in nonArchivedMessages" :key="'non-archived-' + index" :message="message" />
     </div>
     <EmptyState v-if="emptyState && (store.currentMessage == '')" />
   </div>
@@ -29,7 +28,9 @@
 <script setup>
 import { ref, watch, computed, onMounted, onUnmounted } from "vue";
 import { useAppStore } from "@/store/index.js";
-import ChatMessage from "./ChatMessage.vue";
+import ChatMessageUser from "./ChatMessageUser.vue";
+import ChatMessageAssistant from "./ChatMessageAssistant.vue";
+import ChatMessageNotification from "./ChatMessageNotification.vue";
 import EmptyState from "./EmptyState.vue";
 import { scrollToBottom } from '../services/scrollFunction.js';
 
@@ -76,6 +77,19 @@ const nonArchivedMessages = computed(() => {
   return messages.value
     .filter(message => !message.is_archived)
 });
+
+const selectMessageComponent = (message) => {
+  switch (message.role) {
+    case 'user':
+      return ChatMessageUser;
+    case 'assistant':
+      return ChatMessageAssistant;
+    case 'notification':
+      return ChatMessageNotification;
+    default:
+      return null;
+  }
+};
 
 
 const emptyState = computed(() => {
