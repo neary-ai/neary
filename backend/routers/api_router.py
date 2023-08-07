@@ -353,7 +353,7 @@ async def get_initial_data(request: Request):
 
         conversation = await ConversationModel.create(program=program, title="Welcome to Neary!")
         
-        await MessageModel.create(conversation=conversation, role="assistant", content="Welcome to Neary 🤗! I'm here to help you get started. First things first, can I have your name (or whatever I should call you) and your location, so I can set your timezone? No worries if you're not comfortable sharing this information yet.")
+        await MessageModel.create(conversation=conversation, role="assistant", content="Welcome to Neary! I'm here to help you get started. 🤗\n\nCan I have your name and your location, if you're comfortable sharing? I can use your location to set your timezone.")
         
         conversation_data = await conversation.serialize()
         conversation_instance = await Conversation.from_json(conversation_data, MessageHandler())

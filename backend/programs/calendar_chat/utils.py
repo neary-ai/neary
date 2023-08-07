@@ -111,7 +111,7 @@ class GoogleService:
                 credentials_data = json.load(file)
             return credentials_data['web']['client_id'], credentials_data['web']['client_secret']
         except FileNotFoundError:
-            raise Exception("""Google OAuth credentials file not found.  [See here for setup instructions](https://github.com/neary-ai/neary/blob/main/docs/calendar_chat.md).""")
+            raise Exception("""Google OAuth credentials file not found.  [View setup instructions](https://github.com/neary-ai/neary/blob/main/docs/calendar_chat.md).""")
 
     def get_new_emails(self, search_term=None, results=25):
         emails = []

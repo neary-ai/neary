@@ -27,6 +27,9 @@ class SupportChat(BaseProgram):
         messages = MessageChain(system_message=self.system_message, user_message=user_message, conversation_id=user_message['conversation_id'])
         messages.user_msg(await self.get_profile_str())
         messages.user_msg(self.get_tools_str())
+        messages.user_msg(self.get_guide_str())
+
+        print(messages.get_chain_str())
 
         # Use remaining tokens to provide context prior messages in the conversation
         context = await self.memory.generate_context(messages)
@@ -60,7 +63,7 @@ class SupportChat(BaseProgram):
         await self.conversation.message_handler.send_command_to_ui(message="reload", conversation_id=self.conversation.id)
         
         if not user.onboarded:
-            asyncio.create_task(self.send_onboarding_guide())
+            asyncio.create_task(self.offer_assistance())
             user.onboarded = True
         await user.save()
 
@@ -70,11 +73,15 @@ class SupportChat(BaseProgram):
     Utility methods
     """
 
-    async def send_onboarding_guide(self):
-        # We wait a couple of seconds before sending welcome message so it's not too jarring :)
-        await asyncio.sleep(2)
+    async def offer_assistance(self):
+        await asyncio.sleep(1)
+        message = "Done! I'll always remember information you have in your profile. Just let me know if there's anything else you'd like me to add.\n\nNow, would you like a quick overview about how to use Neary?"
+        await self.memory.save_message({'role': 'assistant', 'content': message, 'conversation_id': self.conversation.id})
+        await self.conversation.message_handler.send_message_to_ui(message=message, conversation_id=self.conversation.id)
+
+    def get_guide_str(self):
+        guide_str = "Here is the Neary user manual. You can use it to answer any questions the user has:\n"
         dir_path = os.path.dirname(os.path.realpath(__file__))
-        with open(os.path.join(dir_path, 'onboarding_guide.md'), 'r') as text:
-            message = text.read()
-            await self.memory.save_message({'role': 'assistant', 'content': message, 'conversation_id': self.conversation.id})
-            await self.conversation.message_handler.send_message_to_ui(message=message, conversation_id=self.conversation.id)
+        with open(os.path.join(dir_path, 'guide.md'), 'r') as text:
+            guide_str += text.read()
+            return guide_str
