@@ -22,7 +22,7 @@
 import { computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { ChevronRightIcon } from '@heroicons/vue/20/solid';
-import { LifebuoyIcon, XMarkIcon, CalendarDaysIcon, DocumentMagnifyingGlassIcon, ChatBubbleLeftRightIcon, BuildingStorefrontIcon, HeartIcon, InformationCircleIcon, CursorArrowRaysIcon } from '@heroicons/vue/24/outline';
+import { LifebuoyIcon, XMarkIcon, CalendarDaysIcon, DocumentMagnifyingGlassIcon, ChatBubbleLeftRightIcon, MapPinIcon, BuildingStorefrontIcon, HeartIcon, InformationCircleIcon, CursorArrowRaysIcon } from '@heroicons/vue/24/outline';
 import { useAppStore } from '@/store/index.js';
 
 const store = useAppStore();
@@ -31,6 +31,7 @@ const router = useRouter();
 const iconComponents = computed(() => ({
   CalendarDaysIcon,
   DocumentMagnifyingGlassIcon,
+  MapPinIcon,
   ChatBubbleLeftRightIcon,
   BuildingStorefrontIcon,
   InformationCircleIcon,

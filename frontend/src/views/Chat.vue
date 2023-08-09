@@ -39,7 +39,7 @@ const handleMessage = async (event) => {
   }
 
   const message = JSON.parse(event.data);
-  if (!message || !message.content) {
+  if (!message) {
     return;
   }
 
@@ -58,8 +58,8 @@ const handleMessage = async (event) => {
   if (message.status == "incomplete" || message.status == "complete") {
     if (message.status == "incomplete") {
       store.messageTimeout = setTimeout(() => {
-        store.notification = { 'type': 'error', 'message': 'Looks like an error :/. Please refresh and try again.' };
-      }, 3500);
+        store.notification = { 'type': 'error', 'message': 'Waiting for response from chat server' };
+      }, 10000);
       conversation.isLoading = true;
     }
     else {

@@ -18,6 +18,7 @@ class BaseProgram:
     def __init__(self, conversation):
         self.id = None
         self.conversation = conversation
+        self.api_type = 'openai'
         self.model = 'gpt-4'
 
         self.system_message = "You are a helpful assistant. Be succinct unless instructed otherwise."
@@ -59,7 +60,7 @@ class BaseProgram:
         context = await self.memory.generate_context(messages)
 
         # Send complete context to the LLM for a response
-        ai_response = await self.conversation.message_handler.get_ai_response(context, self.model)
+        ai_response = await self.conversation.message_handler.get_ai_response(context, self.api_type, self.model)
 
         # Save user message and AI response to database
         await self.memory.save_message(user_message)
@@ -154,7 +155,7 @@ class BaseProgram:
                         system_message=self.system_message, user_message=tool_msg, conversation_id=tool_msg['conversation_id'])
 
                     context = await self.memory.generate_context(messages)
-                    ai_response = await self.conversation.message_handler.get_ai_response(context, self.model)
+                    ai_response = await self.conversation.message_handler.get_ai_response(context, self.api_type, self.model)
 
                     # Save tool output and AI response to conversation
                     tool_msg['role'] = 'background'
@@ -292,7 +293,7 @@ class BaseProgram:
 
             if recent_message.id == message_id:
                 context = await self.memory.generate_context(messages)
-                ai_response = await self.conversation.message_handler.get_ai_response(context, self.model)
+                ai_response = await self.conversation.message_handler.get_ai_response(context, self.api_type, self.model)
 
                 # Save tool output and AI response to conversation
                 await self.memory.save_message(tool_msg)
@@ -365,11 +366,17 @@ class BaseProgram:
                 'value': self.system_message,
                 'field': 'Textarea'
             },
+            'api_type': {
+                'display_name': 'API Type',
+                'value': self.api_type,
+                'field': 'Select',
+                'options': [{'option': 'OpenAI', 'value': 'openai'}, {'option': 'Azure', 'value': 'azure'}, {'option': 'Local', 'value': 'local'}]
+            },
             'model': {
                 'display_name': 'Model',
                 'value': self.model,
                 'field': 'Select',
-                'options': [{'option': 'GPT-4', 'value': 'gpt-4'}, {'option': 'GPT-3.5', 'value': 'gpt-3.5-turbo'}]
+                'options': [{'option': 'gpt-4', 'value': 'gpt-4'}, {'option': 'gpt-3.5-turbo', 'value': 'gpt-3.5-turbo'}]
             },
             'token_limit': {
                 'display_name': 'Token Limit',
@@ -389,6 +396,8 @@ class BaseProgram:
         """
         if "model" in settings:
             self.model = settings["model"]['value']
+        if "api_type" in settings:
+            self.api_type = settings["api_type"]['value']
         if "system_message" in settings:
             self.system_message = settings["system_message"]['value']
         if "tool_approval_required" in settings:

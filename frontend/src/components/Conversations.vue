@@ -42,7 +42,7 @@ import { useRouter } from 'vue-router';
 import SectionHeading from './common/SectionHeading.vue'
 import { useAppStore } from '@/store/index.js';
 import { PlusIcon } from '@heroicons/vue/20/solid';
-import { InformationCircleIcon, CalendarDaysIcon, DocumentMagnifyingGlassIcon, ChatBubbleLeftRightIcon, BuildingStorefrontIcon, HeartIcon, LifebuoyIcon } from '@heroicons/vue/24/outline';
+import { InformationCircleIcon, CalendarDaysIcon, DocumentMagnifyingGlassIcon, ChatBubbleLeftRightIcon, MapPinIcon, BuildingStorefrontIcon, HeartIcon, LifebuoyIcon } from '@heroicons/vue/24/outline';
 import Button from './common/Button.vue';
 
 const store = useAppStore();
@@ -51,6 +51,7 @@ const iconComponents = computed(() => ({
   CalendarDaysIcon,
   DocumentMagnifyingGlassIcon,
   ChatBubbleLeftRightIcon,
+  MapPinIcon,
   BuildingStorefrontIcon,
   InformationCircleIcon,
   HeartIcon,

@@ -21,7 +21,7 @@
   const firstLetterOfName = computed(() => {
     if (store.userProfile && store.userProfile.name) {
       const name = store.userProfile.name;
-      return name ? name[0] : '?';
+      return name ? name[0] : 'U';
     }
     return '?';
   });

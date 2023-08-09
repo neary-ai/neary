@@ -1,13 +1,10 @@
 from datetime import datetime
 import tiktoken
-import pydantic
 import pytz
 import yaml
 
-from langchain.chat_models import ChatOpenAI
-
-from .llm_connector import StreamHandler
 from backend.models import ConversationModel, MessageModel
+from .llm_connector import LLMConnector
 
 websocket_store = set()
 
@@ -48,7 +45,7 @@ class MessageHandler:
         else:
             print('No websocket available!')
 
-    async def get_ai_response(self, context, model, streaming=True):
+    async def get_ai_response(self, context, api_type, model, streaming=True):
         '''Queries the LLM and streams the response to the UI'''
         self.log_message_history(context)
 
@@ -56,28 +53,23 @@ class MessageHandler:
             websocket = self.websocket
         else:
             websocket = None
+        try:
+            llm = LLMConnector(api_type=api_type, context=context, websocket=websocket)
+        except Exception as e:
+            await self.send_notification_to_ui(notification=str(e), conversation_id=context.conversation_id, save_to_db=False)
+            return
 
-        async with StreamHandler(context=context, websocket=websocket) as handler:
-            try:
-                chat = ChatOpenAI(
-                    streaming=True, 
-                    callbacks=[handler],
-                    temperature=0.5,
-                    model_name=model,
-                    request_timeout=120
-                )
+        messages = context.get_formatted_chain()
 
-                results = await chat.agenerate([context.get_formatted_chain()])
+        ai_response = await llm.create_chat(
+            model=model,
+            messages=messages,
+            temperature=0.5
+        )
 
-                chat_generation = results.generations[0][0]
-                ai_message = chat_generation.message.content
+        print(ai_response['content'])
 
-                ai_response = {'role': 'assistant', 'content': ai_message, 'conversation_id': context.conversation_id, "metadata": context.metadata, "status": "complete"}
-
-                return ai_response
-            except:
-                await self.send_notification_to_ui(notification="No valid OpenAI key found! Please set it in the OPENAI_API_KEY environment variable.", conversation_id=context.conversation_id, save_to_db=False)
-                return
+        return ai_response
 
     def log_message_history(self, context):
         """ Save most recent message chain """
@@ -85,13 +77,13 @@ class MessageHandler:
         tokenizer = tiktoken.encoding_for_model("gpt-4")
         log_file = 'data/message_history.yaml'
 
-        total_tokens = sum(len(list(tokenizer.encode(message.content))) for message in messages)
+        total_tokens = sum(len(list(tokenizer.encode(message['content']))) for message in messages)
 
         now = datetime.now(pytz.timezone('US/Mountain')).strftime('%m/%d/%Y %I:%M %p')
 
         message_history = {
             f"New Context ({total_tokens} tokens) from {now}": [
-                {message.__class__.__name__: message.content} for message in messages
+                {message['role']: message['content']} for message in messages
             ]
         }
 

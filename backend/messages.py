@@ -31,15 +31,7 @@ class MessageChain:
         return self.messages
 
     def get_formatted_chain(self):
-        formatted_messages = []
-        for message in self._compiled_chain():
-            if message['role'] == 'system':
-                formatted_messages.append(SystemMessage(content=message['content']))
-            if message['role'] == 'user':
-                formatted_messages.append(HumanMessage(content=message['content']))
-            if message['role'] == 'assistant':
-                formatted_messages.append(AIMessage(content=message['content']))
-        return formatted_messages
+        return [{'role': message['role'], 'content': message['content']} for message in self._compiled_chain() if message['role'] in ['system', 'assistant', 'user']]
 
     def get_chain_str(self):
         chain_str = ""

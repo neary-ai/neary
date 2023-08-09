@@ -18,6 +18,12 @@
         "icon": "CalendarDaysIcon"
     },
     {
+        "class_name": "LocalChat",
+        "display_name": "Local Chat",
+        "description": "No tools or fancy configs. Defaults to local API server.",
+        "icon": "MapPinIcon"
+    },
+    {
         "class_name": "SupportChat",
         "display_name": "Support",
         "description": "Have questions about Neary? Just ask.",

@@ -62,7 +62,7 @@ class DocumentChat(BaseProgram):
         # Use remaining tokens to provide context prior messages in the conversation
         context = await self.memory.generate_context(messages)
 
-        ai_response = await self.conversation.message_handler.get_ai_response(context, self.model)
+        ai_response = await self.conversation.message_handler.get_ai_response(context, self.api_type, self.model)
 
         await self.memory.save_message(user_message)
         await self.memory.save_message(ai_response)

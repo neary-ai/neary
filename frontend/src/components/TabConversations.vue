@@ -115,7 +115,7 @@ import {
   ChevronRightIcon,
   ChevronDownIcon,
 } from '@heroicons/vue/24/solid';
-import { LifebuoyIcon, InformationCircleIcon, CalendarDaysIcon, DocumentMagnifyingGlassIcon, ChatBubbleLeftRightIcon, BuildingStorefrontIcon, HeartIcon, MagnifyingGlassIcon } from '@heroicons/vue/20/solid';
+import { LifebuoyIcon, InformationCircleIcon, CalendarDaysIcon, DocumentMagnifyingGlassIcon, ChatBubbleLeftRightIcon, MapPinIcon, BuildingStorefrontIcon, HeartIcon, MagnifyingGlassIcon } from '@heroicons/vue/20/solid';
 import loadingIcon from '@/assets/images/three-dots.svg';
 
 const store = useAppStore();
@@ -126,6 +126,7 @@ const iconComponents = computed(() => ({
   CalendarDaysIcon,
   DocumentMagnifyingGlassIcon,
   ChatBubbleLeftRightIcon,
+  MapPinIcon,
   BuildingStorefrontIcon,
   InformationCircleIcon,
   HeartIcon,

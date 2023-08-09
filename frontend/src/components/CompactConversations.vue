@@ -88,7 +88,7 @@ import {
   CheckIcon,
   ChevronUpDownIcon,
 } from '@heroicons/vue/24/solid';
-import { InformationCircleIcon, CalendarDaysIcon, DocumentMagnifyingGlassIcon, ChatBubbleLeftRightIcon, BuildingStorefrontIcon, HeartIcon, LifebuoyIcon } from '@heroicons/vue/20/solid';
+import { InformationCircleIcon, CalendarDaysIcon, DocumentMagnifyingGlassIcon, ChatBubbleLeftRightIcon, MapPinIcon, BuildingStorefrontIcon, HeartIcon, LifebuoyIcon } from '@heroicons/vue/20/solid';
 
 const store = useAppStore();
 
@@ -96,6 +96,7 @@ const iconComponents = computed(() => ({
   CalendarDaysIcon,
   DocumentMagnifyingGlassIcon,
   ChatBubbleLeftRightIcon,
+  MapPinIcon,
   BuildingStorefrontIcon,
   InformationCircleIcon,
   HeartIcon,

@@ -33,7 +33,7 @@ import { ref, computed, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAppStore } from '@/store/index.js';
 import SectionHeading from './common/SectionHeading.vue'
-import { LifebuoyIcon, CalendarDaysIcon, DocumentMagnifyingGlassIcon, ChatBubbleLeftRightIcon, XMarkIcon, BuildingStorefrontIcon, HeartIcon, InformationCircleIcon } from '@heroicons/vue/24/outline';
+import { LifebuoyIcon, CalendarDaysIcon, DocumentMagnifyingGlassIcon, ChatBubbleLeftRightIcon, MapPinIcon, XMarkIcon, BuildingStorefrontIcon, HeartIcon, InformationCircleIcon } from '@heroicons/vue/24/outline';
 
 const store = useAppStore();
 const router = useRouter();
@@ -67,6 +67,7 @@ const iconComponents = computed(() => ({
     CalendarDaysIcon,
     DocumentMagnifyingGlassIcon,
     ChatBubbleLeftRightIcon,
+    MapPinIcon,
     BuildingStorefrontIcon,
     InformationCircleIcon,
     HeartIcon,
