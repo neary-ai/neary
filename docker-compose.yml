@@ -7,9 +7,13 @@ services:
       dockerfile: Dockerfile
     container_name: neary
     environment:
-      - OPENAI_API_KEY
       - BASE_URL
       - JWT_SECRET
+      - LOCAL_ENDPOINT
+      - OPENAI_API_KEY
+      - AZURE_OPENAI_KEY
+      - AZURE_OPENAI_ENDPOINT
+      - AZURE_OPENAI_API_VERSION
     ports:
       - "8000:8000"
     volumes:
