@@ -108,20 +108,16 @@ const getWebSocketUrl = () => {
 
 const initWebSocket = async () => {
   if (!store.ws || store.ws.readyState === WebSocket.CLOSED) {
-    console.log('Opening WebSocket..');
     const ws = new WebSocket(getWebSocketUrl());
     ws.onmessage = handleMessage;
-
     store.ws = ws;
     await reconnectWebSocket();
   }
 };
 
 const reconnectWebSocket = async () => {
-  let backoff = 500;
   store.ws.onclose = async () => {
-    await new Promise((resolve) => setTimeout(resolve, backoff));
-    backoff *= 2;
+    await new Promise((resolve) => setTimeout(resolve, 2000));
     await initWebSocket();
   };
 };

@@ -62,7 +62,7 @@ export const useAppStore = defineStore('appstore', {
             } catch (error) {
                 console.log(error)
                 if ((!error || error.data.message != "initial_start") && (error.status != 401)) {
-                    this.notification = { "type": "error", "message": "We're having trouble connecting to the server.", "sticky": true }
+                    this.notification = { "type": "error", "message": "Can't connect to server", "sticky": true }
                 }
                 return
             }
