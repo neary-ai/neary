@@ -1,4 +1,5 @@
 .vscode
+.env
 backend/credentials/*
 !/backend/credentials/.gitkeep
 backend/data/*
