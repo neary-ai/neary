@@ -1,5 +1,3 @@
-from langchain.schema import AIMessage, HumanMessage, SystemMessage
-
 class MessageChain:
     '''
     Helper class to construct a conversation / message chain to pass to AI
@@ -40,25 +38,24 @@ class MessageChain:
                 chain_str += f"{message['role']}: {message['content']}\n\n"
         return chain_str
 
-    def system_msg(self, msg, index=None):
+    def system_msg(self, msg, id=None, tokens=None, index=None):
         if any(x['role'] == 'system' for x in self.messages):
             return
-        
-        self.messages.insert(0, {'role': 'system', 'content': msg})
+        self.messages.insert(0, {'role': 'system', 'id': id, 'content': msg, 'tokens': tokens})
 
-    def user_msg(self, msg, index=None):
+    def user_msg(self, msg, id=None, tokens=None, index=None):
         if msg:
             if index is not None:
-                self.messages.insert(index, {'role': 'user', 'content': msg})
+                self.messages.insert(index, {'role': 'user', 'id': id, 'content': msg, 'tokens': tokens})
             else:
-                self.messages.append({'role': 'user', 'content': msg}) 
+                self.messages.append({'role': 'user', 'id': id, 'content': msg, 'tokens': tokens}) 
 
-    def ai_msg(self, msg, index=None):
+    def ai_msg(self, msg, id=None, tokens=None, index=None):
         if msg:
             if index is not None:
-                self.messages.insert(index, {'role': 'assistant', 'content': msg})
+                self.messages.insert(index, {'role': 'assistant', 'id': id, 'content': msg, 'tokens': tokens})
             else:
-                self.messages.append({'role': 'assistant', 'content': msg})
+                self.messages.append({'role': 'assistant', 'id': id, 'content': msg, 'tokens': tokens})
 
     def add_metadata(self, metadata):
         self.metadata.append(metadata)

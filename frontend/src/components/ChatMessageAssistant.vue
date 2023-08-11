@@ -3,7 +3,7 @@
         class="flex justify-start items-start w-full prose prose-invert max-w-none leading-7 mr-auto bg-nearyblue-400 text-gray-400 pt-6 pb-3.5 pl-6 pr-8 transition-all duration-50 delay-0">
         <div class="flex w-full items-start">
             <div class="py-3">
-                <div class="not-prose flex-shrink-0 font-bold text-base rounded h-7 w-7 flex items-center justify-center mr-5 text-sm"
+                <div class="not-prose flex-shrink-0 font-bold rounded h-7 w-7 flex items-center justify-center mr-5 text-sm"
                     :class="message.is_archived ? 'bg-slate-700 text-slate-400' : 'bg-nearypink-300/20 text-nearypink-200'">
                     N
                 </div>

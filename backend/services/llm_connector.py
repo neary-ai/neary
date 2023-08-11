@@ -1,6 +1,7 @@
 import os
 import asyncio
 import openai
+import requests
 from openai.error import Timeout, RateLimitError
 
 class LLMConnector:
@@ -35,9 +36,8 @@ class LLMConnector:
         # Default OpenAI config
         else:
             openai.api_base = "https://api.openai.com/v1"
-        
+
     async def create_chat(self, messages, model="gpt-4", temperature=0.7, top_p=1, n=1, stream=True, stop=None, max_tokens=None, presence_penalty=0, frequency_penalty=0):
-        print('Using API: ', self.api_type)
         model_key = "deployment_id" if self.api_type == "azure" else "model"
         for attempt in range(3):
             try:
@@ -66,6 +66,7 @@ class LLMConnector:
                         except Exception:
                             print('Error in chunk: ', chunk)
                     ai_message['status'] = 'complete'
+                    ai_message['xray'] = {'messages': self.context.get_chain()}
                     await self.websocket.send_json(ai_message)
                     return ai_message
             except (Timeout, RateLimitError):

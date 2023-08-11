@@ -47,7 +47,9 @@ class BaseMemory:
         token_count = 0
 
         for message in messages.get_chain():
-            token_count += len(list(tokenizer.encode(message['content'])))
+            tokens = len(list(tokenizer.encode(message['content'])))
+            message['tokens'] = tokens
+            token_count += tokens
         
         print(f'{token_count} tokens pre-filled, now populating with truncated history.')
 
@@ -64,18 +66,18 @@ class BaseMemory:
                 break
             
             if message['role'] == 'user' or message['role'] == 'tool':
-                messages.user_msg(message['content'], index=insert_index)
+                messages.user_msg(message['content'], id=message['id'], tokens=new_message_tokens, index=insert_index)
             elif message['role'] == 'assistant':
-                messages.ai_msg(message['content'], index=insert_index)
+                messages.ai_msg(message['content'], id=message['id'], tokens=new_message_tokens, index=insert_index)
             elif message['role'] == 'system':
-                messages.system_msg(message['content'], index=1)
+                messages.system_msg(message['content'], id=message['id'], tokens=new_message_tokens, index=1)
             else:
                 continue
 
             token_count += new_message_tokens
         
         print(f'Final request: {token_count} tokens.')
-        
+                
         return messages
 
     """

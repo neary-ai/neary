@@ -28,7 +28,8 @@ export const useAppStore = defineStore('appstore', {
         textInputHeight: 0,
         currentMessage: "",
         appState: {},
-        userProfile: {}
+        userProfile: {},
+        xray: {},
     }),
     getters: {
         selectedSpace(state) {

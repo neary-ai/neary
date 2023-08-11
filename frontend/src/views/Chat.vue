@@ -43,6 +43,10 @@ const handleMessage = async (event) => {
     return;
   }
 
+  if (message.xray) {
+    store.xray = message.xray;
+  }
+
   const conversation = store.conversations[message.conversation_id];
 
   if (message.role == 'command') {
