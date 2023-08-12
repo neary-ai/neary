@@ -73,7 +73,6 @@
         </div>
       </div>
     </div>
-    <!-- X-Ray! -->
     <div v-if="showXray"
       :class="[store.sidebarOpen && !store.isMobile ? 'left-44' : 'left-0', 'fixed top-12  right-0 bottom-28 flex items-center justify-center z-5']">
       <div class="bg-nearyblue-500/50 backdrop-blur-md w-full h-full rounded-lg relative p-12 overflow-y-scroll">
@@ -103,7 +102,7 @@
             </li>
           </ul>
         </template>
-        <div v-else class="text-nearygray-200 mb-2 w-4/5 leading-7 border-l-4 border-nearyblue-50 pl-4">Send a message, then check back here for the complete context sent to the chat model.</div>
+        <div v-else class="text-nearygray-200 mb-2 w-4/5 leading-7 border-l-4 border-nearyblue-50 pl-4">Send a message, then check back here for details about your most recent request.</div>
       </div>
     </div>
   </div>
