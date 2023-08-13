@@ -22,19 +22,24 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 60*24*30
 async def register(request: Request):
     """
     Since this is a single user application, we register the user if none exists
-    or return an error if one is already in the database
+    or update the existing user if no email is set.
     """
     data = await request.json()
 
-    user_count = await UserModel.all().count()
-    if user_count > 0:
+    user = await UserModel.first()
+    if user and user.email:
         raise HTTPException(status_code=400, detail="Account already created!")
 
     try:
-        user = await UserModel.create(
-            email=data['email'],
-            password_hash=bcrypt.hash(data['password'])
-        )
+        if user:
+            user.email = data['email']
+            user.password_hash = bcrypt.hash(data['password'])
+            await user.save()
+        else:
+            user = await UserModel.create(
+                email=data['email'],
+                password_hash=bcrypt.hash(data['password'])
+            )
 
         access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
         access_token = jwt.encode(
@@ -58,7 +63,8 @@ async def register(request: Request):
 
         return response
     except:
-        HTTPException(status_code=400, detail="Error creating user account.")
+        raise HTTPException(status_code=400, detail="Error creating or updating user account.")
+        
 
 @router.get("/logout")
 async def logout(request: Request) -> JSONResponse:

@@ -9,6 +9,7 @@ services:
     environment:
       - BASE_URL
       - JWT_SECRET
+      - ENABLE_AUTH
       - LOCAL_ENDPOINT
       - OPENAI_API_KEY
       - AZURE_OPENAI_KEY
