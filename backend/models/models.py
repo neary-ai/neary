@@ -8,10 +8,9 @@ class UserModel(Model):
     """
 
     id = fields.IntField(pk=True)
-    email = fields.CharField(max_length=255, unique=True)
-    password_hash = fields.CharField(max_length=255)
+    email = fields.CharField(max_length=255, null=True)
+    password_hash = fields.CharField(max_length=255, null=True)
     profile = fields.JSONField(null=True)
-    onboarded = fields.BooleanField(default=False)
     app_state = fields.JSONField(null=True)
 
 class SpaceModel(Model):
@@ -228,3 +227,11 @@ class ApprovalRequestModel(Model):
             "created_at": self.created_at.isoformat(),
             "updated_at": self.updated_at.isoformat()
         }
+
+class Migration(Model):
+    """
+    Represents a database migration.
+    """
+    id = fields.IntField(pk=True)
+    name = fields.CharField(max_length=255, unique=True)
+    applied_at = fields.DatetimeField(auto_now_add=True)

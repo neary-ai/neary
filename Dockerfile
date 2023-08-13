@@ -30,7 +30,4 @@ COPY ./backend .
 
 RUN mkdir data
 
-COPY ./backend/start.sh .
-RUN chmod +x start.sh
-
-CMD ["./start.sh"]
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]

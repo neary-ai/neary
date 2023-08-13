@@ -54,18 +54,21 @@ class SupportChat(BaseProgram):
         """
         user = await UserModel.first()
         existing_profile = user.profile
+        new_profile = False
+
         if user.profile:
             user.profile = {**existing_profile, **kwargs}
         else:
+            new_profile = True
             user.profile = kwargs
+        
+        await user.save()
 
         # Reload the UI with updated profile info
         await self.conversation.message_handler.send_command_to_ui(message="reload", conversation_id=self.conversation.id)
         
-        if not user.onboarded:
+        if new_profile:
             asyncio.create_task(self.offer_assistance())
-            user.onboarded = True
-        await user.save()
 
         return True
 

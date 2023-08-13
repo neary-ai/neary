@@ -7,5 +7,6 @@ from .models import (
     MessageModel,
     DocumentModel,
     AuthCredentialModel,
-    ApprovalRequestModel
+    ApprovalRequestModel,
+    Migration
 )

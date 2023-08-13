@@ -1,6 +1,7 @@
 import os
 import sys
 from pathlib import Path
+
 current_dir = Path(__file__).resolve().parent
 sys.path.append(str(Path(__file__).parent.parent))
 
@@ -14,7 +15,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 from fastapi.responses import FileResponse
 
-from backend.config import init_db
+from backend.config import run_setup
 from backend.auth import AuthMiddleware
 from backend.routers.auth_router import router as auth_router
 from backend.routers.api_router import router as api_router
@@ -22,11 +23,13 @@ from backend.routers.ws_router import router as ws_router
 
 app = FastAPI()
 
-init_db(app)
-
 app.include_router(auth_router, prefix="/auth")
 app.include_router(api_router, prefix="/api")
 app.include_router(ws_router)
+
+@app.on_event('startup')
+async def app_startup():
+    await run_setup(app)
 
 # Serve our static files from the frontend
 @app.get("/{catch_all:path}", response_class=HTMLResponse)
