@@ -41,7 +41,7 @@ const emit = defineEmits(['updateInput'])
 
 const handleInput = (event) => {
   const newValue = event.target.value;
-  if (localValue.value && localValue.value != newValue) {
+  if (newValue !== localValue.value) {
     emit('updateInput', newValue);
   }
 }

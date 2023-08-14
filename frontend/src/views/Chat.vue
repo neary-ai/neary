@@ -7,7 +7,7 @@
       <router-view></router-view>
       <ToolbarAlert />
     </main>
-    <TextInput v-if="inChatWindow" />
+    <ChatBox v-if="inChatWindow" />
   </div>
 </template>
 
@@ -18,8 +18,8 @@ import { scrollToBottom } from '../services/scrollFunction.js';
 import { useAppStore } from '@/store/index.js';
 import Sidebar from '@/components/Sidebar.vue';
 import NavBar from '@/components/NavBar.vue';
-import TextInput from '@/components/TextInput.vue';
 import ToolbarAlert from '@/components/common/ToolbarAlert.vue';
+import ChatBox from '../components/ChatBox.vue';
 
 const store = useAppStore();
 const route = useRoute();

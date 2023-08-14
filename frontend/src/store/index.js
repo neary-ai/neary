@@ -29,6 +29,7 @@ export const useAppStore = defineStore('appstore', {
         currentMessage: "",
         appState: {},
         userProfile: {},
+        showXray: false,
         xray: {},
     }),
     getters: {
