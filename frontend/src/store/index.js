@@ -14,6 +14,7 @@ export const useAppStore = defineStore('appstore', {
         selectedConversationId: null,
         conversationSettings: {},
         programSettings: {},
+        settingsOptions: null,
         openTabs: [],
         isMobile: window.innerWidth <= 640,
         sidebarOpen: window.innerWidth <= 640 ? false : true,
@@ -36,24 +37,23 @@ export const useAppStore = defineStore('appstore', {
         selectedSpace(state) {
             return state.spaces[state.selectedSpaceId];
         },
-        selectedConversation(state) {
-            return state.conversations[state.selectedConversationId];
-        },
         spacesOptions(state) {
             if (state.spaces) {
                 let spaces = Object.values(state.spaces);
                 let spaces_list = spaces.map(space => ({ 'value': space.id, 'option': space.name }));
-        
+
                 spaces_list.sort((a, b) => (a.value === -1 ? -1 : b.value === -1 ? 1 : 0));
-        
+
                 return spaces_list;
             } else {
                 return [];
             }
+        },
+        selectedConversation(state) {
+            return state.conversations[state.selectedConversationId];
         }
     },
     actions: {
-        // Initial Data
         async initialize() {
             let initial_data;
             let initialSpaceId;
@@ -74,19 +74,12 @@ export const useAppStore = defineStore('appstore', {
                 this.spaces[space.id] = space;
             }
 
-            // Append 'None' space option and set to -1 for UI
-            this.spaces[-1] = {'id': -1, 'name': 'None', 'description': null, 'conversations': []}
+            // Append 'None' space option
+            this.spaces[-1] = { 'id': -1, 'name': 'None', 'description': null, 'conversations': [] }
 
             // Set conversations
             for (let conversation of initial_data.conversations) {
-                this.conversations[conversation.id] = {
-                    ...conversation,
-                    space_id: conversation.space_id === null ? -1 : conversation.space_id,
-                    messages: [],
-                    isLoading: false,
-                    unreadMessages: false,
-                    showArchivedMessages: false,
-                }
+                this.conversations[conversation.id] = this.initConversation(conversation);
             }
 
             // Set user profile
@@ -106,7 +99,7 @@ export const useAppStore = defineStore('appstore', {
                 initialConversationId = null;
             }
 
-            // Load conversation, space, or welcome message
+            // Load conversation or space if none
             if (initialConversationId) {
                 this.selectedSpaceId = initialSpaceId;
                 this.loadConversation(initialConversationId);
@@ -120,29 +113,23 @@ export const useAppStore = defineStore('appstore', {
                 this.loadSpace(initialSpaceId);
             }
         },
+        initConversation(conversation) {
+            return {
+                ...conversation,
+                space_id: conversation.space_id === null ? -1 : conversation.space_id,
+                // messages: [],
+                isLoading: false,
+                unreadMessages: false,
+                showArchivedMessages: false,
+            };
+        },
+        async addProfileField(field) {
+            this.userProfile = { ...this.userProfile, ...field };
+            await api.updateUserProfile(this.userProfile);
+        },
         async reinitialize() {
             await this.initialize();
             await this.getMessages(this.selectedConversationId);
-        },
-        showConversations() {
-            router.push('/conversations');
-        },
-        showMessages() {
-            router.push('/');
-        },
-        async getSpaces() {
-            const spacesData = await api.getSpaces();
-            for (let space of spacesData) {
-                this.spaces[space.id] = space;
-            }
-        },
-        async getConversationSettings(conversationId) {
-            let settings = await api.getConversationSettings(conversationId);
-            this.conversationSettings = settings.conversation
-            this.programSettings = settings.program
-            if (!this.conversationSettings.space.value) {
-                this.conversationSettings.space.value = -1;
-            }
         },
         async loadConversation(conversationId, close) {
             if (close) {
@@ -156,7 +143,6 @@ export const useAppStore = defineStore('appstore', {
             }
             else {
                 this.selectedConversationId = conversationId;
-                await this.getConversationSettings(conversationId);
                 await this.openTab(conversationId)
                 await this.getMessages(conversationId);
                 await this.saveState();
@@ -188,60 +174,6 @@ export const useAppStore = defineStore('appstore', {
             conversation.messages.forEach((id) => {
                 this.messages[id].is_archived = true;
             });
-        },
-        // Conversation settings
-        async updateConversationSettings(conversationId, newSettings) {
-            try {
-                const conversation = this.conversations[conversationId];
-                for (const setting in newSettings) {
-                    if (setting == 'title') {
-                        this.conversationSettings.title.value = newSettings['title']
-                        conversation.title = newSettings['title']
-                    }
-
-                    if (setting == 'space') {
-                        this.conversationSettings.space.value = newSettings['space']
-                        if (this.selectedSpace) {
-                            let index = this.selectedSpace.conversations.indexOf(conversationId);
-                            if (index != -1) {
-                                this.selectedSpace.conversations.splice(index, 1);
-                            }
-                        }
-                        if (newSettings['space'] && newSettings['space'] !== -1) {
-                            if (!this.spaces[newSettings['space']].conversations.includes(conversationId)) {
-                                this.spaces[newSettings['space']].conversations.push(conversationId);
-                            }
-                        }
-                    }                    
-
-                    if (setting == 'program') {
-                        this.conversationSettings.program.value = newSettings['program']
-                        if (newSettings['program'] && newSettings['program'] !== 'DefaultProgram') {
-                            let program_info = this.conversationSettings.program.options.find((object) => object.value == newSettings['program']);
-                            conversation.program.name = newSettings['program'];
-                            conversation.program.metadata.display_name = program_info.option;
-                            conversation.program.metadata.icon = program_info.icon;
-                        }
-                    }
-                }
-                await api.saveConversationSettings(conversationId, {'conversation': this.conversationSettings});
-            }
-            catch (error) {
-                console.log(error);
-            }
-        },
-        async updateProgramSettings(conversationId, newSettings) {
-            try {
-                for (const setting in this.programSettings) {
-                    if (newSettings.hasOwnProperty(setting)) {
-                        this.programSettings[setting].value = newSettings[setting];
-                    }
-                }
-                await api.saveConversationSettings(conversationId, {'program': this.programSettings});
-            }
-            catch (error) {
-                console.log(error);
-            }
         },
         // App State
         async getState() {
@@ -276,7 +208,7 @@ export const useAppStore = defineStore('appstore', {
             }
             this.selectedConversationId = null;
             this.saveState();
-            this.showConversations();
+            router.push('/conversations');
         },
         // Preferences
         toggleSidebar(action) {
@@ -301,38 +233,41 @@ export const useAppStore = defineStore('appstore', {
             space.name = spaceName;
             await api.updateSpace(spaceId, spaceName);
         },
-        async deleteSpace (spaceId) {
+        async deleteSpace(spaceId) {
             try {
-              await api.deleteSpace(spaceId);
-              this.selectedSpaceId = null;
-              delete this.spaces[spaceId];
-              this.notification = { "type": "success", "message": "Space deleted" } 
+                await api.deleteSpace(spaceId);
+                this.selectedSpaceId = null;
+                delete this.spaces[spaceId];
+                this.notification = { "type": "success", "message": "Space deleted" }
             } catch (error) {
-              console.error('Error archiving space:', error);
+                console.error('Error archiving space:', error);
+            }
+        },
+        newNotification(message, sticky = false, type = null) {
+            this.notification = {
+                "message": message,
+                "sticky": sticky,
+                "type": type
+            }
+
+            if (!sticky) {
+                setTimeout(() => this.notification = null, 4000);
             }
         },
         // Conversations
         async createConversation(spaceId) {
             const newConversation = await api.createConversation(spaceId);
-            this.conversations[newConversation.id] = {
-                ...newConversation,
-                space_id: newConversation.space_id === null ? -1 : newConversation.space_id,
-                messages: [],
-                isLoading: false,
-                unreadMessages: false,
-                showArchivedMessages: false,
-            }
+            this.conversations[newConversation.id] = this.initConversation(newConversation);
             if (spaceId) {
                 this.spaces[spaceId].conversations.push(newConversation.id);
             }
-            await this.getConversationSettings(newConversation.id);
             this.selectedConversationId = newConversation.id;
             this.openTab(newConversation.id);
-            this.showMessages();
+            router.push('/');
         },
         async deleteConversation(conversationId) {
             await api.deleteConversation(conversationId);
-            
+
             const conversationSpace = this.conversations[conversationId].space_id
 
             if (conversationSpace && conversationSpace > -1) {
@@ -345,10 +280,35 @@ export const useAppStore = defineStore('appstore', {
 
             this.closeTab(conversationId);
             delete this.conversations[conversationId];
-            
+
             await this.saveState();
-            this.showConversations();
-            this.notification = { "type": "success", "message": "Conversation deleted" }            
+            router.push('/conversations');
+            this.notification = { "type": "success", "message": "Conversation deleted" }
+        },
+        async updateConversation(conversation) {
+            try {
+                this.updateConversationSpace(conversation);
+                let response = await api.updateConversation(conversation);
+                this.conversations[conversation.id] = this.initConversation(response.data);
+            }
+            catch (error) {
+                console.log(error);
+            }
+        },
+        async updateConversationSpace(conversation) {
+            for (let spaceId in this.spaces) {
+                let index = this.spaces[spaceId].conversations.indexOf(conversation.id);
+
+                if (index != -1 && spaceId != conversation.space_id) {
+                    this.spaces[spaceId].conversations.splice(index, 1);
+                }
+            }
+
+            if (conversation.space_id && conversation.space_id !== -1) {
+                if (!this.spaces[conversation.space_id].conversations.includes(conversation.id)) {
+                    this.spaces[conversation.space_id].conversations.push(conversation.id);
+                }
+            }
         },
         // Messages
         addMessage(message, conversationId) {
@@ -369,6 +329,6 @@ export const useAppStore = defineStore('appstore', {
         updateLastMessage(message, messageId) {
             message.id = messageId
             this.messages[messageId] = message
-        },
+        }
     },
 });

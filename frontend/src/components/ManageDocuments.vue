@@ -3,9 +3,9 @@
         <div class="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between mb-6">
             <div class="flex items-center gap-3">
                 <!-- Dropdown for Filters -->
-                <Listbox v-slot={open} v-model="filterType" as="div">
+                <Listbox v-slot="{ open }" v-model="filterType" as="div">
                     <ListboxButton
-                    :class="[open ? 'border-field-focused' : 'border-transparent', 'bg-field-default text-field-default-foreground border relative w-full cursor-default rounded-md py-1.5 pl-3 pr-10 text-left shadow-sm focus:outline-none text-sm leading-6']">
+                        :class="[open ? 'border-field-focused' : 'border-transparent', 'bg-field-default text-field-default-foreground border relative w-full cursor-default rounded-md py-1.5 pl-3 pr-10 text-left shadow-sm focus:outline-none text-sm leading-6']">
                         {{ filterType }}
                         <span
                             class="bg-neutral-100 text-field-default-foreground font-semibold ml-2 inline-flex items-center rounded-full px-1.5 text-xs py-0.5">
@@ -16,12 +16,12 @@
                         </span>
                     </ListboxButton>
                     <ListboxOptions as="ul"
-                    class="border border-field-focused divide-y divide-field-divide absolute z-10 mt-1 max-h-60 overflow-auto rounded-md bg-field-default text-field-default-foreground py-1 text-base shadow-lg focus:outline-none sm:text-sm">
+                        class="border border-field-focused divide-y divide-field-divide absolute z-10 mt-1 max-h-60 overflow-auto rounded-md bg-field-default text-field-default-foreground py-1 text-base shadow-lg focus:outline-none sm:text-sm">
                         <ListboxOption v-for="tab in tabs" :key="tab.name" :value="tab.name" v-slot="{ active }" as="li">
                             <li
-                                :class="[active ? 'bg-field-active text-field-active-foreground' : '', 'relative cursor-default select-none py-2 pl-2 pr-4']">
+                                :class="[active ? 'bg-field-active text-field-active-foreground' : '', 'relative cursor-pointer select-none py-2 pl-2 pr-4']">
                                 <div class="flex items-center justify-between gap-3 text-sm">
-                                    <span :class="[selected ? 'font-semibold' : 'font-normal', 'ml-1 block truncate']">{{
+                                    <span :class="['ml-1 block truncate']">{{
                                         tab.name }}</span>
                                     <span v-if="tab.count"
                                         :class="[active ? '' : '', 'bg-neutral-100 text-field-default-foreground font-semibold ml-1 inline-flex items-center rounded-full px-1.5 text-xs py-0.5']">
@@ -34,34 +34,41 @@
                 </Listbox>
 
                 <!-- Dropdown for Actions -->
-                <Listbox v-slot="{open}" v-model="selectedAction" as="div">
+                <Listbox v-slot="{ open }" v-model="selectedAction" as="div">
                     <ListboxButton
-                    :class="[open ? 'border-field-focused' : 'border-transparent', 'bg-field-default text-field-default-foreground border relative w-full cursor-default rounded-md py-1.5 pl-3 pr-10 text-left shadow-sm focus:outline-none text-sm leading-6']">
+                        :class="[open ? 'border-field-focused' : 'border-transparent', 'bg-field-default text-field-default-foreground border relative w-full cursor-default rounded-md py-1.5 pl-3 pr-10 text-left shadow-sm focus:outline-none text-sm leading-6']">
                         Actions
                         <span class="pointer-events-none absolute inset-y-0 right-0 ml-3 flex items-center pr-2">
                             <ChevronUpDownIcon class="h-5 w-5 text-field-default-foreground" aria-hidden="true" />
                         </span>
                     </ListboxButton>
                     <ListboxOptions as="ul"
-                    class="border border-field-focused divide-y divide-field-divide absolute z-10 mt-1 max-h-60 overflow-auto rounded-md bg-field-default text-field-default-foreground py-1 text-sm shadow-lg focus:outline-none sm:text-sm">
+                        class="border border-field-focused divide-y divide-field-divide absolute z-10 mt-1 max-h-60 overflow-auto rounded-md bg-field-default text-field-default-foreground py-1 text-sm shadow-lg focus:outline-none sm:text-sm">
                         <ListboxOption :disabled="!canAddToConversation" :value="'Add to Conversation'" as="li">
-                            <div :class="[canAddToConversation ? 'hover:bg-field-active hover:text-field-active-foreground' : 'text-slate-600', 'px-4 py-2 cursor-pointer']">Add to Conversation</div>
+                            <div
+                                :class="[canAddToConversation ? 'hover:bg-field-active hover:text-field-active-foreground' : 'text-slate-600', 'px-4 py-2 cursor-pointer']">
+                                Add to Conversation</div>
                         </ListboxOption>
                         <ListboxOption :disabled="!canRemoveFromConversation" :value="'Remove from Conversation'" as="li">
-                            <div :class="[canRemoveFromConversation ? 'hover:bg-field-active hover:text-field-active-foreground' : 'text-slate-600', 'px-4 py-2 cursor-pointer']">Remove from Conversation</div>
+                            <div
+                                :class="[canRemoveFromConversation ? 'hover:bg-field-active hover:text-field-active-foreground' : 'text-slate-600', 'px-4 py-2 cursor-pointer']">
+                                Remove from Conversation</div>
                         </ListboxOption>
                         <ListboxOption :disabled="!canDeleteDocument" :value="'Delete Document'" as="li">
-                            <div :class="[canDeleteDocument ? 'hover:bg-field-active hover:text-field-active-foreground' : 'text-slate-600', 'px-4 py-2 cursor-pointer']">Delete Documents</div>
+                            <div
+                                :class="[canDeleteDocument ? 'hover:bg-field-active hover:text-field-active-foreground' : 'text-slate-600', 'px-4 py-2 cursor-pointer']">
+                                Delete Documents</div>
                         </ListboxOption>
                     </ListboxOptions>
                 </Listbox>
             </div>
             <!-- Button to Add New Document -->
-            <button @click="emit('toggledocs')"
-                class="text-white flex items-center gap-1.5 bg-nearypink-300 rounded-md pr-3.5 pl-2 py-2 text-sm shadow-sm hover:bg-opacity-90">
-                <PlusIcon class="w-5 h-5" />
-                New Document
-            </button>
+            <Button button-type="btn-light" @click="emit('toggledocs')">
+                <div class="flex items-center justify-center">
+                    <PlusIcon class="w-5 h-5 mr-1" />
+                    New Document
+                </div>
+            </Button>
         </div>
         <!-- Table -->
         <div class="overflow-x-auto">
@@ -98,7 +105,7 @@
                 </tbody>
             </table>
             <div @click="emit('toggledocs')" v-if="filteredDocs.length === 0"
-                class="cursor-pointer text-center py-5 text-nearypink-300 font-semibold border-t border-gray-700">
+                class="cursor-pointer text-center py-5 text-nearylight-200 font-semibold border-t border-gray-700">
                 + Add documents
             </div>
         </div>
@@ -107,10 +114,11 @@
 
   
 <script setup>
-import { ref, computed, onMounted, nextTick, watch } from 'vue';
-import { useRouter, useRoute } from 'vue-router';
+import { ref, computed, onMounted, watch } from 'vue';
+import { useRouter } from 'vue-router';
 import { useAppStore } from '@/store/index.js';
 import api from '@/services/apiService';
+import Button from '@/components/common/Button.vue';
 import { Listbox, ListboxButton, ListboxOption, ListboxOptions } from '@headlessui/vue';
 import { ChevronUpDownIcon } from '@heroicons/vue/24/outline';
 import { PlusIcon } from '@heroicons/vue/20/solid';
@@ -200,11 +208,11 @@ const deleteSelectedDocs = async () => {
 };
 
 const toggleAll = () => {
-  if (selectAll.value) {
-    filteredDocs.value.forEach(doc => doc.selected = true);
-  } else {
-    filteredDocs.value.forEach(doc => doc.selected = false);
-  }
+    if (selectAll.value) {
+        filteredDocs.value.forEach(doc => doc.selected = true);
+    } else {
+        filteredDocs.value.forEach(doc => doc.selected = false);
+    }
 };
 
 watch(selectedAction, async (newAction) => {

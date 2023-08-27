@@ -87,10 +87,10 @@ const sendMessage = async () => {
 
   const conversation = store.selectedConversation;
 
-  if (!('title' in conversation) || conversation.title == null || conversation.title == 'New conversation') {
+  if (!('title' in conversation) || conversation.title == null || conversation.title == 'New Conversation') {
     let title = message.content.slice(0, 50);
-    let update = { 'conversation': [{ 'name': 'title', 'value': title }] };
-    await store.updateConversationSettings(conversation.id, update);
+    store.selectedConversation.title = title
+    await store.updateConversation(store.selectedConversation);
   }
 
   if (store.ws.readyState === WebSocket.OPEN) {
@@ -131,7 +131,8 @@ const handleCommand = async (input) => {
 
   if (command === 'title') {
     const title = commandArgs;
-    await store.updateConversationSettings(store.selectedConversationId, { 'title': title });
+    store.selectedConversation.title = title;
+    await store.updateConversation(store.selectedConversation);
     return true;
   }
 

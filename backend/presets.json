@@ -1,0 +1,155 @@
+[
+    {
+        "id": 1,
+        "name": "Chat with Neary",
+        "icon": "heroicons:chat-bubble-left-right-solid",
+        "description": "General chat, sensible defaults.",
+        "settings": {
+            "llm": {
+                "api_type": "openai",
+                "model": "gpt-4",
+                "system_message": "You are a helpful assistant."
+            },
+            "token_limit": 5000,
+            "tool_approval_required": true
+        },
+        "snippets": [
+            {
+                "name": "notepad",
+                "settings": null,
+                "data": null
+            }
+        ],
+        "tools": [
+            {
+                "name": "make_a_note",
+                "settings": null,
+                "data": null
+            }
+        ],
+        "is_default": true
+    },
+    {
+        "id": 2,
+        "name": "Calendar Chat",
+        "icon": "heroicons:calendar-days-solid",
+        "description": "Manage your own schedule? Nah.",
+        "settings": {
+            "llm": {
+                "api_type": "openai",
+                "model": "gpt-4",
+                "system_message": "Your job is to act as a personal assistant for the user, getting and scheduling events with their calendar as needed. Important: You should never 'guess' when scheduling events. If you are unsure of a detail, such as an invitees email address, ask the user before scheduling the event. Finally, if you don't see the user's timezone provided in any prior messages, you should ask them for their location before you do anything else. Then, update their timezone with the `update_timezone` tool."
+            },
+            "token_limit": 3000,
+            "tool_approval_required": true
+        },
+        "snippets": [
+            {
+                "name": "user_profile",
+                "settings": null,
+                "data": null
+            },
+            {
+                "name": "seven_day_calendar",
+                "settings": null,
+                "data": null
+            }
+        ],
+        "tools": [
+            {
+                "name": "create_calendar_event",
+                "settings": null,
+                "data": null
+            },
+            {
+                "name": "get_calendar_events",
+                "settings": null,
+                "data": null
+            }
+        ],
+        "is_default": false
+    },
+    {
+        "id": 3,
+        "name": "Document Chat",
+        "icon": "heroicons:document-magnifying-glass-solid",
+        "description": "Load documents. Ask questions. Get answers.",
+        "settings": {
+            "llm": {
+                "api_type": "openai",
+                "model": "gpt-4",
+                "system_message": "Your job is to assist the user with document search and analysis. When provided with documents to load via a URL, you should use the `load_urls` tool. When asked a question, you should do your best to provide an answer from the provided document snippets. If there are no snippets loaded that answer the user's question, simply let them know."
+            },
+            "token_limit": 5000,
+            "tool_approval_required": true
+        },
+        "snippets": [
+            {
+                "name": "document",
+                "settings": null,
+                "data": null
+            }
+        ],
+        "tools": [
+            {
+                "name": "load_urls",
+                "settings": null,
+                "data": null
+            }
+        ],
+        "is_default": false
+    },
+    {
+        "id": 4,
+        "name": "Support Chat",
+        "icon": "heroicons:information-circle-solid",
+        "description": "Need help with Neary? Just ask.",
+        "settings": {
+            "llm": {
+                "api_type": "openai",
+                "model": "gpt-4",
+                "system_message": "You are an assistant called Neary. Your job is to welcome people to the new Neary app. You should answer questions they have about the service and on-board them by saving their name and timezone (using tz database format) to their profile using the `update_profile` tool. Important: You should never make up an answer. If the user asks you a question about the app that you do not know, or cannot find from contextual information provided to you, simply say you are not sure."
+            },
+            "token_limit": 5000,
+            "tool_approval_required": true
+        },
+        "snippets": [
+            {
+                "name": "user_manual",
+                "settings": null,
+                "data": null
+            },
+            {
+                "name": "user_profile",
+                "settings": null,
+                "data": null
+            }
+        ],
+        "tools": [
+            {
+                "name": "update_profile",
+                "settings": null,
+                "data": null
+            }
+        ],
+        "is_default": false
+    },
+    {
+        "id": 5,
+        "name": "Vanilla",
+        "icon": "heroicons:chat-bubble-bottom-center-text-solid",
+        "description": "No plugins. Just you and the AI.",
+        "settings": {
+            "llm": {
+                "api_type": "openai",
+                "model": "gpt-4",
+                "system_message": "You are a helpful assistant."
+            },
+            "token_limit": 5000,
+            "tool_approval_required": true
+        },
+        "snippets": [],
+        "tools": [],
+        "is_default": false
+    }
+]

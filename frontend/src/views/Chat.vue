@@ -54,15 +54,15 @@ const handleMessage = async (event) => {
     return;
   }
 
-  else if (message.role == 'error') {
-    await handleApiError(message);
+  else if (message.role == 'alert') {
+    await handleAlert(message);
     return
   }
 
   if (message.status == "incomplete" || message.status == "complete") {
     if (message.status == "incomplete") {
       store.messageTimeout = setTimeout(() => {
-        store.notification = { 'type': 'error', 'message': 'Waiting for response from chat server' };
+        store.notification = { 'type': 'alert', 'message': 'Waiting for response from chat server' };
       }, 10000);
       conversation.isLoading = true;
     }
@@ -97,8 +97,8 @@ const handleCommand = async (message) => {
   }
 }
 
-const handleApiError = async (message) => {
-  store.notification = { "type": "error", "message": message.content, "sticky": true };
+const handleAlert = async (message) => {
+  store.notification = { 'type': 'alert', 'message': message.content };
 }
 
 const getWebSocketUrl = () => {
@@ -126,6 +126,7 @@ const reconnectWebSocket = async () => {
   };
 };
 
+// Watchers
 watch(route, async (to) => {
   await nextTick();
   if (to.path === '/') {
@@ -133,16 +134,11 @@ watch(route, async (to) => {
   }
 }, { immediate: true });
 
-watch(() => store.notification, (newNotification, oldNotification) => {
-  if (newNotification !== oldNotification && newNotification !== null && !('sticky' in newNotification)) {
-    setTimeout(() => store.notification = null, 4000);
-  }
-});
 
 onMounted(async () => {
   await store.initialize();
   await initWebSocket();
-  
+
   window.addEventListener('resize', () => {
     store.isMobile = (window.innerWidth <= 640);
     windowHeight.value = window.innerHeight;

@@ -57,7 +57,7 @@ const api = {
             );
             return response;
         } catch (error) {
-            throw(error);
+            throw (error);
         }
     },
     async saveApiKey(newApiKey) {
@@ -69,7 +69,7 @@ const api = {
             );
             return response;
         } catch (error) {
-            throw(error);
+            throw (error);
         }
     },
     // General calls
@@ -79,22 +79,6 @@ const api = {
             return response.data;
         } catch (error) {
             throw error;
-        }
-    },
-    async getSpaces() {
-        try {
-            const response = await axios.get(`${apiBaseUrl}/api/spaces`, { withCredentials: true });
-            return response.data;
-        } catch (error) {
-            throw error;
-        }
-    },
-    async getConversations(spaceId) {
-        try {
-            const response = await axios.get(`${apiBaseUrl}/api/spaces/${spaceId}/conversations`, { withCredentials: true });
-            return response.data;
-        } catch (error) {
-            console.error('Error getting spaces:', error);
         }
     },
     async getMessages(conversationId, archived) {
@@ -138,13 +122,24 @@ const api = {
         }
     },
     async createConversation(spaceId) {
+        if (spaceId === null) {
+            spaceId = -1;
+        }
         try {
-            const url = spaceId ? `${apiBaseUrl}/api/spaces/${spaceId}/conversations` : `${apiBaseUrl}/api/conversations`;
+            const url = `${apiBaseUrl}/api/spaces/${spaceId}/conversations`;
             const response = await axios.post(url, {}, { withCredentials: true });
             return response.data;
         } catch (error) {
             console.error('Error creating conversation:', error);
         }
+    },
+    async updateConversation(conversation) {
+        const response = await axios.put(
+            `${apiBaseUrl}/api/conversations/${conversation.id}`,
+            conversation,
+            { withCredentials: true }
+        );
+        return response;
     },
     async deleteConversation(conversationId) {
         try {
@@ -162,17 +157,109 @@ const api = {
             console.error('Error archiving message:', error);
         }
     },
-    async getConversationSettings(conversationId) {
-        const response = await axios.get(`${apiBaseUrl}/api/conversations/${conversationId}/settings`, { withCredentials: true });
-        return response.data;
+    async getAvailableSettings() {
+        try {
+            const response = await axios.get(`${apiBaseUrl}/api/conversations/settings`, { withCredentials: true });
+            return response.data;
+        } catch (error) {
+            console.error('Error getting settings options:', error);
+        }
     },
-    async saveConversationSettings(conversationId, settings) {
-        const response = await axios.put(
-            `${apiBaseUrl}/api/conversations/${conversationId}/settings`,
-            settings,
-            { withCredentials: true }
-        );
-        return response;
+    async importPreset(preset) {
+        try {
+            const response = await axios.post(`${apiBaseUrl}/api/presets/import`, preset, { withCredentials: true });
+            return response.data;
+        } catch (error) {
+            console.error('Error adding preset:', error);
+        }
+    },
+    async getAvailablePresets() {
+        try {
+            const response = await axios.get(`${apiBaseUrl}/api/presets`, { withCredentials: true });
+            return response.data;
+        } catch (error) {
+            console.error('Error getting presets:', error);
+        }
+    },
+    async createPreset(name, description, conversationId) {
+        try {
+            const response = await axios.post(`${apiBaseUrl}/api/presets`, { "name": name, "description": description, "conversation_id": conversationId }, { withCredentials: true });
+            return response.data;
+        } catch (error) {
+            console.error('Error adding preset:', error);
+        }
+    },
+    async deletePreset(preset) {
+        try {
+            const response = await axios.post(`${apiBaseUrl}/api/presets/${preset.id}`, {}, { withCredentials: true });
+            return response.data;
+        } catch (error) {
+            console.error('Error deleting preset:', error);
+        }
+    },
+    async updatePreset(preset) {
+        try {
+            const response = await axios.put(`${apiBaseUrl}/api/presets/${preset.id}`, { preset }, { withCredentials: true });
+            return response.data;
+        } catch (error) {
+            console.error('Error updating preset:', error);
+        }
+    },
+    async getAvailableSnippets(conversationId) {
+        try {
+            const response = await axios.get(`${apiBaseUrl}/api/conversations/${conversationId}/snippets`, { withCredentials: true });
+            return response.data;
+        } catch (error) {
+            console.error('Error getting snippets:', error);
+        }
+    },
+    async getAvailableTools(conversationId) {
+        try {
+            const response = await axios.get(`${apiBaseUrl}/api/conversations/${conversationId}/tools`, { withCredentials: true });
+            return response.data;
+        } catch (error) {
+            console.error('Error getting tools:', error);
+        }
+    },
+    async getIntegrations() {
+        try {
+            const response = await axios.get(`${apiBaseUrl}/api/integrations`, { withCredentials: true });
+            return response.data;
+        } catch (error) {
+            console.error('Error getting integrations:', error);
+        }
+    },
+    async saveIntegration(integration) {
+        try {
+            const response = await axios.post(`${apiBaseUrl}/api/integrations`, integration, { withCredentials: true });
+            return response.data;
+        } catch (error) {
+            console.error('Error getting integrations:', error);
+        }
+    },
+    async disconnectIntegration(integration) {
+        try {
+            const response = await axios.put(`${apiBaseUrl}/api/integrations/${integration.id}`, integration, { withCredentials: true });
+            return response.data;
+        } catch (error) {
+            console.error('Error disconnecting integration:', error);
+        }
+    },
+    async getOAuthURL(integrationId) {
+        try {
+            const response = await axios.get(`${apiBaseUrl}/api/start_oauth/${integrationId}`, { withCredentials: true });
+            return response.data
+        } catch (error) {
+            console.error('Error getting auth url:', error);
+        }
+    },
+    async updateUserProfile(userProfile) {
+        try {
+            const response = await axios.put(`${apiBaseUrl}/api/profile`, userProfile, { withCredentials: true });
+            return response.data;
+        } catch (error) {
+            throw (error);
+        }
     },
     // State calls
     async getState() {
@@ -202,7 +289,7 @@ const api = {
     },
     async createDocumentFromURL(conversationId, url) {
         try {
-            const response = await axios.post( `${apiBaseUrl}/api/conversations/${conversationId}/documents/add_url`, url, { withCredentials: true });
+            const response = await axios.post(`${apiBaseUrl}/api/conversations/${conversationId}/documents/add_url`, url, { withCredentials: true });
             return response.data;
         } catch (error) {
             console.error("Error creating document from URL:", error);
@@ -253,7 +340,7 @@ const api = {
         }
     },
     // Misc. calls
-   async postActionResponse(action, messageId) {
+    async postActionResponse(action, messageId) {
         const response = await axios.post(
             `${apiBaseUrl}/api/action/response`,
             {

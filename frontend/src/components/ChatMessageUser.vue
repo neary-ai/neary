@@ -23,6 +23,6 @@
       const name = store.userProfile.name;
       return name ? name[0] : 'U';
     }
-    return '?';
+    return 'U';
   });
   </script>

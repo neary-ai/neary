@@ -1,8 +1,8 @@
 import os
 import asyncio
 import openai
-import requests
 from openai.error import Timeout, RateLimitError
+
 
 class LLMConnector:
     def __init__(self, context, api_type="openai", api_key=None, api_base=None, api_version=None, websocket=None):
@@ -13,26 +13,32 @@ class LLMConnector:
         # Azure config
         if self.api_type == "azure":
             openai.api_type = api_type
-            api_key = os.getenv("AZURE_OPENAI_KEY") if api_key is None else api_key
-            api_base = os.getenv("AZURE_OPENAI_ENDPOINT") if api_base is None else api_base
-            api_version = os.getenv("AZURE_OPENAI_API_VERSION") if api_version is None else api_version
+            api_key = os.getenv(
+                "AZURE_OPENAI_KEY") if api_key is None else api_key
+            api_base = os.getenv(
+                "AZURE_OPENAI_ENDPOINT") if api_base is None else api_base
+            api_version = os.getenv(
+                "AZURE_OPENAI_API_VERSION") if api_version is None else api_version
 
             if not api_key or not api_base:
-                raise ValueError("AZURE_OPENAI_KEY and AZURE_OPENAI_ENDPOINT must be set in environment variables.")
-            
+                raise ValueError(
+                    "AZURE_OPENAI_KEY and AZURE_OPENAI_ENDPOINT must be set in environment variables.")
+
             openai.api_key = api_key
             openai.api_base = api_base
             openai.api_version = "2023-05-15" if not api_version else api_version
 
         # Local config
         elif self.api_type == "local":
-            api_base = os.getenv("LOCAL_ENDPOINT") if not api_base else api_base
+            api_base = os.getenv(
+                "LOCAL_ENDPOINT") if not api_base else api_base
 
             if not api_base:
-                raise ValueError("LOCAL_ENDPOINT must be set in environment variables.")
-                
+                raise ValueError(
+                    "LOCAL_ENDPOINT must be set in environment variables.")
+
             openai.api_base = api_base
-        
+
         # Default OpenAI config
         else:
             openai.api_base = "https://api.openai.com/v1"
@@ -61,12 +67,15 @@ class LLMConnector:
                         try:
                             if 'content' in chunk['choices'][0]['delta']:
                                 collected_tokens += chunk['choices'][0]['delta']['content']
-                                ai_message = {'role': 'assistant', 'content': collected_tokens, 'conversation_id': self.context.conversation_id, 'status': 'incomplete'}
+                                ai_message = {'role': 'assistant', 'content': collected_tokens,
+                                              'conversation_id': self.context.conversation_id, 'status': 'incomplete'}
                                 await self.websocket.send_json(ai_message)
                         except Exception:
                             print('Error in chunk: ', chunk)
                     ai_message['status'] = 'complete'
-                    ai_message['xray'] = {'messages': self.context.get_chain()}
+                    ai_message['metadata'] = self.context.get_metadata()
+                    ai_message['xray'] = {
+                        'messages': self.context.get_chain_as_dict()}
                     await self.websocket.send_json(ai_message)
                     return ai_message
             except (Timeout, RateLimitError):
@@ -83,10 +92,11 @@ class LLMConnector:
         print("Failed after 3 retries.")
         return None
 
+
 async def get_embeddings(doc):
     response = openai.Embedding.create(
-    input=doc,
-    model="text-embedding-ada-002"
+        input=doc,
+        model="text-embedding-ada-002"
     )
     embeddings = response['data'][0]['embedding']
     return embeddings

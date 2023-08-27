@@ -12,7 +12,7 @@
             <div class="absolute inset-0 flex items-center" aria-hidden="true">
               <div class="w-full border-t border-slate-500" />
             </div>
-            <div class="relative flex justify-center">
+            <div class="relative flex justify-center bg-gray-400">
               <span class="bg-nearyblue-300 px-2 py-2 text-sm text-slate-400">Archived messages</span>
             </div>
           </div>
@@ -62,20 +62,27 @@ const showArchivedMessages = computed(() => {
 })
 
 const messages = computed(() => {
-  if (store.selectedConversation) {
-    return store.selectedConversation.messages.map(id => store.messages[id]);
+  if (store.selectedConversation && Object.keys(store.messages).length > 0) {
+    return store.selectedConversation.messages.map(id => {
+      const message = store.messages[id];
+      return message;
+    });
   }
   return [];
 });
 
 const archivedMessages = computed(() => {
-  return messages.value
-    .filter(message => message.is_archived)
+  if (store.selectedConversation) {
+    return messages.value.filter(message => message.is_archived)
+  }
+  return [];
 });
 
 const nonArchivedMessages = computed(() => {
-  return messages.value
-    .filter(message => !message.is_archived)
+  if (store.selectedConversation) {
+    return messages.value.filter(message => !message.is_archived)
+  }
+  return [];
 });
 
 const selectMessageComponent = (message) => {

@@ -26,11 +26,10 @@
 </template>
   
 <script setup>
-import { onMounted, ref, watch, nextTick, computed } from 'vue';
+import { ref, computed } from 'vue';
 import MarkdownIt from 'markdown-it';
 import DOMPurify from 'dompurify';
-import ClipboardJS from 'clipboard';
-import Prism from 'prismjs';
+
 import 'prismjs/components/prism-python';
 import 'prismjs/themes/prism-tomorrow.css';
 import { InformationCircleIcon, } from '@heroicons/vue/24/outline';

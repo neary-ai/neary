@@ -11,10 +11,11 @@ from backend.models import DocumentModel, ConversationModel
 from ..llm_connector import get_embeddings
 from .loaders import *
 
+
 class DocumentManager:
 
-    def __init__(self, conversation=None):
-        self.conversation_id = conversation.id if conversation else 1
+    def __init__(self, conversation_id):
+        self.conversation_id = conversation_id
 
         self.faiss_path = None
         self.faiss_index = None
@@ -90,7 +91,7 @@ class DocumentManager:
             self.faiss_index.add(np.array(embeddings, dtype=np.float32))
         else:
             raise Exception('No usuable text extracted!')
-        
+
         # Save the Faiss index to disk
         print('Saving to faiss..')
         self.save_index_to_disk()
@@ -114,7 +115,8 @@ class DocumentManager:
                 if conversation:
                     await conversation.documents.add(doc_chunk)
             except IntegrityError:
-                print(f'Document with chunk_hash_id {metadata["id"]} already exists. Skipping.')
+                print(
+                    f'Document with chunk_hash_id {metadata["id"]} already exists. Skipping.')
 
     """
     Loader methods
@@ -126,7 +128,7 @@ class DocumentManager:
 
     async def load_files(self, files):
         docs = []
-        
+
         for file in files:
             print(f'{file.filename} => {file.content_type}')
             if file.content_type == "application/pdf":
@@ -141,9 +143,9 @@ class DocumentManager:
                 pass
             elif file.content_type == "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
                 pass
-    
+
         await self.save_documents(docs)
-    
+
     """
     Search & document discovery
     """
@@ -153,15 +155,17 @@ class DocumentManager:
         search_vector = np.array([embeddings], dtype=np.float32)
 
         # Query the Faiss index to find the most similar embeddings, and get distances
-        distances, index_positions = self.faiss_index.search(search_vector, results)
-        
+        distances, index_positions = self.faiss_index.search(
+            search_vector, results)
+
         # Create a base query for DocumentModel
         base_query = DocumentModel.filter(faiss_index__in=index_positions[0])
-        
+
         # Filter by conversation_id if provided
         if conversation_filter:
-            base_query = base_query.filter(conversations__id=self.conversation_id)
-        
+            base_query = base_query.filter(
+                conversations__id=self.conversation_id)
+
         # Retrieve the associated metadata for the most similar embeddings from the database
         found_documents = await base_query
 
@@ -240,8 +244,10 @@ class DocumentManager:
         documents_to_delete = await DocumentModel.filter(document_key=document_key)
 
         # Remove the corresponding documents from the Faiss index
-        faiss_indexes_to_remove = [doc.faiss_index for doc in documents_to_delete]
-        self.faiss_index.remove_ids(np.array(faiss_indexes_to_remove, dtype=np.int64))
+        faiss_indexes_to_remove = [
+            doc.faiss_index for doc in documents_to_delete]
+        self.faiss_index.remove_ids(
+            np.array(faiss_indexes_to_remove, dtype=np.int64))
 
         # Delete the filtered documents from database
         await DocumentModel.filter(document_key=document_key).delete()
