@@ -2,10 +2,6 @@ from backend.plugins import Snippet
 from backend.services.user_profile_manager import UserProfileManager
 
 class UserProfileSnippet(Snippet):
-    name = "user_profile"
-    display_name = "User Profile"
-    description = "Returns the contents of the user profile"
-
     def __init__(self, id, conversation, settings=None, data=None):
         super().__init__(id, conversation, settings, data)
 

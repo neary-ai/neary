@@ -4,12 +4,6 @@ from backend.plugins import Snippet
 from backend.services import UserProfileManager, MessageHandler, CredentialManager
 
 class LocalWeatherSnippet(Snippet):
-    name = "local_weather"
-    display_name = "Local Weather"
-    description = "Inserts today's weather."
-
-    integrations = ['openweathermap']
-
     def __init__(self, id, conversation, settings=None, data=None):
         super().__init__(id, conversation, settings, data)
 
@@ -19,7 +13,11 @@ class LocalWeatherSnippet(Snippet):
         credential_manager = await CredentialManager.create("openweathermap")
         
         credentials = await credential_manager.get_credentials()
-        location = await profile_manager.get_field('location')
+
+        if credentials is None:
+             await message_handler.send_alert_to_ui("OpenWeatherMap integration is required", self.conversation.id)
+
+        location = self.settings.get('location', await profile_manager.get_field('location'))
 
         owm = OWM(credentials['api_key'])
 
@@ -35,7 +33,7 @@ class LocalWeatherSnippet(Snippet):
                 context.add_snippet(f"It's {round(temp['temp'])} degrees Fahrenheit and {status} in {location}.")
             except Exception as e:
                 print(e)
-                context.add_snippet(f"No weather data found for location: {location}.")
+                await message_handler.send_alert_to_ui("Weather error! Check location and API key.", self.conversation.id)
         else:
             message_handler = MessageHandler()
             await message_handler.send_alert_to_ui("The Local Weather snippet requires a location!", self.conversation.id)

@@ -1,7 +1,7 @@
 <template>
   <div
     :class="[isTall ? 'justify-start' : 'justify-center', 'w-full h-screen flex flex-col items-center mt-12 px-8 pb-6']">
-    <Icon icon="uil:tornado" class="w-14 h-14 text-nearypink-300/70 mb-6" />
+    <Icon icon="uil:tornado" class="w-14 h-14 text-nearypink-300 mb-6" />
     <div class="text-xl text-nearygray-50 font-semibold mb-2 text-center">Ready? Just start typing.</div>
     <div v-if="isTall && store.selectedConversation" class="w-full max-w-sm mt-8">
       <div class="flex flex-col gap-2.5 mb-6">
@@ -16,7 +16,7 @@
       </div>
       <div class="flex flex-col gap-2.5">
         <label class="text-sm text-field-label">Select Preset</label>
-        <Card @click="router.push('/presets')" class="cursor-pointer">
+        <Card @click="router.push('/stack')" class="cursor-pointer">
           <template v-slot:icon>
             <div class="flex items-center justify-center h-9 w-9 rounded shadow bg-nearycyan-500 mt-0.5">
               <Icon
@@ -36,8 +36,8 @@
       </div>
     </div>
     <div v-else class="w-full max-w-xs">
-      <div @click="toggleSettings()"
-        class="cursor-pointer flex items-center justify-center text-nearygray-400 text-sm mt-3">Conversation settings
+      <div @click="router.push('/stack')"
+        class="cursor-pointer flex items-center justify-center text-nearygray-400 text-sm mt-3">View chat stack
         &rarr;</div>
     </div>
   </div>
@@ -72,34 +72,8 @@ onUnmounted(() => {
 
 const isTall = computed(() => windowHeight.value > 680);
 
-const conversationSpace = computed(() => {
-  if (store.selectedConversation) {
-    if (!store.selectedConversation.space_id) {
-      return -1;
-    }
-    return store.selectedConversation.space_id;
-  }
-});
-
-// Handle title
-const handleTitleUpdate = async () => {
-  await store.updateConversation(store.selectedConversation);
-}
 
 // Update space
 const selectedSpaceValue = ref(null);
-
-const handleSpaceUpdate = async (selected) => {
-  selectedSpaceValue.value = selected;
-  await store.changeConversationSpace(store.selectedConversation, selectedSpaceValue.value)
-}
-
-const toggleSettings = () => {
-  if (route.path.startsWith('/settings')) {
-    router.push('/');
-  } else {
-    router.push(`/settings/${store.selectedConversationId}`);
-  }
-}
 
 </script>

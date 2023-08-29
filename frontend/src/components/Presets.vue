@@ -1,6 +1,6 @@
 <template>
-  <div id="alt-window" class="font-mulish flex flex-col gap-3 max-w-3xl overflow-y-scroll">
-    <div class="p-8 pt-[5.5rem]">
+  <div id="alt-window" class="font-mulish flex flex-col gap-3 w-full overflow-y-scroll">
+    <div class="p-8 pt-[5.5rem] max-w-3xl">
       <div class="flex items-center justify-between">
         <SectionHeading section-name="Presets" @on-click="onBackButtonClick" />
         <div class="cursor-pointer flex text-nearylight-300 text-sm font-medium items-center justify-center"
@@ -28,7 +28,7 @@
               <Popover class="relative inline-block text-left">
                 <PopoverButton
                   class="flex items-center group relative cursor-pointer px-2 py-0.5 hover:text-nearygray-100 focus:border-transparent focus:ring-0 focus:outline-none">
-                  <Icon icon="heroicons-solid:dots-vertical" class="w-[1.1rem] h-[1.1rem]" />
+                  <Icon icon="heroicons:ellipsis-vertical" class="w-5 h-5" />
                 </PopoverButton>
                 <Transition as="div" enter="transition ease-out duration-200" enterFrom="opacity-0 translate-y-1"
                   enterTo="opacity-100 translate-y-0" leave="transition ease-in duration-150"
@@ -92,17 +92,12 @@ const updatePreset = async (preset) => {
   await store.updateConversation(store.selectedConversation);
 }
 
-const exportPreset = (preset, close) => {
+const exportPreset = async (preset, close) => {
   close();
 
-  const presetCopy = { ...preset };
-
-  delete presetCopy.id;
-  delete presetCopy.is_default;
-  delete presetCopy.is_custom;
-
-  const presetData = JSON.stringify(presetCopy, null, 2);
-  const fileData = new Blob([presetData], { type: "application/json" });
+  const presetJSON = await api.exportPreset(preset);
+  const presetString = JSON.stringify(presetJSON, null, 2);
+  const fileData = new Blob([presetString], { type: "application/json" });
   const fileName = `preset_${preset.id}.json`;
 
   const downloadLink = document.createElement("a");

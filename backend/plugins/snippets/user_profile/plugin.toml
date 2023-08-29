@@ -1,0 +1,8 @@
+[metadata]
+display_name = "User Profile"
+version = "0.1.0"
+author = "Neary"
+
+plugin_type = "snippet"
+module = "user_profile"
+description = "Returns the contents of the user profile."

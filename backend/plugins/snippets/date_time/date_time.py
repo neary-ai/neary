@@ -1,21 +1,16 @@
+from backend.plugins import Snippet
+from backend.services import UserProfileManager
 import datetime
 import pytz
 
-from backend.plugins import Snippet
-from backend.services import UserProfileManager
-
 class DateTimeSnippet(Snippet):
-    name = "date_time"
-    display_name = "Date and Time"
-    description = "Inserts the current date and time"
-
     def __init__(self, id, conversation, settings=None, data=None):
         super().__init__(id, conversation, settings, data)
 
     async def run(self, context):
         profile_manager = UserProfileManager()
 
-        timezone = await profile_manager.get_field('timezone')
+        timezone = self.settings.get('timezone', await profile_manager.get_field('timezone'))
 
         if timezone:
             local_tz = pytz.timezone(timezone)

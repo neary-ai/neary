@@ -1,5 +1,4 @@
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
-import importlib
 
 from backend.conversation import Conversation
 from backend.models import ConversationModel
@@ -29,6 +28,7 @@ async def process_input(user_message, message_handler):
 async def websocket_endpoint(websocket: WebSocket):
     """WebSocket endpoint"""
     await websocket.accept()
+
     websocket_store.add(websocket)
     message_handler = MessageHandler(websocket)
 

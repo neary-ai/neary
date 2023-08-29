@@ -1,9 +1,9 @@
 <template>
-  <div id="spaces-window" class="flex flex-col gap-3 max-w-3xl overflow-y-scroll">
-    <div class="p-8 pt-[5.5rem]">
+  <div id="spaces-window" class="flex flex-col gap-3 max-w-full overflow-y-scroll">
+    <div class="p-8 pt-[5.35rem] max-w-3xl">
       <div class="flex items-center justify-between">
         <SectionHeading section-name="Spaces" @on-click="onBackButtonClick" />
-        <Button v-if="hasSpaces" @buttonClick="newSpace" button-type="btn-pink">
+        <Button v-if="hasSpaces" @buttonClick="newSpace" button-type="btn-light">
           <div class="flex items-center gap-1 pr-1.5">
             <PlusIcon class="w-5 h-5" />
             New Space
@@ -24,9 +24,9 @@
           </li>
         </template>
       </ul>
-      <div v-else class="flex items-center justify-center max-w-lg">
-        <div class="text-center py-12 px-14 mt-12 rounded-lg border-2 border-dashed border-neutral-100">
-          <Square3Stack3DIcon class="mx-auto h-12 w-12 text-nearygray-200 mb-4" />
+      <div v-else class="flex items-center justify-start max-w-lg">
+        <div class="text-center py-12 px-14 mt-8 rounded-lg border-2 border-dashed border-neutral-100">
+          <Squares2X2Icon class="mx-auto h-12 w-12 text-nearygray-200 mb-4" />
           <h3 class="mt-2 text-sm font-semibold text-nearygray-50">Organize your conversations</h3>
           <p class="mt-1 text-sm text-nearygray-300">Create your first space</p>
           <div class="mt-6">
@@ -41,9 +41,9 @@
       </div>
     </div>
   </div>
-  <Modal :isOpen="isOpen" @save="save" @close="close">
+  <Modal :isOpen="isOpen" @keyup.enter="save" @save="save" @close="close">
     <template v-slot:title>
-      <h3 class="font-semibold text-lg text-field-default-foreground">{{ modalTitle }}</h3>
+      {{ modalTitle }}
     </template>
     <div class="flex-grow w-full my-5">
       <div>
@@ -52,8 +52,8 @@
       </div>
     </div>
     <template v-slot:buttons>
-      <Button @buttonClick="save" button-type="btn-light">Save</Button>
-      <Button @buttonClick="close" button-type="btn-light">Cancel</Button>
+      <Button @buttonClick="save" button-type="btn-light" class="w-full">Save</Button>
+      <Button @buttonClick="close" button-type="btn-outline-light" class="w-full">Cancel</Button>
     </template>
   </Modal>
 </template>
@@ -67,7 +67,7 @@ import api from '@/services/apiService';
 import { useAppStore } from '@/store/index.js';
 import { useRouter } from 'vue-router';
 import { PlusIcon } from '@heroicons/vue/20/solid';
-import { Square3Stack3DIcon, PencilSquareIcon, XMarkIcon } from '@heroicons/vue/24/outline';
+import { Squares2X2Icon, PencilSquareIcon, XMarkIcon } from '@heroicons/vue/24/outline';
 
 const store = useAppStore();
 const router = useRouter();
@@ -105,7 +105,7 @@ const save = async () => {
       store.spaces[newSpace.id] = newSpace
       store.loadSpace(newSpace.id);
     } else {
-      await store.updateSpace(space.id, space.name);
+      await store.updateSpace(space.value.id, spaceName.value);
     }
   } catch (error) {
     console.error('Error updating space:', error);

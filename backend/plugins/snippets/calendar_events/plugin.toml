@@ -1,0 +1,27 @@
+[metadata]
+display_name = "Calendar Events"
+version = "0.1.0"
+author = "Neary"
+
+plugin_type = "snippet"
+module = "calendar_events"
+description = "Inserts calendar events for a given period."
+integrations = ["google_calendar"]
+
+[settings.days]
+description = "How many days of events to retrieve"
+value = 7
+type = "integer"
+editable = true
+
+[settings.filter_recurring]
+description = "Whether or not to filter out multiple recurring events"
+value = true
+type = "boolean"
+editable = true
+
+[settings.concise]
+description = "Use a more concise presentation format"
+value = true
+type = "boolean"
+editable = true

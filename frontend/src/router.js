@@ -15,6 +15,7 @@ import Snippets from './components/Snippets.vue';
 import Tools from './components/Tools.vue';
 import Integrations from './components/Integrations.vue';
 import Conversations from './components/Conversations.vue';
+import Plugin from './components/Plugin.vue';
 
 const routes = [
   {
@@ -67,6 +68,11 @@ const routes = [
         name: 'Presets',
         component: Presets
 
+      },
+      {
+        path: 'plugins/:id',
+        name: 'Plugin',
+        component: Plugin
       },
       {
         path: 'integrations',

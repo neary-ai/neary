@@ -3,21 +3,14 @@ from backend.plugins.utils.google_service import GoogleService
 from backend.services import MessageHandler
 
 class GetCalendarEventsTool(Tool):
-    name = "get_calendar_events"
-    display_name = "Get Calendar Events"
-    description = "Retrieves calendar events for a given number of days."
-    llm_description = "`get_calendar_events`: Retrieves the user's upcoming calendar events. Takes optional `days` (integer) argument, where `1` would be today's events, `2` would be today's and tomorrow's events, and so on."
-    
-    integrations = ['google_calendar']
-    requires_approval = False
-    follow_up_on_output = True
-    
     def __init__(self, id, conversation, settings=None, data=None):
         super().__init__(id, conversation, settings, data)
-
         self.google_service = GoogleService()
 
-    async def run(self, days=7, filter_recurring=True, concise=True):
+    async def run(self, days=7):
+        filter_recurring = self.settings['filter_recurring']
+        concise = self.settings['concise']
+
         try:
             await self.google_service.authenticate()        
         except Exception as e:

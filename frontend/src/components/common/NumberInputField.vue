@@ -32,7 +32,7 @@ const props = defineProps({
   },
   step: {
     type: Number,
-    default: 100,
+    default: 1,
   },
 });
 

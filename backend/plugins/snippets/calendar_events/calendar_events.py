@@ -5,18 +5,16 @@ from backend.services import MessageHandler
 
 
 class SevenDayCalendarSnippet(Snippet):
-    name = "seven_day_calendar"
-    display_name = "7 Day Calendar"
-    description = "Inserts calendar events for the next week."
-
-    integrations = ['google_calendar']
-
     def __init__(self, id, conversation, settings=None, data=None):
         super().__init__(id, conversation, settings, data)
 
         self.google_service = GoogleService()
 
-    async def run(self, context, days=7, filter_recurring=True, concise=True):
+    async def run(self, context):
+        days = self.settings["days"]
+        filter_recurring = self.settings["filter_recurring"]
+        concise = self.settings["concise"]
+        
         try:
             await self.google_service.authenticate()
         except Exception as e:
@@ -26,6 +24,7 @@ class SevenDayCalendarSnippet(Snippet):
 
         events = self.google_service.get_calendar_events(
             days=days, filter_recurring=filter_recurring)
+        
         if events:
             if concise:
                 events_strs = [

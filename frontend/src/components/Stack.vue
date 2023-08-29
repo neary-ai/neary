@@ -65,10 +65,37 @@
                                             </div>
                                         </template>
                                         <div class="text-field-default-foreground text-sm font-medium">{{
-                                            snippet.display_name }}</div>
-                                        <div class="text-sm text-nearygray-400">{{ snippet.description }}</div>
+                                            snippet.registry.metadata.display_name }}</div>
+                                        <div class="text-sm font-normal text-nearygray-400">{{
+                                            snippet.registry.metadata.description }}</div>
                                         <template v-slot:button>
-                                            <XMarkIcon @click="disablePlugin(snippet)" class="shrink-0 ml-4 w-5 h-5" />
+                                            <Popover class="relative inline-block text-left">
+                                                <PopoverButton
+                                                    class="flex items-center group relative cursor-pointer px-2 py-0.5 hover:text-nearygray-100 focus:border-transparent focus:ring-0 focus:outline-none">
+                                                    <Icon icon="heroicons:ellipsis-vertical" class="w-5 h-5" />
+                                                </PopoverButton>
+                                                <Transition as="div" enter="transition ease-out duration-200"
+                                                    enterFrom="opacity-0 translate-y-1" enterTo="opacity-100 translate-y-0"
+                                                    leave="transition ease-in duration-150"
+                                                    leaveFrom="opacity-100 translate-y-0" leaveTo="opacity-0 translate-y-1">
+                                                    <PopoverPanel v-slot="{ close }"
+                                                        class="absolute w-32 bottom-8 -right-0 origin-top-right ring-1 ring-nearygray-500  bg-nearygray-200 text-nearyblue-300 rounded-md focus:outline-none">
+                                                        <ul class="divide-y divide-nearygray-500">
+                                                            <li @click.stop="pluginSettings(snippet, close)"
+                                                                class="cursor-pointer flex items-center rounded-t gap-2 px-3 py-2 text-sm hover:bg-nearygray-300">
+                                                                <Icon icon="heroicons:adjustments-horizontal"
+                                                                    class="w-5 h-5" />
+                                                                <div>Settings</div>
+                                                            </li>
+                                                            <li @click.stop="disablePlugin(snippet, close)"
+                                                                class="cursor-pointer flex items-center rounded-b gap-2 px-3 py-2 text-sm hover:bg-nearygray-300">
+                                                                <Icon icon="heroicons:x-mark" class="w-5 h-5" />
+                                                                <div>Remove</div>
+                                                            </li>
+                                                        </ul>
+                                                    </PopoverPanel>
+                                                </Transition>
+                                            </Popover>
                                         </template>
                                     </Card>
                                 </template>
@@ -95,16 +122,43 @@
                                         <template v-slot:icon>
                                             <div
                                                 class="flex items-center justify-center h-9 w-9 rounded shadow bg-neutral-100 mt-0.5">
-                                                <Icon icon="mdi:function" class="text-nearyyellow-200 w-5 h-5" />
+                                                <Icon icon="mdi:function" class="text-nearyyellow-100 w-5 h-5" />
                                             </div>
                                         </template>
                                         <div class="leading-7">
                                             <div class="text-field-default-foreground text-sm font-medium">{{
-                                                tool.display_name }}</div>
-                                            <div class="text-sm text-nearygray-400">{{ tool.description }}</div>
+                                                tool.registry.metadata.display_name }}</div>
+                                            <div class="text-sm font-normal text-nearygray-400">{{
+                                                tool.registry.metadata.description }}</div>
                                         </div>
                                         <template v-slot:button>
-                                            <XMarkIcon @click="disablePlugin(tool)" class="shrink-0 ml-4 w-5 h-5" />
+                                            <Popover class="relative inline-block text-left">
+                                                <PopoverButton
+                                                    class="flex items-center group relative cursor-pointer px-2 py-0.5 hover:text-nearygray-100 focus:border-transparent focus:ring-0 focus:outline-none">
+                                                    <Icon icon="heroicons:ellipsis-vertical" class="w-5 h-5" />
+                                                </PopoverButton>
+                                                <Transition as="div" enter="transition ease-out duration-200"
+                                                    enterFrom="opacity-0 translate-y-1" enterTo="opacity-100 translate-y-0"
+                                                    leave="transition ease-in duration-150"
+                                                    leaveFrom="opacity-100 translate-y-0" leaveTo="opacity-0 translate-y-1">
+                                                    <PopoverPanel v-slot="{ close }"
+                                                        class="absolute w-32 bottom-8 -right-0 origin-top-right ring-1 ring-nearygray-500  bg-nearygray-200 text-nearyblue-300 rounded-md focus:outline-none">
+                                                        <ul class="divide-y divide-nearygray-500">
+                                                            <li @click.stop="pluginSettings(tool, close)"
+                                                                class="cursor-pointer flex items-center rounded-t gap-2 px-3 py-2 text-sm hover:bg-nearygray-300">
+                                                                <Icon icon="heroicons:adjustments-horizontal"
+                                                                    class="w-5 h-5" />
+                                                                <div>Settings</div>
+                                                            </li>
+                                                            <li @click.stop="disablePlugin(tool, close)"
+                                                                class="cursor-pointer flex items-center rounded-b gap-2 px-3 py-2 text-sm hover:bg-nearygray-300">
+                                                                <Icon icon="heroicons:x-mark" class="w-5 h-5" />
+                                                                <div>Remove</div>
+                                                            </li>
+                                                        </ul>
+                                                    </PopoverPanel>
+                                                </Transition>
+                                            </Popover>
                                         </template>
                                     </Card>
                                 </template>
@@ -124,19 +178,30 @@
                         </div>
                         <div class="col-span-1 sm:col-span-4 flex flex-col text-slate-400">
                             <div class="flex flex-col items-start w-full">
-                                <Button class="shrink-0" @buttonClick="createPreset()" button-type="btn-light">Save New
-                                    Preset</Button>
-                                <!-- <label class="text-sm font-semibold text-slate-300 w-full mb-1.5">Preset Name</label>
-                                <TextInputField v-model="createPresetName" class="w-full mb-6"
-                                    placeholderText="Enter a name for your preset" />
-                                <label class="text-sm font-semibold text-slate-300 w-full mb-1.5">Description
-                                    (optional)</label>
-                                <TextInputField v-model="createPresetDescription" class="w-full mb-6"
-                                    placeholderText="Enter an optional description" />
-                                <Button class="shrink-0" @buttonClick="createPreset()" button-type="btn-light">Create
-                                    Preset</Button> -->
+                                <Button class="shrink-0" @buttonClick="isOpen = true;" button-type="btn-light">Save New Preset</Button>
                             </div>
                         </div>
+                        <Modal :isOpen="isOpen" @keyup.enter="save" @save="save" @close="close">
+                            <template v-slot:title>
+                                Create Preset
+                            </template>
+                            <div class="flex-grow w-full my-5">
+                                <div class="flex flex-col mb-6">
+                                    <label class="text-sm font-semibold text-slate-300 w-full mb-2">Preset Name</label>
+                                    <TextInputField v-model="createPresetName" class="w-full"
+                                        placeholderText="Enter a name for your preset" />
+                                </div>
+                                <div class="flex flex-col mb-6">
+                                    <label class="text-sm font-semibold text-slate-300 w-full mb-2">Description</label>
+                                    <TextInputField v-model="createPresetDescription" class="w-full"
+                                        placeholderText="Enter a short description" />
+                                </div>
+                            </div>
+                            <template v-slot:buttons>
+                                <Button @buttonClick="save" button-type="btn-light" class="w-full">Save Preset</Button>
+                                <Button @buttonClick="close" button-type="btn-outline-light" class="w-full">Cancel</Button>
+                            </template>
+                        </Modal>
                     </div>
                 </div>
             </div>
@@ -150,37 +215,38 @@ import { useRouter } from 'vue-router';
 import { useAppStore } from '@/store/index.js';
 import api from '@/services/apiService';
 import Button from './common/Button.vue';
-import TextInputField from './common/TextInputField.vue';
-import NumberInputField from './common/NumberInputField.vue';
+import { Popover, PopoverButton, PopoverPanel } from '@headlessui/vue';
 import TextareaField from './common/TextareaField.vue';
+import TextInputField from './common/TextInputField.vue';
 import SectionHeading from './common/SectionHeading.vue'
 import Card from './common/Card.vue';
+import Modal from './common/Modal.vue';
 import { Icon } from '@iconify/vue';
-import ListBoxBasic from './common/ListBoxBasic.vue';
-import { XMarkIcon, ChevronRightIcon } from '@heroicons/vue/20/solid';
+import { ChevronRightIcon } from '@heroicons/vue/20/solid';
 
 const store = useAppStore();
 const router = useRouter();
-const exportFormat = ref("plain")
 
-const exportOptions = [
-    { value: 'plain', option: 'Plain Text' },
-    { value: 'json', option: 'JSON' }
-]
 
 const enabledSnippets = computed(() => {
     if (store.selectedConversation) {
-        return store.selectedConversation.plugins.filter(plugin => plugin.type === 'snippet');
+        return store.selectedConversation.plugins.filter(plugin => plugin.registry.metadata.plugin_type === 'snippet');
     }
     return []
 });
 
 const enabledTools = computed(() => {
     if (store.selectedConversation) {
-        return store.selectedConversation.plugins.filter(plugin => plugin.type === 'tool');
+        return store.selectedConversation.plugins.filter(plugin => plugin.registry.metadata.plugin_type === 'tool');
     }
     return []
 });
+
+const pluginSettings = (plugin) => {
+    store.pluginSettings = plugin;
+    router.push(`/plugins/${plugin.id}`);
+    return
+}
 
 const disablePlugin = async (plugin) => {
     store.selectedConversation.plugins = store.selectedConversation.plugins.filter(p => p !== plugin);
@@ -188,11 +254,14 @@ const disablePlugin = async (plugin) => {
 }
 
 // Create new preset
+const isOpen = ref(false)
+
 const createPresetName = ref('')
 const createPresetDescription = ref('')
 
-const createPreset = async () => {
-    console.log('creating preset with: ', createPresetName.value)
+const save = async () => {
+    isOpen.value = false;
+
     try {
         await api.createPreset(createPresetName.value, createPresetDescription.value, store.selectedConversationId)
         store.newNotification("Preset saved!");
@@ -203,37 +272,8 @@ const createPreset = async () => {
 
 }
 
-const handleExportInput = (event) => {
-    exportFormat.value = event;
-}
-
-const archiveMessages = async () => {
-    await store.archiveMessages(store.selectedConversationId);
-    router.push('/');
-    store.notification = { "type": "success", "message": "Messages archived!" }
-};
-
-const deleteConversation = async () => {
-    await store.deleteConversation(store.selectedConversationId);
-};
-
-const downloadConversation = async () => {
-    const conversationId = Number(router.currentRoute.value.params.id);
-    const fileData = await api.exportConversation(conversationId, exportFormat.value);
-    const fileExtension = exportFormat.value === "plain" ? ".txt" : ".json";
-    const fileName = `conversation_${conversationId}${fileExtension}`;
-
-    const downloadLink = document.createElement("a");
-    downloadLink.href = URL.createObjectURL(fileData);
-    downloadLink.download = fileName;
-    downloadLink.style.display = "none";
-    document.body.appendChild(downloadLink);
-    downloadLink.click();
-
-    setTimeout(() => {
-        URL.revokeObjectURL(downloadLink.href);
-        document.body.removeChild(downloadLink);
-    }, 100);
+const close = () => {
+  isOpen.value = false;
 };
 
 const onBackButtonClick = () => {

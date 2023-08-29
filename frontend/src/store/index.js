@@ -32,6 +32,7 @@ export const useAppStore = defineStore('appstore', {
         userProfile: {},
         showXray: false,
         xray: {},
+        isWebSocketActive: false,
     }),
     getters: {
         selectedSpace(state) {
@@ -62,9 +63,8 @@ export const useAppStore = defineStore('appstore', {
             try {
                 initial_data = await api.getInitialData();
             } catch (error) {
-                console.log(error)
-                if ((!error || error.data.message != "initial_start") && (error.status != 401)) {
-                    this.notification = { "type": "error", "message": "Can't connect to server", "sticky": true }
+                if ((!error || error.data.message != "initial_start") && (error && error.status != 401)) {
+                    this.newNotification("Can't connect to server", true)
                 }
                 return
             }
@@ -117,7 +117,6 @@ export const useAppStore = defineStore('appstore', {
             return {
                 ...conversation,
                 space_id: conversation.space_id === null ? -1 : conversation.space_id,
-                // messages: [],
                 isLoading: false,
                 unreadMessages: false,
                 showArchivedMessages: false,
@@ -125,6 +124,9 @@ export const useAppStore = defineStore('appstore', {
         },
         async addProfileField(field) {
             this.userProfile = { ...this.userProfile, ...field };
+            await this.updateUserProfile;
+        },
+        async updateUserProfile() {
             await api.updateUserProfile(this.userProfile);
         },
         async reinitialize() {
@@ -151,12 +153,11 @@ export const useAppStore = defineStore('appstore', {
                 scrollToBottom(this.highlighting, true);
             }
         },
-        async loadSpace(spaceId) {
-            this.selectedSpaceId = spaceId;
-            await this.saveState();
-            router.push('/conversations');
-        },
         async getMessages(conversationId, archived = true) {
+            if (this.conversations[conversationId].messages && this.conversations[conversationId].messages.length > 0 
+                && this.messages[this.conversations[conversationId].messages[0]]) {
+                return;
+            }
             this.messagesLoading = true;
             const messagesData = await api.getMessages(conversationId, archived);
             messagesData.sort((a, b) => a.id - b.id);
@@ -167,6 +168,11 @@ export const useAppStore = defineStore('appstore', {
                 }
             }
             this.messagesLoading = false;
+        },
+        async loadSpace(spaceId) {
+            this.selectedSpaceId = spaceId;
+            await this.saveState();
+            router.push('/conversations');
         },
         async archiveMessages(conversationId) {
             await api.archiveMessages(conversationId)
@@ -238,7 +244,7 @@ export const useAppStore = defineStore('appstore', {
                 await api.deleteSpace(spaceId);
                 this.selectedSpaceId = null;
                 delete this.spaces[spaceId];
-                this.notification = { "type": "success", "message": "Space deleted" }
+                this.newNotification("Space deleted")
             } catch (error) {
                 console.error('Error archiving space:', error);
             }
@@ -261,9 +267,7 @@ export const useAppStore = defineStore('appstore', {
             if (spaceId) {
                 this.spaces[spaceId].conversations.push(newConversation.id);
             }
-            this.selectedConversationId = newConversation.id;
-            this.openTab(newConversation.id);
-            router.push('/');
+            this.loadConversation(newConversation.id);
         },
         async deleteConversation(conversationId) {
             await api.deleteConversation(conversationId);
@@ -283,7 +287,7 @@ export const useAppStore = defineStore('appstore', {
 
             await this.saveState();
             router.push('/conversations');
-            this.notification = { "type": "success", "message": "Conversation deleted" }
+            this.newNotification("Conversation deleted")
         },
         async updateConversation(conversation) {
             try {

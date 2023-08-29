@@ -2,17 +2,13 @@ import os
 import json
 from pathlib import Path
 from typing import Optional
-from datetime import datetime
 
 from fastapi import HTTPException, status, Request, APIRouter, Body, UploadFile, File
 from fastapi.responses import JSONResponse, RedirectResponse, FileResponse
-from google_auth_oauthlib.flow import Flow
 
 from backend.models import *
 from backend.auth import get_current_user
 from backend.utils.utils import export_conversation
-from backend.programs.calendar_chat.utils import GoogleService
-from backend.services.message_handler import MessageHandler
 from backend.services.documents.document_manager import DocumentManager
 from backend.conversation import Conversation
 
@@ -104,7 +100,7 @@ async def create_conversation(space_id: int):
     conversation = await ConversationModel.create(title="New Conversation", space=space, preset=preset, settings=preset.settings)
 
     for plugin in preset.plugins:
-        plugin = await PluginRegistryModel.get_or_none(name=plugin['name'], is_active=True, is_public=True)
+        plugin = await PluginRegistryModel.get_or_none(name=plugin['name'], is_active=True, is_internal=False)
         if plugin:
             await PluginInstanceModel.create(plugin=plugin, conversation=conversation)
 
@@ -132,13 +128,13 @@ async def get_settings_options():
                     "value": "openai",
                 },
                 {
-                    "option": "Local",
-                    "value": "local",
-                },
-                {
                     "option": "Azure",
                     "value": "azure",
-                }
+                },
+                {
+                    "option": "Custom",
+                    "value": "custom",
+                },
             ],
             "model": [
                 {
@@ -258,7 +254,7 @@ async def update_conversation(request: Request, conversation_id: int):
             plugin_instance.is_enabled = True
             await plugin_instance.save()
         else:
-            plugin = await PluginRegistryModel.get_or_none(name=plugin_name, is_active=True, is_public=True)
+            plugin = await PluginRegistryModel.get_or_none(name=plugin_name, is_active=True)
             if plugin:
                 await PluginInstanceModel.create(conversation_id=conversation.id, plugin=plugin)
 
@@ -268,6 +264,19 @@ async def update_conversation(request: Request, conversation_id: int):
     output = await conversation.serialize()
     return output
 
+
+@router.post("/presets/import")
+async def add_presets(preset: dict = Body(...)):
+    existing_preset = await PresetModel.get_or_none(name=preset['name'], is_active=False)
+
+    if existing_preset:
+        await existing_preset.delete()
+
+    await PresetModel.create(**preset, is_custom=True)
+
+    presets = await PresetModel.filter(is_active=True)
+
+    return [preset.serialize() for preset in presets]
 
 @router.post("/presets/{preset_id}")
 async def delete_presets(preset_id: int):
@@ -290,6 +299,21 @@ async def delete_presets(preset_id: int):
     return presets
 
 
+@router.get("/presets/{preset_id}/export")
+async def export_preset(preset_id: int):
+    preset = await PresetModel.get_or_none(id=preset_id)
+    if preset is None:
+        raise HTTPException(status_code=404, detail="Preset not found")
+
+    preset_data = preset.serialize()
+    
+    del preset_data['is_custom']
+    del preset_data['is_default']
+    del preset_data['id']
+
+    return preset_data
+
+
 @router.put("/presets/{preset_id}")
 async def update_preset(preset_id: int, preset_data: dict = Body(...)):
     preset_data = preset_data['preset']
@@ -309,20 +333,6 @@ async def update_preset(preset_id: int, preset_data: dict = Body(...)):
     return presets
 
 
-@router.post("/presets/import")
-async def add_presets(preset: dict = Body(...)):
-    existing_preset = await PresetModel.get_or_none(name=preset['name'], is_active=False)
-
-    if existing_preset:
-        await existing_preset.delete()
-
-    await PresetModel.create(**preset, is_custom=True)
-
-    presets = await PresetModel.all(is_active=True)
-
-    return [preset.serialize() for preset in presets]
-
-
 @router.get("/presets")
 async def get_presets():
     presets = await PresetModel.filter(is_active=True)
@@ -331,7 +341,7 @@ async def get_presets():
 
 
 @router.post("/presets")
-async def create_preset(name: str = Body(...), description: str = Body(None), conversation_id: int = Body(...)):
+async def create_preset(preset_name: str = Body(...), preset_description: str = Body(None), conversation_id: int = Body(...)):
     conversation = await ConversationModel.get_or_none(id=conversation_id)
     if not conversation:
         raise HTTPException(status_code=404, detail="Conversation not found")
@@ -344,13 +354,13 @@ async def create_preset(name: str = Body(...), description: str = Body(None), co
     for plugin in serialized_plugins:
         plugins.append({
             "name": plugin['name'],
-            "settings": None,
+            "settings": plugin['settings'],
             "data": None
         })
 
     preset = await PresetModel.create(
-        name=name,
-        description=description,
+        name=preset_name,
+        description=preset_description,
         plugins=plugins,
         settings=conversation.settings,
         is_custom=True,
@@ -360,21 +370,19 @@ async def create_preset(name: str = Body(...), description: str = Body(None), co
 
     serialized = preset.serialize()
 
-    print('New preset: ', serialized)
-
     return serialized
 
 
 @router.get("/conversations/{conversation_id}/snippets")
 async def get_snippets(conversation_id: int):
-    plugins = await PluginRegistryModel.filter(type="snippet", is_active=True, is_public=True)
+    plugins = await PluginRegistryModel.filter(plugin_type="snippet", is_active=True, is_internal=False)
     serialized = [plugin.serialize() for plugin in plugins]
     return serialized
 
 
 @router.get("/conversations/{conversation_id}/tools")
 async def get_tools(conversation_id: int):
-    plugins = await PluginRegistryModel.filter(type="tool", is_active=True, is_public=True)
+    plugins = await PluginRegistryModel.filter(plugin_type="tool", is_active=True, is_internal=False)
     serialized = [plugin.serialize() for plugin in plugins]
     return serialized
 
@@ -431,6 +439,23 @@ async def new_integration(integration: dict = Body(...)):
     # Return the serialized integrations
     return serialized_integrations
 
+@router.get("/plugins/{plugin_id}")
+async def get_plugin_instance(plugin_id: int):
+    plugin = await PluginInstanceModel.get_or_none(id=plugin_id)
+
+    if plugin:
+        plugin_data = await plugin.serialize()
+    
+    return plugin_data
+
+@router.put("/plugins/{plugin_id}")
+async def update_plugin_instance(plugin_id: int, settings: dict = Body(...)):
+    plugin = await PluginInstanceModel.get_or_none(id=plugin_id)
+    print('Updating settings: ', settings)
+    plugin.settings = settings
+    await plugin.save()
+
+    return {"detail": "success"}
 
 @router.get("/conversations/{conversation_id}/messages")
 async def get_conversation_messages(request: Request, conversation_id: int, archived: Optional[bool] = False):
@@ -598,9 +623,6 @@ async def get_initial_data(request: Request):
     for conversation in conversations:
         serialized_conversations.append(await conversation.serialize())
 
-    for conversation in serialized_conversations:
-        print(conversation, "\n\n")
-
     # Setup welcome conversation if first run
     if not app_state and not serialized_spaces and not serialized_conversations:
 
@@ -608,7 +630,7 @@ async def get_initial_data(request: Request):
         conversation = await ConversationModel.create(title="Welcome to Neary!", space=None, preset=preset, settings=preset.settings)
 
         for plugin in preset.plugins:
-            plugin = await PluginRegistryModel.get_or_none(name=plugin['name'], is_active=True, is_public=True)
+            plugin = await PluginRegistryModel.get_or_none(name=plugin['name'], is_active=True, is_internal=False)
             if plugin:
                 await PluginInstanceModel.create(plugin=plugin, conversation=conversation)
 

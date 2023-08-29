@@ -1,18 +1,18 @@
 <template>
-    <div id="alt-window" class="font-mulish flex flex-col gap-3 max-w-3xl overflow-y-scroll">
-        <div class="p-8 pt-[5.5rem]">
+    <div id="alt-window" class="font-mulish flex flex-col gap-3 w-full overflow-y-scroll">
+        <div class="p-8 pt-[5.5rem] max-w-3xl">
             <SectionHeading section-name="Add Tools" @on-click="onBackButtonClick" />
             <div class="mt-6 space-y-4">
                 <template v-for="tool in filteredTools" :key="tool.name">
                     <Card>
                         <template v-slot:icon>
                             <div class="flex items-center justify-center h-9 w-9 rounded shadow bg-neutral-100 mt-0.5">
-                                <Icon icon="mdi:function" class="text-nearyyellow-200 w-5 h-5" />
+                                <Icon icon="mdi:function" class="text-nearyyellow-100 w-5 h-5" />
                             </div>
                         </template>
                         <div class="leading-7">
-                            <div class="text-field-default-foreground text-sm font-medium">{{ tool.display_name }}</div>
-                            <div class="text-sm text-nearygray-400">{{ tool.description }}</div>
+                            <div class="text-field-default-foreground text-sm font-medium">{{ tool.metadata.display_name }}</div>
+                            <div class="text-sm text-nearygray-400">{{ tool.metadata.description }}</div>
                         </div>
                         <template v-slot:button>
                             <Icon icon="heroicons:plus" @click="addTool(tool)"

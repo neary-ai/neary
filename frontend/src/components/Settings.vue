@@ -157,7 +157,7 @@ const handleExportInput = (event) => {
 const archiveMessages = async () => {
   await store.archiveMessages(store.selectedConversationId);
   router.push('/');
-  store.notification = { "type": "success", "message": "Messages archived!" }
+  store.newNotification("Messages archived!");
 };
 
 const deleteConversation = async () => {

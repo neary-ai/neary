@@ -1,0 +1,8 @@
+[metadata]
+display_name = "Notepad"
+version = "0.1.0"
+author = "Neary"
+
+plugin_type = "snippet"
+module = "notepad"
+description = "Inserts the contents of Neary's notepad."

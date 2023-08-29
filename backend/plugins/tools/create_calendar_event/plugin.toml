@@ -1,0 +1,22 @@
+[metadata]
+display_name = "Create Calendar Event"
+version = "0.1.0"
+author = "Neary"
+
+plugin_type = "tool"
+module = "create_calendar_event"
+description = "Creates an event on your Google Calendar"
+llm_description = "`create_calendar_event`: Creates an event on the user's calendar. Takes `event_title` (string), `event_description` (string), `start_time` (ISO 8601 string), `end_time` (ISO 8601 string) and `attendees` (email addresses in a Python list) arguments."
+integrations = ["google_calendar"]
+
+[settings.requires_approval]
+description = "Whether this tool requires approval or not"
+value = true
+type = "boolean"
+editable = true
+
+[settings.follow_up_on_output]
+description = "Whether to follow up on the output or not"
+value = true
+type = "boolean"
+editable = false

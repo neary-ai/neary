@@ -2,19 +2,15 @@
   <div ref="chatWindow" id="chat-window" v-touch:swipe="swipeToConversation" class="flex flex-col overflow-y-auto">
     <div class="pt-12 bg-nearyblue-300"></div>
     <div v-if="!emptyState" class="flex flex-col items-start divide-y divide-neutral-500/60 px-0">
-      <div v-if="showArchivedMessages" class="divide-y divide-neutral-500/60">
+      <div v-if="showArchivedMessages" class="divide-y divide-neutral-500/60 w-full">
         <component :is="selectMessageComponent(message)" :chatWindowHeight="chatWindowHeight"
           v-for="(message, index) in archivedMessages" :key="'archived-' + index" :message="message" />
-        <div class="relative py-4">
+        <div class="relative">
           <div class="absolute inset-0 flex items-center" aria-hidden="true">
+            <div class="w-full border-t border-slate-500" />
           </div>
-          <div class="relative">
-            <div class="absolute inset-0 flex items-center" aria-hidden="true">
-              <div class="w-full border-t border-slate-500" />
-            </div>
-            <div class="relative flex justify-center bg-gray-400">
-              <span class="bg-nearyblue-300 px-2 py-2 text-sm text-slate-400">Archived messages</span>
-            </div>
+          <div class="relative flex justify-center">
+            <span class="bg-nearyblue-300 px-2 py-2 text-sm text-slate-400">Archived messages</span>
           </div>
         </div>
       </div>
@@ -63,26 +59,17 @@ const showArchivedMessages = computed(() => {
 
 const messages = computed(() => {
   if (store.selectedConversation && Object.keys(store.messages).length > 0) {
-    return store.selectedConversation.messages.map(id => {
-      const message = store.messages[id];
-      return message;
-    });
+    return store.selectedConversation.messages.map(id => store.messages[id]).filter(Boolean);
   }
   return [];
 });
 
 const archivedMessages = computed(() => {
-  if (store.selectedConversation) {
-    return messages.value.filter(message => message.is_archived)
-  }
-  return [];
+  return messages.value.filter(message => message.is_archived)
 });
 
 const nonArchivedMessages = computed(() => {
-  if (store.selectedConversation) {
-    return messages.value.filter(message => !message.is_archived)
-  }
-  return [];
+  return messages.value.filter(message => !message.is_archived)
 });
 
 const selectMessageComponent = (message) => {

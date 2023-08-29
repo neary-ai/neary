@@ -77,13 +77,13 @@ class Conversation:
 
             # Find the loaded tool plugin
             for tool in self.tools:
-                if tool.name == tool_name:
+                if tool.metadata['module'] == tool_name:
                     # Request approval if required, or process
-                    if self.settings['tool_approval_required'] and tool.requires_approval:
+                    if tool.settings['requires_approval']:
                         await self.request_approval(tool, tool_args)
                     else:
                         tool_output = await tool.run(**tool_args)
-                        return tool_output, tool.follow_up_on_output
+                        return tool_output, tool.settings['follow_up_on_output']
                     break
 
         return None, False
@@ -114,7 +114,7 @@ class Conversation:
         """
         # First save the request to db
         pending_request = ApprovalRequestModel(
-            conversation_id=self.id, tool_name=tool.name, tool_args=tool_args)
+            conversation_id=self.id, tool_name=tool.metadata['module'], tool_args=tool_args)
         await pending_request.save()
 
         # Then send notification to ui
@@ -140,9 +140,9 @@ class Conversation:
         table_header = "| Name | Value |\n| --- | --- |"
 
         if args_string:
-            notification = f"Neary would like to use the **{tool.display_name}** tool:\n{table_header}\n{args_string}."
+            notification = f"Neary would like to use the **{tool.metadata['display_name']}** tool:\n{table_header}\n{args_string}."
         else:
-            notification = f"Neary would like to use the **{tool.display_name}** tool."
+            notification = f"Neary would like to use the **{tool.metadata['display_name']}** tool."
 
         await self.message_handler.send_notification_to_ui(message=notification, conversation_id=self.id, actions=actions, save_to_db=True)
 
@@ -186,10 +186,10 @@ class Conversation:
 
         # Find the loaded tool plugin
         for tool in self.tools:
-            if tool.name == tool_name:
+            if tool.metadata['module'] == tool_name:
                 tool_output = await tool.run(**tool_args)
                 # Call handle message if tool wants to follow-up
-                if tool.follow_up_on_output:
+                if tool.settings['follow_up_on_output']:
                     await self.handle_message(tool_output=tool_output)
 
     async def handle_action(self, name, data, message_id):
@@ -206,17 +206,18 @@ class Conversation:
         self.tools = []
 
         for plugin in self.plugins:
-            plugin_type = plugin["type"]
             plugin_name = plugin["name"]
+            plugin_type = plugin["registry"]["metadata"]["plugin_type"]
+            plugin_module = plugin["registry"]["metadata"]["module"]
 
             try:
                 # Change the import path based on the plugin type
                 if plugin_type == 'snippet':
                     module = importlib.import_module(
-                        f'backend.plugins.snippets.{plugin_name}.{plugin_name}')
+                        f'backend.plugins.snippets.{plugin_name}.{plugin_module}')
                 elif plugin_type == 'tool':
                     module = importlib.import_module(
-                        f'backend.plugins.tools.{plugin_name}.{plugin_name}')
+                        f'backend.plugins.tools.{plugin_name}.{plugin_module}')
 
                 # Get the first class in the module that is a subclass of the plugin type
                 for name, obj in inspect.getmembers(module):

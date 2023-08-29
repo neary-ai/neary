@@ -21,7 +21,11 @@ class CredentialManager:
         return cls(integration)
 
     async def get_credentials(self):
-        instance = await IntegrationInstanceModel.get(integration=self.integration)
+        instance = await IntegrationInstanceModel.get_or_none(integration=self.integration)
+        
+        if instance is None:
+            return None
+        
         credentials = instance.credentials
 
         # Check if the token is expired or about to expire

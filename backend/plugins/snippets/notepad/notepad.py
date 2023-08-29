@@ -1,10 +1,6 @@
 from backend.plugins import Snippet
 
 class NotepadSnippet(Snippet):
-    name = "notepad"
-    display_name = "Notepad"
-    description = "Inserts the contents of Neary's notepad"
-    
     def __init__(self, id, conversation, settings=None, data=None):
         super().__init__(id, conversation, settings, data)
 

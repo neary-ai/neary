@@ -1,0 +1,21 @@
+[metadata]
+display_name = "Make a Note"
+version = "0.1.0"
+author = "Neary"
+
+plugin_type = "tool"
+module = "make_a_note"
+description = "Saves a note for Neary's future reference"
+llm_description = "`make_a_note`: Saves a note to memory for your future reference. Use only when the user asks you to remember something. Takes a `text` argument."
+
+[settings.requires_approval]
+description = "Whether this tool requires approval or not"
+value = true
+type = "boolean"
+editable = true
+
+[settings.follow_up_on_output]
+description = "Whether to follow up on the output or not"
+value = true
+type = "boolean"
+editable = false

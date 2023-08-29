@@ -1,0 +1,21 @@
+[metadata]
+display_name = "Clear Notes"
+version = "0.1.0"
+author = "Neary"
+
+plugin_type = "tool"
+module = "clear_notes"
+description = "Clears Neary's saved notes."
+llm_description = "`clear_notes`: Erases your saved notes. Only use when instructed by the user. Takes no arguments."
+
+[settings.requires_approval]
+description = "Whether this tool requires approval or not"
+value = true
+type = "boolean"
+editable = true
+
+[settings.follow_up_on_output]
+description = "Whether to follow up on the output or not"
+value = false
+type = "boolean"
+editable = false

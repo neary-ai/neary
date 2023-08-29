@@ -1,5 +1,6 @@
 import os
 import json
+import toml
 import importlib.util
 from tortoise import Tortoise
 from tortoise.exceptions import DoesNotExist, OperationalError
@@ -22,8 +23,7 @@ async def run_setup(app):
     )
 
     # Apply migrations, if necessary
-    # await apply_migrations()
-    await Tortoise.generate_schemas()
+    await apply_migrations()
 
     # Register ORM with FastAPI
     register_tortoise(
@@ -77,46 +77,55 @@ async def load_plugins():
         for dir_name in os.listdir(plugin_dir):
             dir_path = os.path.join(plugin_dir, dir_name)
 
-            # Check if it's a directory and if it contains a Python file with the same name
-            if os.path.isdir(dir_path) and os.path.isfile(os.path.join(dir_path, dir_name + ".py")):
-                # The plugin file should be in the directory and have the same name
-                plugin_file = os.path.join(dir_path, dir_name + ".py")
-                spec = importlib.util.spec_from_file_location(
-                    dir_name, plugin_file)
-                module = importlib.util.module_from_spec(spec)
-                spec.loader.exec_module(module)
+            # Check if it's a directory and if it contains a plugin.toml file
+            if os.path.isdir(dir_path) and os.path.isfile(os.path.join(dir_path, "plugin.toml")):
+                try:
+                    # Load the plugin.toml file
+                    with open(os.path.join(dir_path, "plugin.toml")) as f:
+                        plugin_config = toml.load(f)
 
-                # Find the plugin class
-                plugin_class = None
-                for attr_name in dir(module):
-                    attr_value = getattr(module, attr_name)
-                    if isinstance(attr_value, type) and attr_value not in [Snippet, Tool] and \
-                            (issubclass(attr_value, Snippet) or issubclass(attr_value, Tool)):
-                        plugin_class = attr_value
-                        break
+                    # Import the module from the entrypoint specified in plugin.toml
+                    plugin_file = os.path.join(
+                        dir_path, plugin_config['metadata']['module'] + ".py")
+                    spec = importlib.util.spec_from_file_location(
+                        plugin_config['metadata']['module'], plugin_file)
+                    module = importlib.util.module_from_spec(spec)
+                    spec.loader.exec_module(module)
 
-                # If a plugin class was found, add it to the database or update the existing one
-                if plugin_class is not None:
-                    try:
-                        # Try to get the plugin
-                        plugin = await PluginRegistryModel.get(name=dir_name)
-                    except DoesNotExist:
-                        # If the plugin does not exist, create it
-                        plugin = await PluginRegistryModel.create(
-                            name=plugin_class.name,
-                            type=plugin_class.type,
-                            display_name=plugin_class.display_name,
-                            description=plugin_class.description,
-                            is_public=plugin_class.is_public,
-                            is_active=True,
-                        )
-                    else:
-                        # If the plugin already existed, update the display_name, description and is_active
-                        plugin.display_name = plugin_class.display_name
-                        plugin.description = plugin_class.description
-                        plugin.is_public = plugin_class.is_public
-                        plugin.is_active = True
-                        await plugin.save()
+                    # Find the plugin class
+                    plugin_class = None
+                    for attr_name in dir(module):
+                        attr_value = getattr(module, attr_name)
+                        if isinstance(attr_value, type) and attr_value not in [Snippet, Tool] and \
+                                (issubclass(attr_value, Snippet) or issubclass(attr_value, Tool)):
+                            plugin_class = attr_value
+                            break
+
+                    # If a plugin class was found, add it to the database or update the existing one
+                    if plugin_class is not None:
+                        try:
+                            # Try to get the plugin
+                            plugin = await PluginRegistryModel.get(name=dir_name)
+                        except DoesNotExist:
+                            # If the plugin does not exist, create it
+                            plugin = await PluginRegistryModel.create(
+                                name=dir_name,
+                                plugin_type=plugin_config['metadata']['plugin_type'],
+                                metadata=plugin_config['metadata'],
+                                settings=plugin_config.get('settings', None),
+                                is_internal=plugin_config['metadata'].get('is_internal', False),
+                                is_active=True,
+                            )
+                        else:
+                            # If the plugin already existed, update the display_name, description and is_active
+                            plugin.plugin_type = plugin_config['metadata']['plugin_type']
+                            plugin.metadata = plugin_config['metadata']
+                            plugin.settings = plugin_config.get('settings', None)
+                            plugin.is_internal = plugin_config['metadata'].get('is_internal', False)
+                            plugin.is_active = True
+                            await plugin.save()
+                except Exception as e:
+                    print(f"Failed to load plugin from {dir_path} due to error: {str(e)}. Skipping this plugin.")
 
 
 async def load_presets():

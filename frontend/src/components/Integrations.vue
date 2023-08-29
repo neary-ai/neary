@@ -1,6 +1,6 @@
 <template>
-    <div id="alt-window" class="font-mulish flex flex-col gap-3 max-w-3xl overflow-y-scroll">
-        <div class="p-8 pt-[5.5rem]">
+    <div id="alt-window" class="font-mulish flex flex-col gap-3 w-full overflow-y-scroll">
+        <div class="p-8 pt-[5.5rem] max-w-3xl">
             <SectionHeading section-name="Integrations" @on-click="onBackButtonClick" />
             <div class="mt-6 space-y-4">
                 <template v-for="integration in integrations" :key="integration.id">
@@ -13,7 +13,7 @@
                         <div class="leading-7">
                             <div class="text-field-default-foreground text-sm font-medium">{{ integration.display_name }}
                             </div>
-                            <div class="text-sm text-nearygray-400">{{ integration.is_integrated }}</div>
+                            <div class="text-sm text-nearygray-400"></div>
                         </div>
                         <template v-slot:button>
                             <Button v-if="integration.is_integrated" @click="disconnectIntegration(integration)"
@@ -40,8 +40,8 @@
                     </div>
                 </div>
                 <template v-slot:buttons>
-                    <Button @buttonClick="save" button-type="btn-light">Save</Button>
-                    <Button @buttonClick="close" button-type="btn-light">Cancel</Button>
+                    <Button @buttonClick="save" button-type="btn-light" class="w-full">Save</Button>
+                    <Button @buttonClick="close" button-type="btn-outline-light" class="w-full">Cancel</Button>
                 </template>
             </Modal>
         </div>

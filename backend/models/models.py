@@ -116,19 +116,18 @@ class PresetModel(Model):
 class PluginRegistryModel(Model):
     id = fields.IntField(pk=True)
     name = fields.CharField(max_length=255, unique=True)
-    type = fields.CharField(max_length=255)
-    display_name = fields.CharField(max_length=255)
-    description = fields.TextField(null=True)
-    is_public = fields.BooleanField(default=True)
+    plugin_type = fields.CharField(max_length=255)
+    metadata = fields.JSONField(null=True)
+    settings = fields.JSONField(null=True)
+    is_internal = fields.BooleanField(default=False)
     is_active = fields.BooleanField(default=False)
 
     def serialize(self):
         return {
             "id": self.id,
             "name": self.name,
-            "type": self.type,
-            "display_name": self.display_name,
-            "description": self.description,
+            "metadata": self.metadata,
+            "settings": self.settings,
             "is_active": self.is_active,
         }
 
@@ -147,14 +146,14 @@ class PluginInstanceModel(Model):
         await self.fetch_related("plugin")
         return {
             "id": self.id,
-            "conversation_id": self.conversation_id,
-            "plugin_id": self.plugin_id,
             "name": self.plugin.name,
-            "type": self.plugin.type,
-            "display_name": self.plugin.display_name,
-            "description": self.plugin.description,
+            "conversation_id": self.conversation_id,
             "settings": self.settings,
             "data": self.data,
+            "registry": {
+                "metadata": self.plugin.metadata,
+                "default_settings": self.plugin.settings,
+            },
             "is_enabled": self.is_enabled
         }
 

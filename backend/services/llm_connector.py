@@ -28,14 +28,14 @@ class LLMConnector:
             openai.api_base = api_base
             openai.api_version = "2023-05-15" if not api_version else api_version
 
-        # Local config
-        elif self.api_type == "local":
+        # Custom config
+        elif self.api_type == "custom":
             api_base = os.getenv(
-                "LOCAL_ENDPOINT") if not api_base else api_base
+                "CUSTOM_ENDPOINT") if not api_base else api_base
 
             if not api_base:
                 raise ValueError(
-                    "LOCAL_ENDPOINT must be set in environment variables.")
+                    "CUSTOM_ENDPOINT must be set in environment variables.")
 
             openai.api_base = api_base
 

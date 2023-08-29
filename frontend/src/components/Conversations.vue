@@ -1,6 +1,6 @@
 <template>
-  <div id="alt-window" class="font-mulish flex flex-col gap-3 max-w-3xl overflow-y-scroll">
-    <div class="p-8 pt-[5.5rem]">
+  <div id="alt-window" class="font-mulish flex flex-col gap-3 w-full overflow-y-scroll">
+    <div class="p-8 pt-[5.5rem] max-w-3xl ">
       <SectionHeading section-name="Conversations" @on-click="router.go(-1);" />
       <div v-if="conversations && conversations.length > 0" class="text-xs font-bold text-nearygray-100 mt-7">
         <template v-if="store.selectedSpace">In {{ store.selectedSpace.name }}</template>
@@ -11,7 +11,7 @@
         <li @click="store.loadConversation(conversation.id)" v-for="conversation in conversations" :key="conversation.id"
           class="flex-grow group w-full cursor-pointer text-nearygray-300 flex items-center justify-start py-5">
           <div class="flex items-center justify-center mr-3 flex-grow h-full">
-            <Icon :icon="conversation.preset.icon" class="w-6 h-6 text-nearygray-500" />
+            <Icon :icon="conversation.preset.icon ? conversation.preset.icon : 'heroicons:user-solid'" class="w-6 h-6 text-nearygray-500" />
           </div>
           <div class="w-full truncate">
             <div class="font-bold text-sm text-nearygray-100 mb-0.5">{{ conversation.title }}</div>
@@ -23,8 +23,8 @@
           </div>
         </li>
       </ul>
-      <div v-else class="flex items-center justify-center max-w-lg">
-        <div class="text-center py-12 px-14 mt-12 rounded-lg border-2 border-dashed border-neutral-100">
+      <div v-else class="flex items-center justify-start max-w-lg">
+        <div class="text-center py-12 px-14 mt-8 rounded-lg border-2 border-dashed border-neutral-100">
           <h3 class="mt-2 text-sm font-semibold text-nearygray-50">That's an empty space</h3>
           <p class="mt-1 text-sm text-nearygray-300">Start your first conversation</p>
           <div class="mt-6">

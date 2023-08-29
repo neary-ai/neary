@@ -173,6 +173,14 @@ const api = {
             console.error('Error adding preset:', error);
         }
     },
+    async exportPreset(preset) {
+        try {
+            const response = await axios.post(`${apiBaseUrl}/api/presets/import`, preset, { withCredentials: true });
+            return response.data;
+        } catch (error) {
+            console.error('Error adding preset:', error);
+        }
+    },
     async getAvailablePresets() {
         try {
             const response = await axios.get(`${apiBaseUrl}/api/presets`, { withCredentials: true });
@@ -183,10 +191,18 @@ const api = {
     },
     async createPreset(name, description, conversationId) {
         try {
-            const response = await axios.post(`${apiBaseUrl}/api/presets`, { "name": name, "description": description, "conversation_id": conversationId }, { withCredentials: true });
+            const response = await axios.post(`${apiBaseUrl}/api/presets`, { "preset_name": name, "preset_description": description, "conversation_id": conversationId }, { withCredentials: true });
             return response.data;
         } catch (error) {
             console.error('Error adding preset:', error);
+        }
+    },
+    async exportPreset(preset) {
+        try {
+            const response = await axios.get(`${apiBaseUrl}/api/presets/${preset.id}/export`, { withCredentials: true });
+            return response.data;
+        } catch (error) {
+            console.error('Error exporting preset:', error);
         }
     },
     async deletePreset(preset) {
@@ -219,6 +235,22 @@ const api = {
             return response.data;
         } catch (error) {
             console.error('Error getting tools:', error);
+        }
+    },
+    async getPlugin(pluginId) {
+        try {
+            const response = await axios.get(`${apiBaseUrl}/api/plugins/${pluginId}`, { withCredentials: true });
+            return response.data;
+        } catch (error) {
+            console.error('Error getting plugin info: ', error);
+        }
+    },
+    async updatePluginSettings(pluginId, settings) {
+        try {
+            const response = await axios.put(`${apiBaseUrl}/api/plugins/${pluginId}`, settings, { withCredentials: true });
+            return response.data;
+        } catch (error) {
+            console.error('Error updating plugin: ', error);
         }
     },
     async getIntegrations() {

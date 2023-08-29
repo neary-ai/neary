@@ -1,9 +1,8 @@
 <template>
-    <div id="documents-window" class="flex flex-col gap-3 max-w-3xl overflow-y-scroll">
-        <div class="p-8 pt-[5.5rem]">
+    <div id="documents-window" class="flex flex-col gap-3 w-full overflow-y-scroll">
+        <div class="p-8 pt-[5.5rem] max-w-3xl">
             <SectionHeading section-name="Manage Account" @on-click="onBackButtonClick" />
             <div class="divide-y divide-slate-400/20">
-
                 <div class="grid grid-cols-1 sm:grid-cols-7 py-12">
                     <div class="col-span-full sm:col-span-3 pr-6">
                         <div class="flex flex-col mb-6 sm:mb-0">
@@ -20,23 +19,23 @@
                                     <label class="text-sm font-semibold text-field-label w-full mb-1.5">{{
                                         capitalize(key) }}</label>
                                     <TextInputField class="mb-6 max-w-xs" inputType="text"
-                                        placeholderText="Enter your full name" :value="value"
-                                        @updateInput="updateProfile(key, $event)" />
+                                        @change="store.updateUserProfile()" v-model="store.userProfile[key]"
+                                        placeholderText="Enter your first name" />
                                 </template>
                                 <template v-else-if="key === 'location'">
                                     <!-- Custom template for location -->
                                     <label class="text-sm font-semibold text-field-label w-full mb-1.5">{{
                                         capitalize(key) }}</label>
                                     <TextInputField class="mb-6 max-w-xs" inputType="text"
-                                        placeholderText="Enter your location" :value="value"
-                                        @updateInput="updateProfile(key, $event)" />
+                                        @change="store.updateUserProfile()" v-model="store.userProfile[key]"
+                                        placeholderText="Enter your location" />
                                 </template>
                                 <template v-else-if="key === 'notes'">
                                     <!-- Custom template for notes -->
                                     <label class="text-sm font-semibold text-field-label w-full mb-1.5">{{
                                         capitalize(key) }}</label>
-                                    <TextareaField class="mb-6 max-w-xs" placeholderText="Enter your notes" :value="value"
-                                        @updateInput="updateProfile(key, $event)" />
+                                    <TextareaField class="mb-6 max-w-xs" placeholderText="Enter any notes or preferences"
+                                    @change="store.updateUserProfile()" v-model="store.userProfile[key]" />
                                 </template>
                                 <template v-else>
                                     <!-- Default template -->
@@ -44,7 +43,7 @@
                                         capitalize(key) }}</label>
                                     <div class="flex w-full items-center gap-3 mb-6">
                                         <TextInputField class="max-w-xs" inputType="text" placeholderText="Enter details.."
-                                            :value="value" @updateInput="updateProfile(key, $event)" />
+                                        @change="store.updateUserProfile()" v-model="store.userProfile[key]" />
                                         <XMarkIcon @click="removeProfileField(key)"
                                             class="h-6 w-6 shrink-0 cursor-pointer" />
                                     </div>
@@ -68,7 +67,7 @@
                         <div class="flex flex-col items-start">
                             <label class="text-sm font-semibold text-field-label w-full mb-1.5">New Password</label>
                             <TextInputField class="mb-6 max-w-xs" inputType="password"
-                                placeholderText="Enter a new password.." @updateInput="updatePassword($event)" />
+                                placeholderText="Enter a new password" @updateInput="updatePassword($event)" />
                         </div>
                         <div class="flex gap-3 mt-2">
                             <Button @buttonClick="changePassword" button-type="btn-light">Save Password</Button>
