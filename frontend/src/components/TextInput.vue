@@ -3,7 +3,9 @@
     <textarea ref="textInputRef" v-model="currentMessage"
       @keydown.enter="!$event.shiftKey ? (sendMessage(), $event.preventDefault()) : ''" @input="resize"
       @focus="isFocused = true" @blur="isFocused = false" placeholder="What do you say?" spellcheck="false"
-      class="bg-nearygray-200/5 resize-none rounded-lg mx-0 sm:mx-1 mb-0.5 sm:mb-1.5 w-full p-6 pt-7 text-slate-200 border border-nearyblue-300 shadow focus:border-nearygray-800/5 focus:ring-0 placeholder-slate-400/80"></textarea>
+      :disabled="!store.isWebSocketActive && !initializing"
+      :class="store.isWebSocketActive || initializing ? ' border-nearyblue-300' : 'border-2 border-nearypink-300/50'"
+      class="border bg-nearygray-200/5 resize-none rounded-lg mx-0 sm:mx-1 mb-0.5 sm:mb-1.5 w-full p-6 pt-7 text-slate-200 shadow focus:border-nearygray-800/5 focus:ring-0 placeholder-slate-400/80"></textarea>
     <div @click="sendMessage()"
       class="absolute right-4 cursor-pointer text-slate-400 hover:text-slate-300 rounded-full h-9 w-9 flex items-center justify-center">
       <Icon icon="heroicons:paper-airplane-solid" class="w-5 h-5 ml-0.5" />
@@ -12,7 +14,7 @@
 </template>
 
 <script setup>
-import { ref, watch, nextTick, onMounted, onUnmounted } from 'vue';
+import { ref, watch, computed, nextTick, onMounted, onUnmounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useAppStore } from '@/store/index.js';
 import { Icon } from '@iconify/vue';
@@ -87,10 +89,10 @@ const sendMessage = async () => {
 
   const conversation = store.selectedConversation;
 
-  if (!('title' in conversation) || conversation.title == null || conversation.title == 'New conversation') {
+  if (!('title' in conversation) || conversation.title == null || conversation.title == 'New Conversation') {
     let title = message.content.slice(0, 50);
-    let update = { 'conversation': [{ 'name': 'title', 'value': title }] };
-    await store.updateConversationSettings(conversation.id, update);
+    store.selectedConversation.title = title
+    await store.updateConversation(store.selectedConversation);
   }
 
   if (store.ws.readyState === WebSocket.OPEN) {
@@ -101,11 +103,11 @@ const sendMessage = async () => {
     resize();
 
     store.messageTimeout = setTimeout(() => {
-      store.notification = { 'type': 'error', 'message': 'Connecting to server. Wait a moment and try again.' };
+      store.newNotification('Connecting to server. Wait a moment and try again.');
     }, 8000);
 
   } else {
-    store.notification = { 'type': 'error', 'message': 'Connecting to server. Wait a moment and try again.' };
+    store.newNotification('Connecting to server. Wait a moment and try again.');
   }
 };
 
@@ -131,7 +133,8 @@ const handleCommand = async (input) => {
 
   if (command === 'title') {
     const title = commandArgs;
-    await store.updateConversationSettings(store.selectedConversationId, { 'title': title });
+    store.selectedConversation.title = title;
+    await store.updateConversation(store.selectedConversation);
     return true;
   }
 
@@ -178,10 +181,15 @@ watch(() => store.selectedConversationId, async () => {
   }
 });
 
+let initializing = ref(true);
+
 onMounted(() => {
   nextTick(() => {
-    resize()
+    resize();
   })
+  setTimeout(() => {
+      initializing.value = false;
+    }, 2000); // delay of 2 seconds
 })
 
 onUnmounted(() => {

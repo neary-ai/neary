@@ -2,11 +2,13 @@ from .models import (
     UserModel,
     SpaceModel,
     ConversationModel,
-    ProgramModel,
-    ProgramRegistryModel,
     MessageModel,
+    PluginRegistryModel,
+    PluginInstanceModel,
+    PresetModel,
     DocumentModel,
-    AuthCredentialModel,
+    IntegrationInstanceModel,
+    IntegrationRegistryModel,
     ApprovalRequestModel,
     Migration
 )

@@ -1,10 +1,9 @@
 <template>
-    <div class="flex w-full items-start prose prose-invert max-w-none leading-7 mr-auto bg-nearyblue-300 py-9 pl-6 pr-8">
-      <div class="not-prose flex-shrink-0 font-bold rounded h-7 w-7 flex items-center justify-center mr-5 text-sm"
-        :class="message.is_archived ? 'bg-slate-700 text-slate-400' : 'bg-nearyblue-50/90 text-nearygray-100'">
+    <div class="flex w-full items-start prose prose-invert max-w-none leading-7 mr-auto py-9 pl-6 pr-8" :class="message.is_archived ? 'pattern-diagonal-lines pattern-nearyblue-200 pattern-bg-nearyblue-300 pattern-size-6 pattern-opacity-80' : 'bg-nearyblue-300'">
+      <div class="not-prose flex-shrink-0 font-bold rounded h-7 w-7 flex items-center justify-center mr-5 text-sm bg-nearyblue-50/90 text-nearygray-100">
         {{ firstLetterOfName }}
       </div>
-      <div class="text-slate-300/80 whitespace-pre-wrap [overflow-wrap:anywhere]" :class="[message.is_archived ? 'text-slate-300/60' : 'text-slate-300/80']">{{ message.content }}</div>
+      <div class="whitespace-pre-wrap [overflow-wrap:anywhere]" :class="[message.is_archived ? 'text-nearygray-100' : 'text-slate-300/80']">{{ message.content }}</div>
     </div>
   </template>
   
@@ -23,6 +22,6 @@
       const name = store.userProfile.name;
       return name ? name[0] : 'U';
     }
-    return '?';
+    return 'U';
   });
   </script>

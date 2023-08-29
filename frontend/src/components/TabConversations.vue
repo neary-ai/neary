@@ -1,24 +1,25 @@
 <template>
-  <div class="flex items-center justify-center w-full overflow-x-scroll no-scrollbar" :class="store.sidebarOpen ? 'ml-[3.5rem]' : 'ml-2'">
-    <div v-show="arrowsVisible" class="flex items-center justify-center h-9 cursor-pointer text-nearygray-100 hover:text-white">
+  <div class="flex items-center justify-center w-full overflow-x-scroll no-scrollbar"
+    :class="store.sidebarOpen ? 'ml-[3.5rem]' : 'ml-2'">
+    <div v-show="arrowsVisible"
+      class="flex items-center justify-center h-9 cursor-pointer text-nearygray-100 hover:text-white">
       <ChevronLeftIcon @click="switchTab('previous')" class="w-5 h-5" />
     </div>
     <div ref="tabContainerRef" class="flex flex-1 gap-2.5 justify-start items-center overflow-x-scroll no-scrollbar"
       :class="arrowsVisible ? 'mx-2' : 'mx-3'">
-      <div v-for="element in openTabConversations" :key="element.id" :ref="el => (tabItemRefs[element.id] = el)" @click="store.loadConversation(element.id)" :class="element.id === store.selectedConversationId ? 'border-nearyyellow-200/90' : 'border-slate-400'" class="flex min-w-[8rem] max-w-[12rem] bg-nearyblue-300 shadow-lg cursor-pointer items-center rounded pb-1.5 pt-2 px-0.5 text-sm border-b-2 text-nearygray-50 font-semibold">
+      <div v-for="element in openTabConversations" :key="element.id" :ref="el => (tabItemRefs[element.id] = el)"
+        @click="store.loadConversation(element.id)"
+        :class="element.id === store.selectedConversationId ? 'border-nearyyellow-200/90' : 'border-slate-400'"
+        class="flex min-w-[8rem] max-w-[12rem] bg-nearyblue-300 shadow-lg cursor-pointer items-center rounded pb-1.5 pt-2 px-0.5 text-sm border-b-2 text-nearygray-50 font-semibold">
         <div class="flex items-center flex-shrink-0">
-          <div v-if="element.isLoading" id="loading-indicator" class="mx-2">
+          <div v-if="element.isLoading" id="loading-indicator" class="ml-2 mr-0.5">
             <img :src="loadingIcon" class="w-4 h-4">
           </div>
-          <div v-else class="mx-2">
-            <component :is="iconComponents[element.program.metadata.icon]"
-              class="text-slate-400/80 h-[1.1rem] w-[1.1rem]" />
-          </div>
-          <div v-if="element.unreadMessages == true" class="flex items-center justify-center mr-2">
-            <div class="h-2 w-2 rounded-full bg-ncyan"></div>
+          <div v-else class="ml-2">
+            <Icon :icon="element.preset.icon ? element.preset.icon : 'heroicons:user-solid'" class="text-slate-400/80 h-[1.1rem] w-[1.1rem]" />
           </div>
         </div>
-        <div class="flex-grow min-w-0 truncate text-clip">
+        <div class="flex-grow min-w-0 truncate text-clip ml-2">
           {{ element.title }}
         </div>
         <div @click.stop="closeTab(element.id);" class="flex-shrink-0 hover:text-slate-100 ml-1.5 mr-1.5">
@@ -46,31 +47,28 @@
     <PopoverButton class="flex items-center cursor-pointer focus:outline-none focus:ring-0">
       <ChevronDownIcon class="w-5 h-5 text-nearygray-100 hover:text-white" />
     </PopoverButton>
-    <PopoverPanel
-      v-slot="{ close }"
+    <PopoverPanel v-slot="{ close }"
       class="absolute right-0 top-10 rounded-md border-field-active border bg-field-default text-field-default-foreground py-1 shadow-xl ring-1 ring-black ring-opacity-10 focus:outline-none w-96 z-20">
       <div class="px-5 pb-1 relative border-b border-field-divide">
-        <MagnifyingGlassIcon class="pointer-events-none absolute left-3 top-2 h-5 w-5"
-          aria-hidden="true" />
+        <MagnifyingGlassIcon class="pointer-events-none absolute left-3 top-2 h-5 w-5" aria-hidden="true" />
         <input type="text" v-model="query" placeholder="Search..."
           class="text-sm w-full px-6 py-2 border-0 bg-transparent focus:ring-0 placeholder:text-field-default-foreground/70">
       </div>
       <div class="overflow-y-auto max-h-80 scroll-py-2">
-        <h2 v-if="filteredConversations.spaceConversations.length > 0"
-          class="mb-2 mt-4 px-3 text-xs font-semibold">In {{ store.selectedSpace.name }}</h2>
+        <h2 v-if="filteredConversations.spaceConversations.length > 0" class="mb-2 mt-4 px-3 text-xs font-semibold">In {{
+          store.selectedSpace.name }}</h2>
         <ul class="divide-y divide-field-divide">
           <li v-for="conversation in filteredConversations.spaceConversations" :key="conversation.id"
             class="group flex cursor-pointer select-none items-center pl-2 pr-4 py-2.5 hover:bg-field-active hover:text-field-active-foreground"
             @click="store.loadConversation(conversation.id, close)">
             <div>
-              <component :is="iconComponents[conversation.program.metadata.icon]"
-                class="h-5 w-5 mr-3 ml-2 opacity-70" />
+              <Icon :icon="conversation.preset.icon ? conversation.preset.icon : 'heroicons:user-solid'" class="h-5 w-5 mr-3 ml-2 opacity-70" />
             </div>
             <div class="flex flex-col items-start w-80 pr-2">
               <div class="font-medium truncate w-full pb-0.5">{{
                 conversation.title
               }}</div>
-              <div class="font-light truncate w-full opacity-70">{{ conversation.snippet ? conversation.snippet : 'No messages, yet!' }}
+              <div class="font-light truncate w-full opacity-70">{{ conversation.excerpt ? conversation.excerpt : 'No messages, yet!' }}
               </div>
             </div>
           </li>
@@ -82,14 +80,13 @@
             class="group flex cursor-pointer select-none items-center pl-2 pr-4 py-2.5 hover:bg-field-active hover:text-field-active-foreground"
             @click="store.loadConversation(conversation.id, close)">
             <div>
-              <component :is="iconComponents[conversation.program.metadata.icon]"
-                class="h-5 w-5 mr-3 ml-2 opacity-70" />
+              <Icon :icon="conversation.preset.icon ? conversation.preset.icon : 'heroicons:user-solid'" class="h-5 w-5 mr-3 ml-2 opacity-70" />
             </div>
             <div class="flex flex-col items-start w-80 pr-2">
               <div class="font-medium truncate w-full pb-0.5">{{
                 conversation.title
               }}</div>
-              <div class="font-light truncate w-full opacity-70">{{ conversation.snippet ? conversation.snippet : 'No messages, yet!' }}</div>
+              <div class="font-light truncate w-full opacity-70">{{ conversation.excerpt ? conversation.excerpt : 'No messages, yet!' }}</div>
             </div>
           </li>
         </ul>
@@ -104,6 +101,7 @@
 <script setup>
 import { ref, reactive, computed, onMounted, onBeforeUnmount, watch } from 'vue';
 import { useAppStore } from '@/store/index.js';
+import { Icon } from '@iconify/vue';
 import {
   Popover,
   PopoverButton,
@@ -115,23 +113,12 @@ import {
   ChevronRightIcon,
   ChevronDownIcon,
 } from '@heroicons/vue/24/solid';
-import { LifebuoyIcon, InformationCircleIcon, CalendarDaysIcon, DocumentMagnifyingGlassIcon, ChatBubbleLeftRightIcon, MapPinIcon, BuildingStorefrontIcon, HeartIcon, MagnifyingGlassIcon } from '@heroicons/vue/20/solid';
+import { MagnifyingGlassIcon } from '@heroicons/vue/20/solid';
 import loadingIcon from '@/assets/images/three-dots.svg';
 
 const store = useAppStore();
 const arrowsVisible = ref(false);
 const tabContainerRef = ref(null);
-
-const iconComponents = computed(() => ({
-  CalendarDaysIcon,
-  DocumentMagnifyingGlassIcon,
-  ChatBubbleLeftRightIcon,
-  MapPinIcon,
-  BuildingStorefrontIcon,
-  InformationCircleIcon,
-  HeartIcon,
-  LifebuoyIcon
-}));
 
 const openTabConversations = computed(() => {
   if (store.openTabs) {

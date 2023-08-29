@@ -41,10 +41,16 @@ const btn = computed(() => {
       'border-nearypink-300',
       'text-nearypink-300',
     ],
-    'btn-blue': [
-      'bg-nearyblue-50',
-      'text-nearygray-100',
-    ]
+    'btn-light': [
+      'bg-nearylight-300',
+      'text-black',
+    ],
+    'btn-outline-light': [
+      'bg-transparent',
+      'border',
+      'border-nearylight-200',
+      'text-nearylight-200',
+    ],
   };
 
   return [...baseClasses, ...buttonTypes[props.buttonType]];

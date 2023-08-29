@@ -1,0 +1,14 @@
+[metadata]
+display_name = "Document"
+version = "0.1.0"
+author = "Neary"
+
+plugin_type = "snippet"
+module = "document"
+description = "Inserts sections from documents relevant to the user query."
+
+[settings.max_results]
+description = "The maximum number of documents snippets to return."
+value = 3
+type = "integer"
+editable = false

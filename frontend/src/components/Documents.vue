@@ -1,6 +1,6 @@
 <template>
-  <div id="documents-window" class="flex flex-col gap-3 max-w-3xl overflow-y-scroll">
-    <div class="p-8 pt-[5.5rem]">
+  <div id="documents-window" class="flex flex-col gap-3 w-full overflow-y-scroll">
+    <div class="p-8 pt-[5.5rem] max-w-3xl">
       <SectionHeading section-name="Documents" @on-click="onBackButtonClick" />
       <ManageDocuments v-if="!showAddDocuments" @toggledocs="toggleAddDocs"></ManageDocuments>
       <AddDocument v-if="showAddDocuments"></AddDocument>

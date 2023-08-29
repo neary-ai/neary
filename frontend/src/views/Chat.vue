@@ -54,15 +54,15 @@ const handleMessage = async (event) => {
     return;
   }
 
-  else if (message.role == 'error') {
-    await handleApiError(message);
+  else if (message.role == 'alert') {
+    await handleAlert(message);
     return
   }
 
   if (message.status == "incomplete" || message.status == "complete") {
     if (message.status == "incomplete") {
       store.messageTimeout = setTimeout(() => {
-        store.notification = { 'type': 'error', 'message': 'Waiting for response from chat server' };
+        store.newNotification ('Waiting for response from chat server');
       }, 10000);
       conversation.isLoading = true;
     }
@@ -97,8 +97,8 @@ const handleCommand = async (message) => {
   }
 }
 
-const handleApiError = async (message) => {
-  store.notification = { "type": "error", "message": message.content, "sticky": true };
+const handleAlert = async (message) => {
+  store.newNotification(message.content);
 }
 
 const getWebSocketUrl = () => {
@@ -112,20 +112,34 @@ const getWebSocketUrl = () => {
 
 const initWebSocket = async () => {
   if (!store.ws || store.ws.readyState === WebSocket.CLOSED) {
-    const ws = new WebSocket(getWebSocketUrl());
-    ws.onmessage = handleMessage;
-    store.ws = ws;
-    await reconnectWebSocket();
+    try {
+      const ws = new WebSocket(getWebSocketUrl());
+
+      ws.onmessage = handleMessage;
+      ws.onopen = () => store.isWebSocketActive = true;
+      ws.onclose = async () => {
+        store.isWebSocketActive = false;
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+        await initWebSocket();
+      };
+      ws.onerror = async (error) => {
+        store.isWebSocketActive = false;
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+        await initWebSocket();
+      };
+      
+      store.ws = ws;
+
+    } catch (error) {
+      console.error('Failed to create WebSocket:', error);
+      store.isWebSocketActive = false;
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+      await initWebSocket();
+    }
   }
 };
 
-const reconnectWebSocket = async () => {
-  store.ws.onclose = async () => {
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-    await initWebSocket();
-  };
-};
-
+// Watchers
 watch(route, async (to) => {
   await nextTick();
   if (to.path === '/') {
@@ -133,16 +147,12 @@ watch(route, async (to) => {
   }
 }, { immediate: true });
 
-watch(() => store.notification, (newNotification, oldNotification) => {
-  if (newNotification !== oldNotification && newNotification !== null && !('sticky' in newNotification)) {
-    setTimeout(() => store.notification = null, 4000);
-  }
-});
 
 onMounted(async () => {
+
   await store.initialize();
   await initWebSocket();
-  
+
   window.addEventListener('resize', () => {
     store.isMobile = (window.innerWidth <= 640);
     windowHeight.value = window.innerHeight;

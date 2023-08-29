@@ -2,16 +2,18 @@ import uuid
 from tortoise import fields
 from tortoise.models import Model
 
+
 class UserModel(Model):
     """
     Represents the user in the system, storing authentication data and application-specific state.
     """
-
     id = fields.IntField(pk=True)
     email = fields.CharField(max_length=255, null=True)
     password_hash = fields.CharField(max_length=255, null=True)
-    profile = fields.JSONField(null=True)
+    profile = fields.JSONField(
+        default={"name": "", "location": "", "notes": ""})
     app_state = fields.JSONField(null=True)
+
 
 class SpaceModel(Model):
     """
@@ -40,6 +42,7 @@ class SpaceModel(Model):
 
         return space_data
 
+
 class ConversationModel(Model):
     """
     Represents a conversation within a space. Each conversation has a title,
@@ -47,83 +50,141 @@ class ConversationModel(Model):
     """
     id = fields.IntField(pk=True)
     title = fields.CharField(max_length=255, default="New conversation")
-    space = fields.ForeignKeyField("models.SpaceModel", related_name="conversations", null=True)
-    program = fields.ForeignKeyField("models.ProgramModel", related_name="conversations", null=True)
+    space = fields.ForeignKeyField(
+        "models.SpaceModel", related_name="conversations", null=True)
+    preset = fields.ForeignKeyField(
+        "models.PresetModel", related_name="conversations", on_delete=fields.SET_NULL, null=True)
+    settings = fields.JSONField(null=True)
+    data = fields.JSONField(null=True)
     is_archived = fields.BooleanField(default=False)
     created_at = fields.DatetimeField(auto_now_add=True)
     updated_at = fields.DatetimeField(auto_now=True)
 
     messages: fields.ReverseRelation["MessageModel"]
+    plugins: fields.ReverseRelation["PluginInstanceModel"]
     documents: fields.ManyToManyRelation["DocumentModel"]
     approval_requests: fields.ReverseRelation["ApprovalRequestModel"]
-    
+
     async def serialize(self):
         messages = await self.messages.all().order_by('created_at')
-        last_message = messages[-1].content if messages else None
+        recent_message = messages[-1].content if messages else None
         message_ids = [message.id for message in messages]
-        
-        program = await self.program
+
+        plugins = await self.plugins.all()
+        preset = await self.preset
 
         conversation_data = {
             "id": self.id,
             "space_id": self.space_id,
+            "preset": preset.serialize(),
             "title": self.title,
-            "program": await program.serialize(),
+            "settings": self.settings,
+            "plugins": [await plugin.serialize() for plugin in plugins if plugin.is_enabled],
             "messages": message_ids,
-            "snippet": last_message,
+            "excerpt": recent_message,
             "created_at": self.created_at.isoformat(),
             "updated_at": self.updated_at.isoformat(),
         }
 
         return conversation_data
 
-class ProgramModel(Model):
-    """
-    Represents a program in the system. Each program has a link to its information in the program registry,
-    a JSON field for storing its state, and timestamps for when it was created and last updated.
-    """
+
+class PresetModel(Model):
     id = fields.IntField(pk=True)
-    program_info = fields.ForeignKeyField(
-        "models.ProgramRegistryModel", related_name="programs")
-    state = fields.JSONField(null=True)
-    settings = fields.JSONField(null=True)
-    created_at = fields.DatetimeField(auto_now_add=True)
-    updated_at = fields.DatetimeField(auto_now=True)
-
-    async def serialize(self):
-        program_info = await self.program_info
-
-        return {
-            "id": self.id,
-            "name": program_info.class_name,
-            "settings": self.settings,
-            "state": self.state,
-            "metadata": await program_info.serialize(),
-            "created_at": self.created_at.isoformat(),
-            "updated_at": self.updated_at.isoformat(),
-        }
-
-class ProgramRegistryModel(Model):
-    """
-    Represents an entry in the program registry. Each entry has a class name, display name,
-    description, and icon for the program it represents.
-    """
-    id = fields.IntField(pk=True)
-    class_name = fields.CharField(max_length=255)
-    display_name = fields.CharField(max_length=255)
+    name = fields.CharField(max_length=255, unique=True)
     description = fields.TextField(null=True)
-    icon = fields.CharField(max_length=255)
+    icon = fields.CharField(max_length=255, null=True)
+    plugins = fields.JSONField(null=True)
+    settings = fields.JSONField(null=True)
+    is_default = fields.BooleanField(default=False)
+    is_custom = fields.BooleanField(default=False)
+    is_active = fields.BooleanField(default=True)
 
-    programs: fields.ReverseRelation["ProgramModel"]
-
-    async def serialize(self):
+    def serialize(self):
         return {
             "id": self.id,
-            "class_name": self.class_name,
-            "display_name": self.display_name,
+            "name": self.name,
             "description": self.description,
             "icon": self.icon,
+            "plugins": self.plugins,
+            "settings": self.settings,
+            "is_default": self.is_default,
+            "is_custom": self.is_custom,
         }
+
+
+class PluginRegistryModel(Model):
+    id = fields.IntField(pk=True)
+    name = fields.CharField(max_length=255, unique=True)
+    plugin_type = fields.CharField(max_length=255)
+    metadata = fields.JSONField(null=True)
+    settings = fields.JSONField(null=True)
+    is_internal = fields.BooleanField(default=False)
+    is_active = fields.BooleanField(default=False)
+
+    def serialize(self):
+        return {
+            "id": self.id,
+            "name": self.name,
+            "metadata": self.metadata,
+            "settings": self.settings,
+            "is_active": self.is_active,
+        }
+
+
+class PluginInstanceModel(Model):
+    id = fields.IntField(pk=True)
+    plugin = fields.ForeignKeyField(
+        "models.PluginRegistryModel", related_name="instances")
+    conversation = fields.ForeignKeyField(
+        "models.ConversationModel", related_name="plugins")
+    settings = fields.JSONField(null=True)
+    data = fields.JSONField(null=True)
+    is_enabled = fields.BooleanField(default=True)
+
+    async def serialize(self):
+        await self.fetch_related("plugin")
+        return {
+            "id": self.id,
+            "name": self.plugin.name,
+            "conversation_id": self.conversation_id,
+            "settings": self.settings,
+            "data": self.data,
+            "registry": {
+                "metadata": self.plugin.metadata,
+                "default_settings": self.plugin.settings,
+            },
+            "is_enabled": self.is_enabled
+        }
+
+
+class IntegrationRegistryModel(Model):
+    id = fields.IntField(pk=True)
+    name = fields.CharField(max_length=100)
+    display_name = fields.CharField(max_length=100)
+    auth_method = fields.CharField(max_length=100)
+    data = fields.JSONField()
+
+    async def active_instance(self):
+        return len(await self.instances.all()) > 0
+
+    async def serialize(self):
+        return {
+            "id": self.id,
+            "name": self.name,
+            "display_name": self.display_name,
+            "auth_method": self.auth_method,
+            "data": self.data,
+            "is_integrated": await self.active_instance()
+        }
+
+
+class IntegrationInstanceModel(Model):
+    id = fields.IntField(pk=True)
+    integration = fields.ForeignKeyField(
+        'models.IntegrationRegistryModel', related_name='instances')
+    credentials = fields.JSONField()
+
 
 class MessageModel(Model):
     """
@@ -155,13 +216,15 @@ class MessageModel(Model):
             "conversation_id": self.conversation_id,
         }
 
+
 class DocumentModel(Model):
     """
     Represents a document in the system. Each document has a hash ID, a FAISS index,
     a key, content, and various metadata fields.
     """
     id = fields.IntField(pk=True)
-    conversations = fields.ManyToManyField("models.ConversationModel", related_name="documents")
+    conversations = fields.ManyToManyField(
+        "models.ConversationModel", related_name="documents")
     chunk_hash_id = fields.CharField(max_length=64, unique=True)
     faiss_index = fields.IntField()
     document_key = fields.CharField(max_length=255, null=True)
@@ -191,15 +254,6 @@ class DocumentModel(Model):
             "metadata": self.metadata
         }
 
-class AuthCredentialModel(Model):
-    """
-    Represents authentication credentials for use by programs. Each set of credentials has a provider,
-    an authentication type, and a JSON field for storing the credential data.
-    """
-    id = fields.IntField(pk=True)
-    provider = fields.CharField(max_length=255)
-    auth_type = fields.CharField(max_length=255)
-    data = fields.JSONField()
 
 class ApprovalRequestModel(Model):
     """
@@ -207,8 +261,8 @@ class ApprovalRequestModel(Model):
     it's part of, the name and arguments of the tool, a status, and timestamps for when it was created and last updated.
     """
     id = fields.UUIDField(pk=True, default=uuid.uuid4)
-    conversation = fields.ForeignKeyField("models.ConversationModel", related_name="pending_tool_requests")
-    message_id = fields.IntField(null=True)
+    conversation = fields.ForeignKeyField(
+        "models.ConversationModel", related_name="pending_tool_requests")
     tool_name = fields.CharField(max_length=255)
     tool_args = fields.JSONField()
     status = fields.CharField(max_length=20, default="pending")
@@ -220,13 +274,13 @@ class ApprovalRequestModel(Model):
         return {
             "id": self.id,
             "conversation_id": self.conversation_id,
-            "message_id": self.message_id,
             "tool_name": self.tool_name,
             "tool_args": self.tool_args,
             "status": self.status,
             "created_at": self.created_at.isoformat(),
             "updated_at": self.updated_at.isoformat()
         }
+
 
 class Migration(Model):
     """

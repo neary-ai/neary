@@ -1,0 +1,21 @@
+[metadata]
+display_name = "Load URL"
+version = "0.1.0"
+author = "Neary"
+
+plugin_type = "tool"
+module = "load_url"
+description = "Creates documents from webpages of your choosing."
+llm_description = "`load_url`: Loads the content from a URL into memory for analysis. Takes a `url` (string) argument."
+
+[settings.requires_approval]
+description = "Whether this tool requires approval or not"
+value = true
+type = "boolean"
+editable = true
+
+[settings.follow_up_on_output]
+description = "Whether to follow up on the output or not"
+value = true
+type = "boolean"
+editable = false

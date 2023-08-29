@@ -7,8 +7,6 @@
           class="relative w-full cursor-default py-1.5 pl-3 pr-10 text-left text-field-active-foreground border border-field-default-foreground/60 rounded-md focus:outline-none focus:ring-0">
           <span class="flex items-center">
             <span class="flex items-center justify-start max-w-[14rem]">
-              <component :is="iconComponents[store.selectedConversation.program.metadata.icon]"
-                class="shrink-0 h-5 w-5 mr-2 opacity-80" />
               <div class="truncate">{{ store.selectedConversation && store.selectedConversation.title }}</div>
             </span>
           </span>
@@ -26,12 +24,10 @@
               <li
                 :class="[active ? 'bg-field-active text-field-active-foreground' : 'text-field-focused-foreground', 'relative cursor-default select-none py-2 pl-3 pr-9']">
                 <div class="flex items-center text-sm">
-                  <component :is="iconComponents[conversation.program.metadata.icon]"
-                    class="shrink-0 h-5 w-5 mr-3 ml-2 opacity-70" />
                   <div class="flex flex-col items-start justify-center">
                     <span :class="[selected ? 'font-semibold' : 'font-semibold', 'block truncate w-[13rem]']">{{
                       conversation.title }}</span>
-                    <div :class="['opacity-70 truncate w-[13rem]']">{{ conversation.snippet ? conversation.snippet : 'No messages, yet!' }}</div>
+                    <div :class="['opacity-70 truncate w-[13rem]']">{{ conversation.excerpt ? conversation.excerpt : 'No messages, yet!' }}</div>
                   </div>
                 </div>
                 <span v-if="selected"
@@ -46,12 +42,10 @@
               <li
                 :class="[active ? 'bg-field-active text-field-active-foreground' : 'text-field-focused-foreground', 'relative cursor-default select-none py-2 pl-3 pr-9']">
                 <div class="flex items-center text-sm">
-                  <component :is="iconComponents[conversation.program.metadata.icon]"
-                    class="shrink-0 h-5 w-5 mr-3 ml-2 opacity-80" />
                   <div class="flex flex-col items-start justify-center">
                     <span :class="[selected ? 'font-semibold' : 'font-semibold', 'block truncate w-[13rem]']">{{
                       conversation.title }}</span>
-                    <div :class="[active ? 'text-field-active-foreground' : '', 'opacity-70 truncate w-[13rem]']">{{ conversation.snippet ? conversation.snippet : 'No messages, yet!' }}</div>
+                    <div :class="[active ? 'text-field-active-foreground' : '', 'opacity-70 truncate w-[13rem]']">{{ conversation.excerpt ? conversation.excerpt : 'No messages, yet!' }}</div>
                   </div>
                 </div>
                 <span v-if="selected"
@@ -88,20 +82,8 @@ import {
   CheckIcon,
   ChevronUpDownIcon,
 } from '@heroicons/vue/24/solid';
-import { InformationCircleIcon, CalendarDaysIcon, DocumentMagnifyingGlassIcon, ChatBubbleLeftRightIcon, MapPinIcon, BuildingStorefrontIcon, HeartIcon, LifebuoyIcon } from '@heroicons/vue/20/solid';
 
 const store = useAppStore();
-
-const iconComponents = computed(() => ({
-  CalendarDaysIcon,
-  DocumentMagnifyingGlassIcon,
-  ChatBubbleLeftRightIcon,
-  MapPinIcon,
-  BuildingStorefrontIcon,
-  InformationCircleIcon,
-  HeartIcon,
-  LifebuoyIcon
-}));
 
 const selectedOptionId = ref(null);
 

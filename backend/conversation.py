@@ -1,114 +1,253 @@
-from .models.models import ConversationModel, ProgramModel, ProgramRegistryModel, SpaceModel
+from datetime import datetime
+import importlib
+import inspect
+import json
+import uuid
+import re
+
+from .plugins.tools.tool import Tool
+from .plugins.snippets.snippet import Snippet
+from .messages.message_chain import MessageChain
+from .services.context_manager import ContextManager
+from .services.message_handler import MessageHandler
+from .models.models import UserModel, MessageModel, ConversationModel, SpaceModel, ApprovalRequestModel
 from .services.documents.document_manager import DocumentManager
-from .programs.default_program.default_program import DefaultProgram
-from .programs.utils import get_program_ref, get_select_options
 
 
 class Conversation:
+    def __init__(self, id, title, settings, plugins=None, message_handler=None):
+        self.id = id
+        self.title = title
+        self.settings = settings
+        self.plugins = plugins
+        self.user_message = None
+        self.message_handler = message_handler if message_handler else MessageHandler()
+        self.document_manager = DocumentManager(id)
+        self.context_manager = ContextManager(self)
 
-    def __init__(self, message_handler=None):
-        self.id = None
-        self.title = None
-        self.message_handler = message_handler
-        self.program = DefaultProgram(self)
-        self.document_manager = DocumentManager(self)
+        self.actions = {
+            "handle_approval_response": self.handle_approval_response,
+        }
 
     def __str__(self):
         return self.title
 
-    """
-    Message handling
-    """
-    async def handle_message(self, user_message):
-        response = await self.program.execute(user_message)
-        return response
+    async def handle_message(self, user_message=None, tool_output=None):
+        continue_conversation = True
 
-    """
-    Program handling
-    """
+        while continue_conversation:
+            # Initialize a new message chain with initial messages
+            context = MessageChain(system_message=self.settings['llm']['system_message'],
+                                   user_message=user_message, tool_output=tool_output, conversation_id=self.id)
 
-    async def load_program(self, program_class_str):
-        program_class = get_program_ref(program_class_str)
+            # Add context from snippets
+            for snippet in self.snippets:
+                await snippet.run(context)
 
-        if program_class is None:
-            return "That program doesn't exist!"
+            # Complete context with past messages
+            await self.context_manager.generate_context(context)
 
-        # Load new program
-        self.program = program_class(self)
-        conversation_model = await ConversationModel.get(id=self.id)
+            # Send complete context to the LLM for a response
+            ai_response = await self.message_handler.get_ai_response(self, context)
 
-        # Get the ProgramRegistryModel for the given class_name
-        program_registry = await ProgramRegistryModel.get(class_name=program_class_str)
+            # Save user message / tool output and AI response to database
+            role = "user" if user_message else "tool_output"
+            message = user_message if user_message else tool_output
 
-        # Create a new ProgramModel using the fetched ProgramRegistryModel
-        program_model = await ProgramModel.create(program_info=program_registry)
+            await self.save_message(role=role, content=message, conversation_id=self.id)
+            await self.save_message(role="assistant", content=ai_response, conversation_id=self.id, metadata=context.get_metadata())
 
-        self.program.id = program_model.id
-        conversation_model.program = program_model
-        await conversation_model.save()
+            # Handle requested tool, if any
+            tool_output, follow_up_requested = await self.handle_tool_requests(ai_response)
 
-        # Save initial program data & settings
-        program_model.state = self.program.get_program_data()
-        program_model.settings = self.program.get_settings()
-        await program_model.save()
+            if follow_up_requested:
+                # Set user_message to none to process new tool output
+                user_message = None
+            else:
+                continue_conversation = False
 
-        return f"Program '{program_class}' loaded!"
+    async def handle_tool_requests(self, ai_response):
+        """
+        Entry point for tool requests, used after each AI response
+        """
+        tool_request = self.extract_tool(ai_response)
 
-    """
-    Utility methods
-    """
+        if tool_request:
+            tool_name, tool_args = tool_request
 
-    async def set_settings(self, settings):
-        if 'conversation' in settings:
-            conversation_settings = settings['conversation']
-            if 'title' in conversation_settings:
-                self.title = conversation_settings['title']['value']
-            if 'program' in conversation_settings:
-                if self.program.__class__.__name__ != conversation_settings['program']['value']:
-                    await self.load_program(conversation_settings['program']['value'])
-            if 'space' in conversation_settings:
-                conversation_model = await ConversationModel.get(id=self.id)
-                if conversation_settings['space']['value'] == -1 or conversation_settings['space']['value'] == '':
-                    conversation_model.space_id = None
-                else:
-                    conversation_model.space_id = conversation_settings['space']['value']
-                await conversation_model.save()
+            # Find the loaded tool plugin
+            for tool in self.tools:
+                if tool.metadata['module'] == tool_name:
+                    # Request approval if required, or process
+                    if tool.settings['requires_approval']:
+                        await self.request_approval(tool, tool_args)
+                    else:
+                        tool_output = await tool.run(**tool_args)
+                        return tool_output, tool.settings['follow_up_on_output']
+                    break
 
-        if 'program' in settings:
-            await self.program.set_settings(settings['program'])
+        return None, False
 
-        await self.save_state()
+    def extract_tool(self, ai_response):
+        """
+        Parses tool requests and provided arguments from the LLM
+        TO-DO: Implement proper OpenAI function calling
+        """
+        tool_pattern = r'<<tool:([^(\s]+)\(([^>]*)\)>>'
+        match = re.search(tool_pattern, ai_response)
 
-    async def get_settings(self):
+        if match:
+            tool_name = match.group(1)
+            tool_args_json = match.group(2)
 
-        current_space_id, space_options = await self.get_space_options()
+            try:
+                tool_kwargs = json.loads(tool_args_json)
+            except json.JSONDecodeError:
+                print("No valid JSON arguments found in tool_args.")
+                tool_kwargs = {}
 
-        settings = {
-            'id': {
-                'display_name': None,
-                'value': self.id,
-                'field': None
+            return tool_name, tool_kwargs
+
+    async def request_approval(self, tool, tool_args):
+        """
+        Issues an approval request and sends it to the frontend
+        """
+        # First save the request to db
+        pending_request = ApprovalRequestModel(
+            conversation_id=self.id, tool_name=tool.metadata['module'], tool_args=tool_args)
+        await pending_request.save()
+
+        # Then send notification to ui
+        actions = [
+            {
+                'type': 'function',
+                'name': 'handle_approval_response',
+                'label': 'Approve',
+                'conversation_id': self.id,
+                'data': {'request_id': str(pending_request.id), 'response': 'approve'}
             },
-            'title': {
-                'display_name': 'Title',
-                'value': self.title,
-                'field': 'TextInput'
-            },
-            'program': {
-                'display_name': None,
-                'value': self.program.__str__(),
-                'field': None,
-                'options': await get_select_options(),
-            },
-            'space': {
-                'display_name': 'Space',
-                'value': current_space_id,
-                'field': 'Select',
-                'options': space_options
-            },
-        }
+            {
+                'type': 'function',
+                'name': 'handle_approval_response',
+                'label': 'Reject',
+                'conversation_id': self.id,
+                'data': {'request_id': str(pending_request.id), 'response': 'reject'}
+            }
+        ]
 
-        return {"conversation": settings, "program": self.program.get_settings()}
+        args_string = '\n'.join(
+            [f"| {k.replace('_', ' ').title()} | {', '.join(v) if isinstance(v, list) else v} |" for k, v in tool_args.items()])
+        table_header = "| Name | Value |\n| --- | --- |"
+
+        if args_string:
+            notification = f"Neary would like to use the **{tool.metadata['display_name']}** tool:\n{table_header}\n{args_string}."
+        else:
+            notification = f"Neary would like to use the **{tool.metadata['display_name']}** tool."
+
+        await self.message_handler.send_notification_to_ui(message=notification, conversation_id=self.id, actions=actions, save_to_db=True)
+
+    async def handle_approval_response(self, data, message_id):
+        request_id = data.get("request_id")
+        response = data.get("response")
+
+        try:
+            request_id = uuid.UUID(request_id)
+        except ValueError:
+            print("Invalid request ID")
+
+        if response.lower() not in ["approve", "reject"]:
+            print("Invalid action. Use 'approve' or 'reject'")
+
+        approval_request = await ApprovalRequestModel.get_or_none(id=request_id, status="pending")
+
+        if not approval_request:
+            print("Approval request not found.")
+
+        if response.lower() == "approve":
+            approval_request.status = "approved"
+            await self.process_approval(approval_request.serialize())
+        elif response.lower() == "reject":
+            approval_request.status = "rejected"
+
+        message = await MessageModel.get_or_none(id=message_id)
+
+        if not message:
+            print("Couldn't retrieve a message with ID: ", message_id)
+        else:
+            await message.delete()
+
+        await approval_request.save()
+
+        return f"Request {approval_request.status}"
+
+    async def process_approval(self, approved_request):
+        tool_name = approved_request['tool_name']
+        tool_args = approved_request['tool_args']
+
+        # Find the loaded tool plugin
+        for tool in self.tools:
+            if tool.metadata['module'] == tool_name:
+                tool_output = await tool.run(**tool_args)
+                # Call handle message if tool wants to follow-up
+                if tool.settings['follow_up_on_output']:
+                    await self.handle_message(tool_output=tool_output)
+
+    async def handle_action(self, name, data, message_id):
+        action_handler = self.actions.get(name)
+        if action_handler:
+            response = await action_handler(data, message_id)
+            return response
+        else:
+            print(f'Unrecognized action: {name}')
+            raise Exception("Unrecognized action: {name}")
+
+    async def load_plugins(self):
+        self.snippets = []
+        self.tools = []
+
+        for plugin in self.plugins:
+            plugin_name = plugin["name"]
+            plugin_type = plugin["registry"]["metadata"]["plugin_type"]
+            plugin_module = plugin["registry"]["metadata"]["module"]
+
+            try:
+                # Change the import path based on the plugin type
+                if plugin_type == 'snippet':
+                    module = importlib.import_module(
+                        f'backend.plugins.snippets.{plugin_name}.{plugin_module}')
+                elif plugin_type == 'tool':
+                    module = importlib.import_module(
+                        f'backend.plugins.tools.{plugin_name}.{plugin_module}')
+
+                # Get the first class in the module that is a subclass of the plugin type
+                for name, obj in inspect.getmembers(module):
+                    if inspect.isclass(obj) and obj.__module__ == module.__name__:
+                        if (plugin_type == 'snippet' and issubclass(obj, Snippet)) or (plugin_type == 'tool' and issubclass(obj, Tool)):
+                            instance = obj(
+                                plugin["id"], self, plugin["settings"], plugin["data"])
+                            if plugin_type == 'snippet':
+                                self.snippets.append(instance)
+                            elif plugin_type == 'tool':
+                                self.tools.append(instance)
+                            break
+
+            except (ModuleNotFoundError, AttributeError):
+                print(f'Failed to load plugin: {plugin_name}')
+
+        if self.tools:
+            from backend.plugins.snippets.insert_tools.insert_tools import InsertToolsSnippet
+            instance = InsertToolsSnippet(self)
+            self.snippets.insert(0, instance)
+
+    def get_plugin_data(self, plugin_name):
+        for plugin in self.plugins:
+            if plugin['name'] == plugin_name:
+                return plugin['data']
+        return None
+
+    async def get_user_profile(self):
+        user = await UserModel.first()
+        return user.profile
 
     async def get_space_options(self):
         spaces = await SpaceModel.filter(is_archived=False)
@@ -120,20 +259,16 @@ class Conversation:
 
         return current_space_id, space_options
 
+    async def save_message(self, role, content, conversation_id, actions=None, metadata=None):
+        if content and type(content) == str:
+            message = await MessageModel.create(role=role, content=content, conversation_id=conversation_id, actions=actions, metadata=metadata)
+            conversation = await ConversationModel.get(id=conversation_id)
+            conversation.updated_at = datetime.utcnow()
+            await conversation.save()
+
+            return message
+
     async def save_state(self):
         conversation_model = await ConversationModel.get(id=self.id)
-        conversation_model.title = self.title
+        conversation_model.settings = self.settings
         await conversation_model.save()
-
-    @classmethod
-    async def from_json(cls, conversation_data, message_handler):
-        instance = cls.__new__(cls)
-        instance.id = conversation_data['id']
-        instance.title = conversation_data['title']
-        instance.document_manager = DocumentManager(instance)
-        instance.message_handler = message_handler
-
-        program_class = get_program_ref(conversation_data['program']['name'])
-        instance.program = await program_class.from_json(instance, conversation_data['program'])
-
-        return instance

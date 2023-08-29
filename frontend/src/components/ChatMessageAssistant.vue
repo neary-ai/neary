@@ -1,16 +1,15 @@
 <template>
     <div ref="messageContainer" v-if="convertedContent.text != ''"
-        class="flex justify-start items-start w-full prose prose-invert max-w-none leading-7 mr-auto bg-nearyblue-400 text-gray-400 pt-6 pb-3.5 pl-6 pr-8 transition-all duration-50 delay-0">
+        class="flex justify-start items-start w-full prose prose-invert max-w-none leading-7 mr-auto text-gray-400 pt-6 pb-3.5 pl-6 pr-8 transition-all duration-50 delay-0" :class="message.is_archived ? 'pattern-diagonal-lines pattern-nearyblue-300 pattern-bg-nearyblue-400 pattern-size-6 pattern-opacity-80' : 'bg-nearyblue-400'">
         <div class="flex w-full items-start">
             <div class="py-3">
-                <div class="not-prose flex-shrink-0 font-bold rounded h-7 w-7 flex items-center justify-center mr-5 text-sm"
-                    :class="message.is_archived ? 'bg-slate-700 text-slate-400' : 'bg-nearypink-300/20 text-nearypink-200'">
+                <div class="not-prose flex-shrink-0 font-bold rounded h-7 w-7 flex items-center justify-center mr-5 text-sm bg-nearypink-300/20 text-nearypink-200">
                     N
                 </div>
             </div>
             <div class="flex flex-col min-w-0 pt-[0.75rem]">
                 <div class="overflow-x-scroll min-w-0 max-w-full"
-                    :class="[message.is_archived ? 'text-slate-300/60' : 'text-slate-300/80']"
+                    :class="[message.is_archived ? 'text-nearygray-200' : 'text-slate-300/80']"
                     v-html="convertedContent.text"></div>
                 <div v-if="convertedContent.toolName != ''" class="text-sm w-full">
                     <div class="flex items-center justify-start w-full flex-grow pb-3">
