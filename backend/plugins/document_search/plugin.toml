@@ -20,7 +20,7 @@ editable = false
 [tools.load_url]
 display_name = "Load URL"
 description = "Creates documents from webpages of your choosing."
-llm_description = "`load_url`: Loads the content from a URL into memory for analysis. Takes a `url` (string) argument."
+llm_description = "Loads the content from a URL into memory for analysis. Takes a `url` (string) argument."
 
 [tools.load_url.settings.requires_approval]
 description = "Whether this tool requires approval or not"

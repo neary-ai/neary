@@ -33,7 +33,7 @@ editable = true
 [tools.create_calendar_event]
 display_name = "Create Calendar Event"
 description = "Creates an event on your Google Calendar"
-llm_description = "`create_calendar_event`: Creates an event on the user's calendar. Takes `event_title` (string), `event_description` (string), `start_time` (ISO 8601 string), `end_time` (ISO 8601 string) and `attendees` (email addresses in a Python list) arguments."
+llm_description = "Creates an event on the user's calendar. Takes `event_title` (string), `event_description` (string), `start_time` (ISO 8601 string), `end_time` (ISO 8601 string) and `attendees` (email addresses in a Python list) arguments."
 
 [tools.create_calendar_event.settings.requires_approval]
 description = "Whether this tool requires approval or not"
@@ -51,7 +51,7 @@ editable = false
 [tools.get_calendar_events]
 display_name = "Get Calendar Events"
 description = "Retrieves calendar events for a given number of days."
-llm_description = "`get_calendar_events`: Retrieves the user's upcoming calendar events. Takes optional `days` (integer) argument, where `1` would be today's events, `2` would be today's and tomorrow's events, and so on."
+llm_description = "Retrieves the user's upcoming calendar events. Takes optional `days` (integer) argument, where `1` would be today's events, `2` would be today's and tomorrow's events, and so on."
 
 [tools.get_calendar_events.settings.filter_recurring]
 description = "Whether or not to filter out multiple recurring events"
@@ -65,19 +65,13 @@ value = true
 type = "boolean"
 editable = true
 
-[tools.get_calendar_events.settings.days]
-description = "Number of days to get"
-value = 7
-type = "integer"
-editable = true
-
 [tools.get_calendar_events.settings.requires_approval]
 description = "Whether this tool requires approval or not"
 value = false
 type = "boolean"
 editable = true
 
-[settings.follow_up_on_output]
+[tools.get_calendar_events.settings.follow_up_on_output]
 description = "Whether to follow up on the output or not"
 value = true
 type = "boolean"

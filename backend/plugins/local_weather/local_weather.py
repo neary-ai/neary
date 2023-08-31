@@ -19,8 +19,10 @@ class LocalWeather(BasePlugin):
              await message_handler.send_alert_to_ui("OpenWeatherMap integration is required", self.conversation.id)
 
         # First try to get a location from plugin settings, then from profile
-        location = self.settings['insert_local_weather'].get('location', await profile_manager.get_field('location'))
-
+        profile_location = await profile_manager.get_field('location')
+        plugin_location =  self.settings['insert_local_weather']['location']['value']
+        location = plugin_location if plugin_location else profile_location
+        
         owm = OWM(credentials['api_key'])
 
         if location:

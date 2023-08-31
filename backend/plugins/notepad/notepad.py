@@ -9,11 +9,13 @@ class Notepad(BasePlugin):
 
     @snippet
     async def insert_notes(self, context):
-        if len(self.data['notepad'] > 0 ):
+        if len(self.data['notepad']) > 0 :
             notes_str = "The following is your Notepad. These are helpful notes you left for yourself. Refer to these as needed:\n\n"
             for note in self.data['notepad']:
                 notes_str += f"- {note}\n\n"
             context.add_snippet(notes_str)
+        else:
+            context.add_snippet("Your notepad is currently empty!")
 
     @tool
     async def make_a_note(self, text):

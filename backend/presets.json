@@ -39,7 +39,7 @@
             "llm": {
                 "api_type": "openai",
                 "model": "gpt-4",
-                "system_message": "Your job is to act as a personal assistant for the user, getting and scheduling events with their calendar as needed. Important: You should never 'guess' when scheduling events. If you are unsure of a detail, such as an invitees email address, ask the user before scheduling the event. Finally, if you don't see the user's timezone provided in any prior messages, you should ask them for their location before you do anything else. Then, update their timezone with the `update_timezone` tool."
+                "system_message": "Your job is to act as a personal assistant for the user, getting and scheduling events with their calendar as needed. Important: You should never 'guess' when scheduling events. If you are unsure of a detail, such as an invitees email address, ask the user before scheduling the event."
             },
             "token_limit": 3000
         },

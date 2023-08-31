@@ -73,7 +73,7 @@ class Conversation:
         tools_str = """You are a tool-assisted AI assistant. This means you can use tools, if necessary, to accomplish tasks that you wouldn't otherwise be able to accomplish as a Large Language Model.\nTo use a tool, simply append a tool request to the bottom of your response in this format: <<tool:tool_name({"tool_arg": "tool_arg_value"}). Replace 'tool_name', 'tool_arg' and 'tool_arg_value' with the values for the tool you're invoking. Here's a list of tools you have available to you:\n\n"""
 
         for tool in self.tools:
-            tools_str += f"- {tool['metadata']['llm_description']}\n"
+            tools_str += f"-`{tool['name']}`: {tool['metadata']['llm_description']}\n"
         
         return tools_str
 
@@ -90,11 +90,11 @@ class Conversation:
             for tool in self.tools:
                 if tool['name'] == tool_name:
                     # Request approval if required, or process
-                    if tool['metadata']['settings']['requires_approval']:
+                    if tool['metadata']['settings']['requires_approval']['value']:
                         await self.request_approval(tool, tool_args)
                     else:
                         tool_output = await tool['method'](tool['instance'], **tool_args)
-                        return tool_output, tool['metadata']['settings']['follow_up_on_output']
+                        return tool_output, tool['metadata']['settings']['follow_up_on_output']['value']
                     break
 
         return None, False

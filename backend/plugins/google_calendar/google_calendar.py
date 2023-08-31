@@ -11,9 +11,9 @@ class GoogleCalendar(BasePlugin):
 
     @snippet
     async def insert_calendar_events(self, context):
-        days = self.settings['insert_calendar_events']['days']
-        filter_recurring = self.settings['insert_calendar_events']['filter_recurring']
-        concise = self.settings['insert_calendar_events']['concise']
+        days = self.settings['insert_calendar_events']['days']['value']
+        filter_recurring = self.settings['insert_calendar_events']['filter_recurring']['value']
+        concise = self.settings['insert_calendar_events']['concise']['value']
         
         try:
             await self.google_service.authenticate()
@@ -59,11 +59,9 @@ class GoogleCalendar(BasePlugin):
             return "An error occured while creating the calendar event."
         
     @tool
-    async def get_calendar_events(self):
-        filter_recurring = self.settings['get_calendar_events']['filter_recurring']
-        concise = self.settings['get_calendar_events']['concise']
-        days = self.settings['get_calendar_events']['days']
-
+    async def get_calendar_events(self, days):
+        filter_recurring = self.settings['get_calendar_events']['filter_recurring']['value']
+        concise = self.settings['get_calendar_events']['concise']['value']
         try:
             await self.google_service.authenticate()        
         except Exception as e:
@@ -72,7 +70,7 @@ class GoogleCalendar(BasePlugin):
             await message_handler.send_alert_to_ui("Invalid Google Calendar credentials", self.conversation.id)
             return
 
-        events = self.google_service.get_calendar_events(days=days, filter_recurring=filter_recurring)
+        events = await self.google_service.get_calendar_events(days=days, filter_recurring=filter_recurring)
         if events:
             if concise:
                 events_strs = [f"{x['summary']} @ {x['start_time']} with {', '.join(x['attendees'])}" for x in events]

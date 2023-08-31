@@ -594,7 +594,7 @@ async def upload_document(conversation_id: int, file: UploadFile = File(...)):
 async def upload_url(conversation_id: int, url: str = Body(...)):
     """ Create a new document from a URL """
     document_manager = DocumentManager(conversation_id)
-    await document_manager.load_urls([url])
+    await document_manager.load_url(url)
 
     return JSONResponse(status_code=200, content={"detail": "success"})
 
