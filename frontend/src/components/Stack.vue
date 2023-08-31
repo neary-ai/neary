@@ -56,7 +56,7 @@
                         </div>
                         <div class="col-span-full sm:col-span-4 flex flex-col text-slate-400">
                             <div class="flex flex-col gap-3 items-start">
-                                <template v-for="snippet in enabledSnippets" :key="snippet.id">
+                                <template v-for="snippet in enabledSnippets" :key="snippet.name">
                                     <Card>
                                         <template v-slot:icon>
                                             <div
@@ -65,9 +65,9 @@
                                             </div>
                                         </template>
                                         <div class="text-field-default-foreground text-sm font-medium">{{
-                                            snippet.registry.metadata.display_name }}</div>
+                                            snippet.display_name }}</div>
                                         <div class="text-sm font-normal text-nearygray-400">{{
-                                            snippet.registry.metadata.description }}</div>
+                                            snippet.description }}</div>
                                         <template v-slot:button>
                                             <Popover class="relative inline-block text-left">
                                                 <PopoverButton
@@ -81,13 +81,13 @@
                                                     <PopoverPanel v-slot="{ close }"
                                                         class="absolute w-32 bottom-8 -right-0 origin-top-right ring-1 ring-nearygray-500  bg-nearygray-200 text-nearyblue-300 rounded-md focus:outline-none">
                                                         <ul class="divide-y divide-nearygray-500">
-                                                            <li @click.stop="pluginSettings(snippet, close)"
+                                                            <li @click.stop="router.push(`/plugins/${snippet.plugin}`)"
                                                                 class="cursor-pointer flex items-center rounded-t gap-2 px-3 py-2 text-sm hover:bg-nearygray-300">
                                                                 <Icon icon="heroicons:adjustments-horizontal"
                                                                     class="w-5 h-5" />
                                                                 <div>Settings</div>
                                                             </li>
-                                                            <li @click.stop="disablePlugin(snippet, close)"
+                                                            <li @click.stop="removeFunction(snippet.name, close)"
                                                                 class="cursor-pointer flex items-center rounded-b gap-2 px-3 py-2 text-sm hover:bg-nearygray-300">
                                                                 <Icon icon="heroicons:x-mark" class="w-5 h-5" />
                                                                 <div>Remove</div>
@@ -117,7 +117,7 @@
                         </div>
                         <div class="col-span-1 sm:col-span-4 flex flex-col text-slate-400">
                             <div class="flex flex-col gap-3 items-start">
-                                <template v-for="tool in enabledTools" :key="tool.id">
+                                <template v-for="tool in enabledTools" :key="tool.name">
                                     <Card>
                                         <template v-slot:icon>
                                             <div
@@ -127,9 +127,9 @@
                                         </template>
                                         <div class="leading-7">
                                             <div class="text-field-default-foreground text-sm font-medium">{{
-                                                tool.registry.metadata.display_name }}</div>
+                                                tool.display_name }}</div>
                                             <div class="text-sm font-normal text-nearygray-400">{{
-                                                tool.registry.metadata.description }}</div>
+                                                tool.description }}</div>
                                         </div>
                                         <template v-slot:button>
                                             <Popover class="relative inline-block text-left">
@@ -144,13 +144,13 @@
                                                     <PopoverPanel v-slot="{ close }"
                                                         class="absolute w-32 bottom-8 -right-0 origin-top-right ring-1 ring-nearygray-500  bg-nearygray-200 text-nearyblue-300 rounded-md focus:outline-none">
                                                         <ul class="divide-y divide-nearygray-500">
-                                                            <li @click.stop="pluginSettings(tool, close)"
+                                                            <li @click.stop="router.push(`/plugins/${tool.plugin}`)"
                                                                 class="cursor-pointer flex items-center rounded-t gap-2 px-3 py-2 text-sm hover:bg-nearygray-300">
                                                                 <Icon icon="heroicons:adjustments-horizontal"
                                                                     class="w-5 h-5" />
                                                                 <div>Settings</div>
                                                             </li>
-                                                            <li @click.stop="disablePlugin(tool, close)"
+                                                            <li @click.stop="removeFunction(tool.name, close)"
                                                                 class="cursor-pointer flex items-center rounded-b gap-2 px-3 py-2 text-sm hover:bg-nearygray-300">
                                                                 <Icon icon="heroicons:x-mark" class="w-5 h-5" />
                                                                 <div>Remove</div>
@@ -178,7 +178,8 @@
                         </div>
                         <div class="col-span-1 sm:col-span-4 flex flex-col text-slate-400">
                             <div class="flex flex-col items-start w-full">
-                                <Button class="shrink-0" @buttonClick="isOpen = true;" button-type="btn-light">Save New Preset</Button>
+                                <Button class="shrink-0" @buttonClick="isOpen = true;" button-type="btn-light">Save New
+                                    Preset</Button>
                             </div>
                         </div>
                         <Modal :isOpen="isOpen" @keyup.enter="save" @save="save" @close="close">
@@ -228,30 +229,49 @@ const store = useAppStore();
 const router = useRouter();
 
 
-const enabledSnippets = computed(() => {
-    if (store.selectedConversation) {
-        return store.selectedConversation.plugins.filter(plugin => plugin.registry.metadata.plugin_type === 'snippet');
-    }
-    return []
-});
+function getEnabledFunctions(functionType) {
+    return computed(() => {
+        const selectedPlugins = store.selectedConversation.plugins;
+        let functions = [];
 
-const enabledTools = computed(() => {
-    if (store.selectedConversation) {
-        return store.selectedConversation.plugins.filter(plugin => plugin.registry.metadata.plugin_type === 'tool');
-    }
-    return []
-});
+        selectedPlugins.forEach(plugin => {
+            Object.entries(plugin.functions).forEach(([name, details]) => {
+                if (details.type === functionType) {
+                    functions.push({
+                        name: name,
+                        display_name: details.display_name,
+                        description: details.description,
+                        plugin: plugin.name
+                    });
+                }
+            });
+        });
 
-const pluginSettings = (plugin) => {
-    store.pluginSettings = plugin;
-    router.push(`/plugins/${plugin.id}`);
-    return
+        return functions;
+    });
 }
 
-const disablePlugin = async (plugin) => {
-    store.selectedConversation.plugins = store.selectedConversation.plugins.filter(p => p !== plugin);
-    await store.updateConversation(store.selectedConversation);
-}
+const enabledSnippets = getEnabledFunctions('snippet');
+const enabledTools = getEnabledFunctions('tool');
+
+const removeFunction = (functionName) => {
+    if (store.selectedConversation && store.selectedConversation.plugins) {
+        store.selectedConversation.plugins.forEach(plugin => {
+            if (plugin.functions[functionName]) {
+                delete plugin.functions[functionName];
+
+                // If there are no functions left in the plugin, remove the plugin
+                if (Object.keys(plugin.functions).length === 0) {
+                    const index = store.selectedConversation.plugins.indexOf(plugin);
+                    if (index > -1) {
+                        store.selectedConversation.plugins.splice(index, 1);
+                    }
+                }
+            }
+        });
+        store.updateConversation(store.selectedConversation);
+    }
+};
 
 // Create new preset
 const isOpen = ref(false)
@@ -273,7 +293,7 @@ const save = async () => {
 }
 
 const close = () => {
-  isOpen.value = false;
+    isOpen.value = false;
 };
 
 const onBackButtonClick = () => {

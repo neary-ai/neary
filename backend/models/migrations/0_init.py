@@ -38,22 +38,12 @@ async def upgrade(db: BaseDBAsyncClient) -> str:
         "created_at" TIMESTAMP NOT NULL  DEFAULT CURRENT_TIMESTAMP,
         "updated_at" TIMESTAMP NOT NULL  DEFAULT CURRENT_TIMESTAMP
     );
-    CREATE TABLE IF NOT EXISTS "pluginregistrymodel" (
-        "id" INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-        "name" VARCHAR(255) NOT NULL UNIQUE,
-        "plugin_type" VARCHAR(255) NOT NULL,
-        "metadata" JSON,
-        "settings" JSON,
-        "is_internal" INT NOT NULL  DEFAULT 0,
-        "is_active" INT NOT NULL  DEFAULT 0
-    );
     CREATE TABLE IF NOT EXISTS "plugininstancemodel" (
         "id" INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-        "plugin_id" INT NOT NULL REFERENCES "pluginregistrymodel" ("id") ON DELETE CASCADE,
+        "name" TEXT NOT NULL,
         "conversation_id" INT NOT NULL REFERENCES "conversationmodel" ("id") ON DELETE CASCADE,
-        "settings" JSON,
-        "data" JSON,
-        "is_enabled" INT NOT NULL  DEFAULT 1
+        "functions" JSON,
+        "data" JSON
     );
     CREATE TABLE IF NOT EXISTS "integrationregistrymodel" (
         "id" INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
@@ -62,7 +52,6 @@ async def upgrade(db: BaseDBAsyncClient) -> str:
         "auth_method" VARCHAR(100) NOT NULL,
         "data" JSON NOT NULL
     );
-
     CREATE TABLE IF NOT EXISTS "integrationinstancemodel" (
         "id" INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
         "integration_id" INT NOT NULL REFERENCES "integrationregistrymodel" ("id") ON DELETE CASCADE,

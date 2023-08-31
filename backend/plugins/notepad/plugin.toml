@@ -1,0 +1,47 @@
+[metadata]
+display_name = "Notepad"
+description = "Allows Neary to take persistant notes and insert them into the conversation."
+author = "Neary"
+version = "0.1.0"
+github = "https://github.com/neary-ai/neary"
+
+
+[snippets.insert_notes]
+display_name = "Insert Notes"
+description = "Inserts the contents of Neary's notepad"
+
+
+[tools.make_a_note]
+display_name = "Make a Note"
+description = "Saves a note for Neary's future reference"
+llm_description = "`make_a_note`: Saves a note to memory for your future reference. Use only when the user asks you to remember something. Takes a `text` argument."
+
+[tools.make_a_note.settings.requires_approval]
+description = "Whether this tool requires approval or not"
+value = true
+type = "boolean"
+editable = true
+
+[tools.make_a_note.settings.follow_up_on_output]
+description = "Whether to follow up on the output or not"
+value = true
+type = "boolean"
+editable = false
+
+
+[tools.clear_notes]
+display_name = "Clear Notes"
+description = "Clear's Neary's notepad"
+llm_description = "`clear_notes`: Erases your saved notes. Only use when instructed by the user. Takes no arguments."
+
+[tools.clear_notes.settings.requires_approval]
+description = "Whether this tool requires approval or not"
+value = true
+type = "boolean"
+editable = true
+
+[tools.clear_notes.settings.follow_up_on_output]
+description = "Whether to follow up on the output or not"
+value = true
+type = "boolean"
+editable = false

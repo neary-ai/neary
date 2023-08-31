@@ -33,6 +33,7 @@ export const useAppStore = defineStore('appstore', {
         showXray: false,
         xray: {},
         isWebSocketActive: false,
+        availablePlugins: null
     }),
     getters: {
         selectedSpace(state) {
@@ -99,6 +100,9 @@ export const useAppStore = defineStore('appstore', {
                 initialConversationId = null;
             }
 
+            // Set plugins
+            this.availablePlugins = initial_data.plugins;
+
             // Load conversation or space if none
             if (initialConversationId) {
                 this.selectedSpaceId = initialSpaceId;
@@ -124,7 +128,7 @@ export const useAppStore = defineStore('appstore', {
         },
         async addProfileField(field) {
             this.userProfile = { ...this.userProfile, ...field };
-            await this.updateUserProfile;
+            await this.updateUserProfile();
         },
         async updateUserProfile() {
             await api.updateUserProfile(this.userProfile);

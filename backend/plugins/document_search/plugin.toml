@@ -1,0 +1,35 @@
+[metadata]
+display_name = "Document Search"
+description = "Inserts sections from documents relevant to the user query."
+author = "Neary"
+version = "0.1.0"
+github = "https://github.com/neary-ai/neary"
+
+
+[snippets.insert_similar_documents]
+display_name = "Insert Relevant Documents"
+description = "Inserts sections from documents relevant to the user query."
+
+[snippets.insert_similar_documents.settings.max_results]
+description = "The maximum number of documents snippets to return."
+value = 3
+type = "integer"
+editable = false
+
+
+[tools.load_url]
+display_name = "Load URL"
+description = "Creates documents from webpages of your choosing."
+llm_description = "`load_url`: Loads the content from a URL into memory for analysis. Takes a `url` (string) argument."
+
+[tools.load_url.settings.requires_approval]
+description = "Whether this tool requires approval or not"
+value = true
+type = "boolean"
+editable = true
+
+[tools.load_url.settings.follow_up_on_output]
+description = "Whether to follow up on the output or not"
+value = true
+type = "boolean"
+editable = false

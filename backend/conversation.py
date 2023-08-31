@@ -5,13 +5,12 @@ import json
 import uuid
 import re
 
-from .plugins.tools.tool import Tool
-from .plugins.snippets.snippet import Snippet
 from .messages.message_chain import MessageChain
 from .services.context_manager import ContextManager
 from .services.message_handler import MessageHandler
 from .models.models import UserModel, MessageModel, ConversationModel, SpaceModel, ApprovalRequestModel
 from .services.documents.document_manager import DocumentManager
+from .services.plugin_manager import PluginManager
 
 
 class Conversation:
@@ -40,9 +39,13 @@ class Conversation:
             context = MessageChain(system_message=self.settings['llm']['system_message'],
                                    user_message=user_message, tool_output=tool_output, conversation_id=self.id)
 
+            # Insert available tools
+            if self.tools:
+                context.add_snippet(self.get_tools_str())
+
             # Add context from snippets
             for snippet in self.snippets:
-                await snippet.run(context)
+                await snippet['method'](snippet['instance'], context)
 
             # Complete context with past messages
             await self.context_manager.generate_context(context)
@@ -66,6 +69,14 @@ class Conversation:
             else:
                 continue_conversation = False
 
+    def get_tools_str(self):
+        tools_str = """You are a tool-assisted AI assistant. This means you can use tools, if necessary, to accomplish tasks that you wouldn't otherwise be able to accomplish as a Large Language Model.\nTo use a tool, simply append a tool request to the bottom of your response in this format: <<tool:tool_name({"tool_arg": "tool_arg_value"}). Replace 'tool_name', 'tool_arg' and 'tool_arg_value' with the values for the tool you're invoking. Here's a list of tools you have available to you:\n\n"""
+
+        for tool in self.tools:
+            tools_str += f"- {tool['metadata']['llm_description']}\n"
+        
+        return tools_str
+
     async def handle_tool_requests(self, ai_response):
         """
         Entry point for tool requests, used after each AI response
@@ -77,13 +88,13 @@ class Conversation:
 
             # Find the loaded tool plugin
             for tool in self.tools:
-                if tool.metadata['module'] == tool_name:
+                if tool['name'] == tool_name:
                     # Request approval if required, or process
-                    if tool.settings['requires_approval']:
+                    if tool['metadata']['settings']['requires_approval']:
                         await self.request_approval(tool, tool_args)
                     else:
-                        tool_output = await tool.run(**tool_args)
-                        return tool_output, tool.settings['follow_up_on_output']
+                        tool_output = await tool['method'](tool['instance'], **tool_args)
+                        return tool_output, tool['metadata']['settings']['follow_up_on_output']
                     break
 
         return None, False
@@ -114,7 +125,7 @@ class Conversation:
         """
         # First save the request to db
         pending_request = ApprovalRequestModel(
-            conversation_id=self.id, tool_name=tool.metadata['module'], tool_args=tool_args)
+            conversation_id=self.id, tool_name=tool['name'], tool_args=tool_args)
         await pending_request.save()
 
         # Then send notification to ui
@@ -140,9 +151,9 @@ class Conversation:
         table_header = "| Name | Value |\n| --- | --- |"
 
         if args_string:
-            notification = f"Neary would like to use the **{tool.metadata['display_name']}** tool:\n{table_header}\n{args_string}."
+            notification = f"Neary would like to use the **{tool['metadata']['display_name']}** tool:\n{table_header}\n{args_string}."
         else:
-            notification = f"Neary would like to use the **{tool.metadata['display_name']}** tool."
+            notification = f"Neary would like to use the **{tool['metadata']['display_name']}** tool."
 
         await self.message_handler.send_notification_to_ui(message=notification, conversation_id=self.id, actions=actions, save_to_db=True)
 
@@ -186,10 +197,11 @@ class Conversation:
 
         # Find the loaded tool plugin
         for tool in self.tools:
-            if tool.metadata['module'] == tool_name:
-                tool_output = await tool.run(**tool_args)
+            if tool['name'] == tool_name:
+                tool_output = await tool['method'](tool['instance'], **tool_args)
+
                 # Call handle message if tool wants to follow-up
-                if tool.settings['follow_up_on_output']:
+                if tool['metadata']['settings']['follow_up_on_output']:
                     await self.handle_message(tool_output=tool_output)
 
     async def handle_action(self, name, data, message_id):
@@ -202,48 +214,38 @@ class Conversation:
             raise Exception("Unrecognized action: {name}")
 
     async def load_plugins(self):
+        plugin_manager = PluginManager()
+
         self.snippets = []
         self.tools = []
 
         for plugin in self.plugins:
             plugin_name = plugin["name"]
-            plugin_type = plugin["registry"]["metadata"]["plugin_type"]
-            plugin_module = plugin["registry"]["metadata"]["module"]
+            plugin_info = plugin_manager.get_plugin(plugin_name)
 
-            try:
-                # Change the import path based on the plugin type
-                if plugin_type == 'snippet':
-                    module = importlib.import_module(
-                        f'backend.plugins.snippets.{plugin_name}.{plugin_module}')
-                elif plugin_type == 'tool':
-                    module = importlib.import_module(
-                        f'backend.plugins.tools.{plugin_name}.{plugin_module}')
+            for function_name, function_info in plugin['functions'].items():
+                if function_name in plugin_info['functions']:
+                    function_method = plugin_info['functions'][function_name]['method']
+                    function_type = plugin_info['functions'][function_name]['type']
+                    function_settings = {function_name: plugin_info['functions'][function_name]['settings']}
 
-                # Get the first class in the module that is a subclass of the plugin type
-                for name, obj in inspect.getmembers(module):
-                    if inspect.isclass(obj) and obj.__module__ == module.__name__:
-                        if (plugin_type == 'snippet' and issubclass(obj, Snippet)) or (plugin_type == 'tool' and issubclass(obj, Tool)):
-                            instance = obj(
-                                plugin["id"], self, plugin["settings"], plugin["data"])
-                            if plugin_type == 'snippet':
-                                self.snippets.append(instance)
-                            elif plugin_type == 'tool':
-                                self.tools.append(instance)
-                            break
+                    # Create an instance of the plugin class
+                    plugin_instance = plugin_info['class'](
+                        plugin["id"], self, function_settings, plugin["data"])
 
-            except (ModuleNotFoundError, AttributeError):
-                print(f'Failed to load plugin: {plugin_name}')
+                    # Store the function method and its instance
+                    function_data = {
+                        'name': function_name,
+                        'instance': plugin_instance,
+                        'method': function_method,
+                        'metadata': plugin_info['functions'][function_name]
+                    }
 
-        if self.tools:
-            from backend.plugins.snippets.insert_tools.insert_tools import InsertToolsSnippet
-            instance = InsertToolsSnippet(self)
-            self.snippets.insert(0, instance)
-
-    def get_plugin_data(self, plugin_name):
-        for plugin in self.plugins:
-            if plugin['name'] == plugin_name:
-                return plugin['data']
-        return None
+                    # Add the function data to the appropriate list
+                    if function_type == 'snippet':
+                        self.snippets.append(function_data)
+                    elif function_type == 'tool':
+                        self.tools.append(function_data)
 
     async def get_user_profile(self):
         user = await UserModel.first()

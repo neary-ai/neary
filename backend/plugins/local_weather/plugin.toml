@@ -1,0 +1,18 @@
+[metadata]
+display_name = "Local Weather"
+description = "Inserts today's weather."
+integrations = ["openweathermap"]
+author = "Neary"
+version = "0.1.0"
+github = "https://github.com/neary-ai/neary"
+
+
+[snippets.insert_local_weather]
+display_name = "Insert Local Weather"
+description = "Inserts today's weather."
+
+[snippets.insert_local_weather.settings.location]
+description = "Location for weather data"
+value = ""
+type = "string"
+editable = true

@@ -11,11 +11,11 @@
                             </div>
                         </template>
                         <div class="leading-7">
-                            <div class="text-field-default-foreground text-sm font-medium">{{ tool.metadata.display_name }}</div>
-                            <div class="text-sm text-nearygray-400">{{ tool.metadata.description }}</div>
+                            <div class="text-field-default-foreground text-sm font-medium">{{ tool.display_name }}</div>
+                            <div class="text-sm text-nearygray-400">{{ tool.description }}</div>
                         </div>
                         <template v-slot:button>
-                            <Icon icon="heroicons:plus" @click="addTool(tool)"
+                            <Icon icon="heroicons:plus" @click="addTool(tool.name)"
                                 class="cursor-pointer shrink-0 ml-4 w-5 h-5" />
                         </template>
                     </Card>
@@ -37,29 +37,67 @@ import { Icon } from '@iconify/vue';
 const store = useAppStore();
 const router = useRouter();
 
-const availableTools = ref([])
-
 const filteredTools = computed(() => {
-    if (store.selectedConversation && store.selectedConversation.plugins) {
-        const activePluginNames = store.selectedConversation.plugins.map(plugin => plugin.name);
-        return availableTools.value.filter(tool => !activePluginNames.includes(tool.name));
+    if (store.selectedConversation && store.selectedConversation.plugins && store.availablePlugins) {
+        let selectedTools = [];
+
+        store.selectedConversation.plugins.forEach(plugin => {
+            Object.entries(plugin.functions).forEach(([name, details]) => {
+                if (details.type === 'tool') {
+                    selectedTools.push(name);
+                }
+            });
+        });
+
+        let tools = [];
+
+        store.availablePlugins.forEach(plugin => {
+            Object.entries(plugin.functions).forEach(([name, details]) => {
+                if (details.type === 'tool' && !selectedTools.includes(name)) {
+                    tools.push({
+                        name: name,
+                        display_name: details.display_name,
+                        description: details.description
+                    });
+                }
+            });
+        });
+
+        return tools;
     }
-    return []
+    return [];
 });
 
-const addTool = async (tool) => {
-    store.selectedConversation.plugins.push(tool);
-    await store.updateConversation(store.selectedConversation)
-}
+const addTool = (toolName) => {
+    const availablePlugin = store.availablePlugins.find(plugin => {
+        return Object.keys(plugin.functions).includes(toolName);
+    });
+
+    if (availablePlugin) {
+        const existingPlugin = store.selectedConversation.plugins.find(plugin => plugin.name === availablePlugin.name);
+
+        if (existingPlugin) {
+            existingPlugin.functions[toolName] = availablePlugin.functions[toolName];
+        } else {
+            const newPlugin = {
+                id: null,
+                name: availablePlugin.name,
+                conversation_id: store.selectedConversation.id,
+                data: null,
+                functions: {
+                    [toolName]: availablePlugin.functions[toolName]
+                },
+                metadata: availablePlugin.metadata
+            };
+
+            store.selectedConversation.plugins.push(newPlugin);
+        }
+        store.updateConversation(store.selectedConversation);
+    }
+};
 
 const onBackButtonClick = () => {
     router.go(-1);
 };
-
-watch(() => store.selectedConversationId, async (newId) => {
-    if (newId) {
-        availableTools.value = await api.getAvailableTools(newId);
-    }
-}, { immediate: true });
 
 </script>

@@ -13,7 +13,7 @@ async def process_input(user_message, message_handler):
     """
     conversation_model = await ConversationModel.get_or_none(id=user_message['conversation_id'])
     serialized = await conversation_model.serialize()
-    
+
     conversation = Conversation(id=serialized['id'], 
                             title=serialized['title'], 
                             settings=serialized['settings'], 

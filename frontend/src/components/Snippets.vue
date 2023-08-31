@@ -11,11 +11,11 @@
                             </div>
                         </template>
                         <div class="leading-7">
-                            <div class="text-field-default-foreground text-sm font-medium">{{ snippet.metadata.display_name }}</div>
-                            <div class="text-sm text-nearygray-400">{{ snippet.metadata.description }}</div>
+                            <div class="text-field-default-foreground text-sm font-medium">{{ snippet.display_name }}</div>
+                            <div class="text-sm text-nearygray-400">{{ snippet.description }}</div>
                         </div>
                         <template v-slot:button>
-                            <Icon icon="heroicons:plus" @click="addSnippet(snippet)"
+                            <Icon icon="heroicons:plus" @click="addSnippet(snippet.name)"
                                 class="cursor-pointer shrink-0 ml-4 w-5 h-5" />
                         </template>
                     </Card>
@@ -26,41 +26,77 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted } from 'vue';
+import { computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAppStore } from '@/store/index.js';
 import SectionHeading from './common/SectionHeading.vue'
 import Card from './common/Card.vue'
-import api from '../services/apiService';
 import { Icon } from '@iconify/vue';
 
 const store = useAppStore();
 const router = useRouter();
 
-const availableSnippets = ref([])
-
 const filteredSnippets = computed(() => {
-    if (store.selectedConversation && store.selectedConversation.plugins) {
-        const activePluginNames = store.selectedConversation.plugins.map(plugin => plugin.name);
-        return availableSnippets.value.filter(snippet => !activePluginNames.includes(snippet.name));
+    if (store.selectedConversation && store.selectedConversation.plugins && store.availablePlugins) {
+        let selectedSnippets = [];
+
+        store.selectedConversation.plugins.forEach(plugin => {
+            Object.entries(plugin.functions).forEach(([name, details]) => {
+                if (details.type === 'snippet') {
+                    selectedSnippets.push(name);
+                }
+            });
+        });
+
+        let snippets = [];
+
+        store.availablePlugins.forEach(plugin => {
+            Object.entries(plugin.functions).forEach(([name, details]) => {
+                if (details.type === 'snippet' && !selectedSnippets.includes(name)) {
+                    snippets.push({
+                        name: name,
+                        display_name: details.display_name,
+                        description: details.description
+                    });
+                }
+            });
+        });
+
+        return snippets;
     }
-    return []
+    return [];
 });
 
-const addSnippet = async (snippet) => {
-    store.selectedConversation.plugins.push(snippet);
-    await store.updateConversation(store.selectedConversation)
-}
+const addSnippet = (snippetName) => {
+    const availablePlugin = store.availablePlugins.find(plugin => {
+        return Object.keys(plugin.functions).includes(snippetName);
+    });
+
+    if (availablePlugin) {
+        const existingPlugin = store.selectedConversation.plugins.find(plugin => plugin.name === availablePlugin.name);
+
+        if (existingPlugin) {
+            existingPlugin.functions[snippetName] = availablePlugin.functions[snippetName];
+        } else {
+            const newPlugin = {
+                id: null,
+                name: availablePlugin.name,
+                conversation_id: store.selectedConversation.id,
+                data: null,
+                functions: {
+                    [snippetName]: availablePlugin.functions[snippetName]
+                },
+                metadata: availablePlugin.metadata
+            };
+
+            store.selectedConversation.plugins.push(newPlugin);
+        }
+        store.updateConversation(store.selectedConversation);
+    }
+};
 
 const onBackButtonClick = () => {
     router.go(-1);
 };
-
-
-watch(() => store.selectedConversationId, async (newId) => {
-    if (newId) {
-        availableSnippets.value = await api.getAvailableSnippets(newId);
-    }
-}, { immediate: true });
 
 </script>

@@ -12,18 +12,20 @@
             },
             "token_limit": 5000
         },
-        "snippets": [
+        "plugins" : [
             {
                 "name": "notepad",
-                "settings": null,
-                "data": null
-            }
-        ],
-        "tools": [
-            {
-                "name": "make_a_note",
-                "settings": null,
-                "data": null
+                "data": null,
+                "functions" : {
+                    "insert_notes": {
+                        "type": "snippet",
+                        "settings": null
+                    },
+                    "make_a_note": {
+                        "type": "tool",
+                        "settings": null
+                    }
+                }
             }
         ],
         "is_default": true
@@ -41,28 +43,34 @@
             },
             "token_limit": 3000
         },
-        "snippets": [
+        "plugins": [
             {
                 "name": "user_profile",
-                "settings": null,
-                "data": null
+                "data": null,
+                "functions": {
+                    "insert_user_profile": {
+                        "type": "snippet",
+                        "settings": null
+                    }
+                }
             },
             {
-                "name": "seven_day_calendar",
-                "settings": null,
-                "data": null
-            }
-        ],
-        "tools": [
-            {
-                "name": "create_calendar_event",
-                "settings": null,
-                "data": null
-            },
-            {
-                "name": "get_calendar_events",
-                "settings": null,
-                "data": null
+                "name": "google_calendar",
+                "data": null,
+                "functions": {
+                    "insert_calendar_events": {
+                        "type": "snippet",
+                        "settings": null
+                    },
+                    "create_calendar_event": {
+                        "type": "tool",
+                        "settings": null
+                    },
+                    "get_calendar_events": {
+                        "type": "tool",
+                        "settings": null
+                    }
+                }
             }
         ],
         "is_default": false
@@ -80,18 +88,20 @@
             },
             "token_limit": 5000
         },
-        "snippets": [
+        "plugins": [
             {
-                "name": "document",
-                "settings": null,
-                "data": null
-            }
-        ],
-        "tools": [
-            {
-                "name": "load_urls",
-                "settings": null,
-                "data": null
+                "name": "document_search",
+                "data": null,
+                "functions": {
+                    "insert_similar_documents": {
+                        "type": "snippet",
+                        "settings": null
+                    },
+                    "load_url": {
+                        "type": "tool",
+                        "settings": null
+                    }
+                }
             }
         ],
         "is_default": false
@@ -109,8 +119,7 @@
             },
             "token_limit": 5000
         },
-        "snippets": [],
-        "tools": [],
+        "plugins": [],
         "is_default": false
     }
 ]
