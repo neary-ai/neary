@@ -71,6 +71,13 @@ class PluginManager(metaclass=Singleton):
         if name not in config[function_type+'s']:
             print(f"Error: No matching {function_type} found in config for {name}")
             return
+        
+        # Check if function name already exists
+        for plugin in self.plugins.values():
+            if name in plugin['functions']:
+                print(f"Warning: {function_type} `{name}` in plugin `{plugin_name}` conflicts with an existing function in plugin `{plugin['metadata']['name']}`")
+                return
+
         # Create a copy of function's config
         function_config = config[function_type+'s'][name].copy()
         function_settings = function_config.pop('settings', {})
