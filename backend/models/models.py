@@ -2,7 +2,6 @@ import uuid
 from tortoise import fields
 from tortoise.models import Model
 
-
 class UserModel(Model):
     """
     Represents the user in the system, storing authentication data and application-specific state.
@@ -79,7 +78,7 @@ class ConversationModel(Model):
             "preset": preset.serialize(),
             "title": self.title,
             "settings": self.settings,
-            "plugins": [await plugin.serialize() for plugin in plugins if plugin.is_enabled],
+            "plugins": [await plugin.serialize() for plugin in plugins],
             "messages": message_ids,
             "excerpt": recent_message,
             "created_at": self.created_at.isoformat(),
@@ -113,48 +112,27 @@ class PresetModel(Model):
         }
 
 
-class PluginRegistryModel(Model):
+class PluginInstanceModel(Model):
     id = fields.IntField(pk=True)
-    name = fields.CharField(max_length=255, unique=True)
-    plugin_type = fields.CharField(max_length=255)
-    metadata = fields.JSONField(null=True)
-    settings = fields.JSONField(null=True)
-    is_internal = fields.BooleanField(default=False)
-    is_active = fields.BooleanField(default=False)
+    name = fields.CharField(max_length=255)
+    conversation = fields.ForeignKeyField(
+        "models.ConversationModel", related_name="plugins")
+    data = fields.JSONField(null=True)
+    functions = fields.JSONField(null=True)
 
-    def serialize(self):
+    async def serialize(self):
+        from backend.services import PluginManager
+        plugin_manager = PluginManager()
+
+        functions, metadata = plugin_manager.add_metadata(self)
+
         return {
             "id": self.id,
             "name": self.name,
-            "metadata": self.metadata,
-            "settings": self.settings,
-            "is_active": self.is_active,
-        }
-
-
-class PluginInstanceModel(Model):
-    id = fields.IntField(pk=True)
-    plugin = fields.ForeignKeyField(
-        "models.PluginRegistryModel", related_name="instances")
-    conversation = fields.ForeignKeyField(
-        "models.ConversationModel", related_name="plugins")
-    settings = fields.JSONField(null=True)
-    data = fields.JSONField(null=True)
-    is_enabled = fields.BooleanField(default=True)
-
-    async def serialize(self):
-        await self.fetch_related("plugin")
-        return {
-            "id": self.id,
-            "name": self.plugin.name,
             "conversation_id": self.conversation_id,
-            "settings": self.settings,
             "data": self.data,
-            "registry": {
-                "metadata": self.plugin.metadata,
-                "default_settings": self.plugin.settings,
-            },
-            "is_enabled": self.is_enabled
+            "functions": functions,
+            "metadata": metadata
         }
 
 

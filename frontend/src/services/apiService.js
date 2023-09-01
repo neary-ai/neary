@@ -229,6 +229,14 @@ const api = {
             console.error('Error getting snippets:', error);
         }
     },
+    async getAvailablePlugins() {
+        try {
+            const response = await axios.get(`${apiBaseUrl}/api/plugins`, { withCredentials: true });
+            return response.data;
+        } catch (error) {
+            console.error('Error getting plugins:', error);
+        }
+    },
     async getAvailableTools(conversationId) {
         try {
             const response = await axios.get(`${apiBaseUrl}/api/conversations/${conversationId}/tools`, { withCredentials: true });
@@ -245,12 +253,20 @@ const api = {
             console.error('Error getting plugin info: ', error);
         }
     },
-    async updatePluginSettings(pluginId, settings) {
+    async updatePluginSettings(pluginName, conversationId, updatedSettings) {
         try {
-            const response = await axios.put(`${apiBaseUrl}/api/plugins/${pluginId}`, settings, { withCredentials: true });
+            const response = await axios.put(`${apiBaseUrl}/api/plugins/${pluginName}/${conversationId}`, updatedSettings, { withCredentials: true });
             return response.data;
         } catch (error) {
             console.error('Error updating plugin: ', error);
+        }
+    },
+    async clearPluginData(pluginName, conversationId) {
+        try {
+            const response = await axios.put(`${apiBaseUrl}/api/plugins/${pluginName}/${conversationId}/data`, {}, { withCredentials: true });
+            return response.data;
+        } catch (error) {
+            console.error('Error clearing plugin data: ', error);
         }
     },
     async getIntegrations() {

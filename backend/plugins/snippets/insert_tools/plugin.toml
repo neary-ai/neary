@@ -1,9 +1,0 @@
-[metadata]
-display_name = "Insert Tools"
-version = "0.1.0"
-author = "Neary"
-
-plugin_type = "snippet"
-module = "insert_tools"
-description = "Give Neary context on which tools are available and how to use them"
-is_internal = true

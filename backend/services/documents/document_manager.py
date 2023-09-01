@@ -122,8 +122,8 @@ class DocumentManager:
     Loader methods
     """
 
-    async def load_urls(self, urls):
-        docs = await url_loader(urls)
+    async def load_url(self, url):
+        docs = await url_loader([url])
         await self.save_documents(docs)
 
     async def load_files(self, files):

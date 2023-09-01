@@ -1,5 +1,6 @@
 import os
 import json
+import pprint
 from pathlib import Path
 from typing import Optional
 
@@ -10,12 +11,14 @@ from backend.models import *
 from backend.auth import get_current_user
 from backend.utils.utils import export_conversation
 from backend.services.documents.document_manager import DocumentManager
+from backend.services import PluginManager
 from backend.conversation import Conversation
 
 from backend.models import UserModel, IntegrationRegistryModel
 from backend.services.oauth_handler import OAuthHandler
 
 router = APIRouter()
+plugin_manager = PluginManager()
 
 """
 User Profile
@@ -100,9 +103,7 @@ async def create_conversation(space_id: int):
     conversation = await ConversationModel.create(title="New Conversation", space=space, preset=preset, settings=preset.settings)
 
     for plugin in preset.plugins:
-        plugin = await PluginRegistryModel.get_or_none(name=plugin['name'], is_active=True, is_internal=False)
-        if plugin:
-            await PluginInstanceModel.create(plugin=plugin, conversation=conversation)
+        await PluginInstanceModel.create(name=plugin["name"], functions=plugin["functions"], data={}, conversation=conversation)
 
     return await conversation.serialize()
 
@@ -212,7 +213,7 @@ async def update_conversation(request: Request, conversation_id: int):
         conversation.space = space
 
     # Update preset
-    new_plugin_names = None
+    new_plugin_data = None
 
     preset_data = conversation_data.get('preset')
     if preset_data:
@@ -224,46 +225,48 @@ async def update_conversation(request: Request, conversation_id: int):
                 raise HTTPException(status_code=404, detail="Preset not found")
 
             conversation.preset = preset
-            conversation.settings=preset.settings
+            conversation.settings = preset.settings
+            
             # Update conversation settings with preset settings
-            new_plugin_names = set(plugin['name'] for plugin in preset.plugins)
+            new_plugin_data = preset.plugins
 
     # If no new plugins from preset, get from settings
-    if new_plugin_names is None:
-        new_plugin_names = set(
-            plugin['name'] for plugin in conversation_data.get('plugins', []))
+    if new_plugin_data is None:
+        new_plugin_data = conversation_data.get('plugins', None)
 
-    current_plugins = [await plugin.serialize() for plugin in conversation.plugins if plugin.is_enabled]
-    current_plugin_names = set(plugin['name'] for plugin in current_plugins)
+    # Existing plugin names
+    existing_plugin_names = [plugin.name for plugin in conversation.plugins]
 
-    # Find plugins to add and remove
-    plugins_to_add = new_plugin_names - current_plugin_names
-    plugins_to_remove = current_plugin_names - new_plugin_names
+    # New plugin names
+    new_plugin_names = [plugin["name"] for plugin in new_plugin_data]
 
-    # Disable removed plugins
+    # Plugin names to remove
+    plugins_to_remove = set(existing_plugin_names) - set(new_plugin_names)
+
+    # Remove plugins that are not included in the new data
     for plugin_name in plugins_to_remove:
-        plugin_instance = await PluginInstanceModel.get_or_none(conversation_id=conversation.id, plugin__name=plugin_name)
+        plugin_instance = await PluginInstanceModel.get(name=plugin_name, conversation=conversation)
         if plugin_instance:
-            plugin_instance.is_enabled = False
-            await plugin_instance.save()
+            await plugin_instance.delete()
 
-    # Enable active plugins
-    for plugin_name in plugins_to_add:
-        plugin_instance = await PluginInstanceModel.get_or_none(conversation_id=conversation.id, plugin__name=plugin_name)
+    # Now add, remove or update plugins from conversation model
+    for plugin in new_plugin_data:
+
+        # See if instance already exists
+        plugin_instance = await PluginInstanceModel.get_or_none(name=plugin["name"], conversation=conversation)
+
+        # Create or update instance
         if plugin_instance:
-            plugin_instance.is_enabled = True
+            plugin_instance.functions = plugin['functions']
             await plugin_instance.save()
         else:
-            plugin = await PluginRegistryModel.get_or_none(name=plugin_name, is_active=True)
-            if plugin:
-                await PluginInstanceModel.create(conversation_id=conversation.id, plugin=plugin)
-
-    # Save changes
+            await PluginInstanceModel.create(name=plugin["name"], functions=plugin["functions"], conversation=conversation)
+    
     await conversation.save()
 
     output = await conversation.serialize()
+    
     return output
-
 
 @router.post("/presets/import")
 async def add_presets(preset: dict = Body(...)):
@@ -277,6 +280,7 @@ async def add_presets(preset: dict = Body(...)):
     presets = await PresetModel.filter(is_active=True)
 
     return [preset.serialize() for preset in presets]
+
 
 @router.post("/presets/{preset_id}")
 async def delete_presets(preset_id: int):
@@ -306,7 +310,7 @@ async def export_preset(preset_id: int):
         raise HTTPException(status_code=404, detail="Preset not found")
 
     preset_data = preset.serialize()
-    
+
     del preset_data['is_custom']
     del preset_data['is_default']
     del preset_data['id']
@@ -354,7 +358,7 @@ async def create_preset(preset_name: str = Body(...), preset_description: str = 
     for plugin in serialized_plugins:
         plugins.append({
             "name": plugin['name'],
-            "settings": plugin['settings'],
+            "functions": plugin['functions'],
             "data": None
         })
 
@@ -370,20 +374,8 @@ async def create_preset(preset_name: str = Body(...), preset_description: str = 
 
     serialized = preset.serialize()
 
-    return serialized
+    print ('preset: ', serialized)
 
-
-@router.get("/conversations/{conversation_id}/snippets")
-async def get_snippets(conversation_id: int):
-    plugins = await PluginRegistryModel.filter(plugin_type="snippet", is_active=True, is_internal=False)
-    serialized = [plugin.serialize() for plugin in plugins]
-    return serialized
-
-
-@router.get("/conversations/{conversation_id}/tools")
-async def get_tools(conversation_id: int):
-    plugins = await PluginRegistryModel.filter(plugin_type="tool", is_active=True, is_internal=False)
-    serialized = [plugin.serialize() for plugin in plugins]
     return serialized
 
 
@@ -439,23 +431,59 @@ async def new_integration(integration: dict = Body(...)):
     # Return the serialized integrations
     return serialized_integrations
 
+@router.get("/plugins")
+async def get_loaded_plugins():
+    plugins = plugin_manager.get_serialized_plugins()
+    return plugin_manager.get_serialized_plugins()
+
+
 @router.get("/plugins/{plugin_id}")
 async def get_plugin_instance(plugin_id: int):
     plugin = await PluginInstanceModel.get_or_none(id=plugin_id)
 
     if plugin:
         plugin_data = await plugin.serialize()
-    
+
     return plugin_data
 
-@router.put("/plugins/{plugin_id}")
-async def update_plugin_instance(plugin_id: int, settings: dict = Body(...)):
-    plugin = await PluginInstanceModel.get_or_none(id=plugin_id)
-    print('Updating settings: ', settings)
-    plugin.settings = settings
+
+@router.put("/plugins/{plugin_name}/{conversation_id}")
+async def update_plugin_instance(plugin_name: str, conversation_id: int, settings: dict = Body(...)):
+    plugin = await PluginInstanceModel.get_or_none(name=plugin_name, conversation_id=conversation_id)
+
+    if plugin is None:
+        raise HTTPException(status_code=404, detail="Plugin not found")
+
+    # Update each function in plugin.functions with revised settings
+    for function_name, function_settings in settings.items():
+        if function_name in plugin.functions:
+            # Wrap each setting value in an object with a 'value' property
+            function_settings = {key: {"value": value} for key, value in function_settings.items()}
+
+            if plugin.functions[function_name]['settings'] is None:
+                # If the current settings are None, replace them with the new settings
+                plugin.functions[function_name]['settings'] = function_settings
+            else:
+                # If the current settings are not None, update them with the new settings
+                plugin.functions[function_name]['settings'].update(function_settings)
+
     await plugin.save()
 
     return {"detail": "success"}
+
+@router.put("/plugins/{plugin_name}/{conversation_id}/data")
+async def clear_plugin_data(plugin_name: str, conversation_id: int):
+    plugin = await PluginInstanceModel.get_or_none(name=plugin_name, conversation_id=conversation_id)
+
+    if plugin is None:
+        raise HTTPException(status_code=404, detail="Plugin not found")
+    
+    plugin.data = {}
+
+    await plugin.save()
+
+    return {"detail": "success"}
+
 
 @router.get("/conversations/{conversation_id}/messages")
 async def get_conversation_messages(request: Request, conversation_id: int, archived: Optional[bool] = False):
@@ -566,7 +594,7 @@ async def upload_document(conversation_id: int, file: UploadFile = File(...)):
 async def upload_url(conversation_id: int, url: str = Body(...)):
     """ Create a new document from a URL """
     document_manager = DocumentManager(conversation_id)
-    await document_manager.load_urls([url])
+    await document_manager.load_url(url)
 
     return JSONResponse(status_code=200, content={"detail": "success"})
 
@@ -630,9 +658,7 @@ async def get_initial_data(request: Request):
         conversation = await ConversationModel.create(title="Welcome to Neary!", space=None, preset=preset, settings=preset.settings)
 
         for plugin in preset.plugins:
-            plugin = await PluginRegistryModel.get_or_none(name=plugin['name'], is_active=True, is_internal=False)
-            if plugin:
-                await PluginInstanceModel.create(plugin=plugin, conversation=conversation)
+            await PluginInstanceModel.create(name=plugin["name"], functions=plugin["functions"], conversation=conversation)
 
         await MessageModel.create(conversation=conversation, role="assistant", content="Welcome to Neary! I'm here to help you get started. 🤗\n\nCan I have your name and your location, if you're comfortable sharing? I can use your location to set your timezone.")
 
@@ -642,7 +668,8 @@ async def get_initial_data(request: Request):
         'app_state': app_state,
         'user_profile': user_profile,
         'spaces': serialized_spaces,
-        'conversations': serialized_conversations
+        'conversations': serialized_conversations,
+        'plugins': plugin_manager.get_serialized_plugins()
     }
 
     return initial_data

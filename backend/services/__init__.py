@@ -6,3 +6,4 @@ from .message_handler import MessageHandler
 from .oauth_handler import OAuthHandler
 from .user_profile_manager import UserProfileManager
 from .file_manager import FileManager
+from .plugin_manager import PluginManager

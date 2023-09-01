@@ -1,0 +1,35 @@
+[metadata]
+display_name = "Document Search"
+description = "Enhances user messages by inserting relevant sections from added Documents into context."
+author = "Neary"
+version = "0.1.0"
+github = "https://github.com/neary-ai/neary"
+
+
+[snippets.insert_similar_documents]
+display_name = "Insert Relevant Documents"
+description = "Inserts sections from documents relevant to the user message."
+
+[snippets.insert_similar_documents.settings.max_results]
+description = "The maximum number of documents snippets to return."
+value = 3
+type = "integer"
+editable = false
+
+
+[tools.load_url]
+display_name = "Load URL"
+description = "Creates a new document from the provided URL."
+llm_description = "Loads the content from a URL into memory for analysis. Takes a `url` (string) argument."
+
+[tools.load_url.settings.requires_approval]
+description = "Require user approval before running tool"
+value = true
+type = "boolean"
+editable = true
+
+[tools.load_url.settings.follow_up_on_output]
+description = "Generate a new response to tool output"
+value = true
+type = "boolean"
+editable = false

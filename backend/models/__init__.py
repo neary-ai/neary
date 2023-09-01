@@ -3,7 +3,6 @@ from .models import (
     SpaceModel,
     ConversationModel,
     MessageModel,
-    PluginRegistryModel,
     PluginInstanceModel,
     PresetModel,
     DocumentModel,

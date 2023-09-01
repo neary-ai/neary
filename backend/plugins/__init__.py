@@ -1,2 +1,1 @@
-from .tools.tool import Tool
-from .snippets.snippet import Snippet
+from .plugin import BasePlugin, tool, snippet

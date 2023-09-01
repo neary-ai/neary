@@ -1,9 +1,0 @@
-[metadata]
-display_name = "User Guide"
-version = "0.1.0"
-author = "Neary"
-
-plugin_type = "snippet"
-module = "user_guide"
-description = "Inserts the contents of the user guide."
-is_internal = true
