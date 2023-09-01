@@ -155,7 +155,7 @@ const deletePreset = async (preset) => {
 
 const setDefault = async (preset) => {
   preset['is_default'] = true;
-  presets = await api.updatePreset(preset);
+  presets.value = await api.updatePreset(preset);
 }
 
 const onBackButtonClick = () => {

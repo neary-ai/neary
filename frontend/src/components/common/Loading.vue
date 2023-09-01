@@ -29,7 +29,7 @@ clearInterval(intervalId);
 const props = defineProps({
 textColor: {
   type: String,
-  default: 'text-nearypink-300'
+  default: 'text-nearylight-300'
 }
 });
 </script>

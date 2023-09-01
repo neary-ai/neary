@@ -1,5 +1,6 @@
 .vscode
 .env
+.pytest*
 backend/credentials/*
 !/backend/credentials/.gitkeep
 backend/data/*
