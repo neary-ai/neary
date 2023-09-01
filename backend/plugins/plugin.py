@@ -12,12 +12,14 @@ class BasePlugin(ABC):
         self.id = id
         self.conversation = conversation
         self.settings, self.metadata = self.load_config()
-        
+
+        # Simplify settings dict
         if settings is not None:
             for key in settings:
                 if key in self.settings:
-                    self.settings[key].update(settings[key])
-    
+                    for subkey in settings[key]:
+                        self.settings[key][subkey] = settings[key][subkey]['value']
+
         self.data = {} if data is None else data
 
     def load_config(self):
@@ -30,11 +32,15 @@ class BasePlugin(ABC):
 
         # Load settings for each tool
         for tool_name, tool_config in config.get("tools", {}).items():
-            settings[tool_name] = tool_config.get("settings", {})
+            tool_settings = tool_config.get("settings", {})
+            for setting_name, setting_config in tool_settings.items():
+                settings[tool_name] = {setting_name: setting_config.get("value", None)}
 
         # Load settings for each snippet
         for snippet_name, snippet_config in config.get("snippets", {}).items():
-            settings[snippet_name] = snippet_config.get("settings", {})
+            snippet_settings = snippet_config.get("settings", {})
+            for setting_name, setting_config in snippet_settings.items():
+                settings[snippet_name] = {setting_name: setting_config.get("value", None)}
 
         return settings, metadata
 

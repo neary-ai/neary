@@ -1,6 +1,6 @@
 [metadata]
 display_name = "Google Calendar"
-description = "Inserts calendar events for a given period."
+description = "Have Neary manage your schedule by answering questions about your calendar and scheduling events on your behalf."
 integrations = ["google_calendar"]
 author = "Neary"
 version = "0.1.0"
@@ -9,16 +9,16 @@ github = "https://github.com/neary-ai/neary"
 
 [snippets.insert_calendar_events]
 display_name = "Insert Calendar Events"
-description = "Inserts calendar events for a given period."
+description = "Insert upcoming calendar events into context."
 
 [snippets.insert_calendar_events.settings.days]
-description = "How many days of events to retrieve"
+description = "How many days of events to insert"
 value = 7
 type = "integer"
 editable = true
 
 [snippets.insert_calendar_events.settings.filter_recurring]
-description = "Whether or not to filter out multiple recurring events"
+description = "Display recurring events only once"
 value = true
 type = "boolean"
 editable = true
@@ -32,17 +32,17 @@ editable = true
 
 [tools.create_calendar_event]
 display_name = "Create Calendar Event"
-description = "Creates an event on your Google Calendar"
+description = "Schedules an event on your behalf."
 llm_description = "Creates an event on the user's calendar. Takes `event_title` (string), `event_description` (string), `start_time` (ISO 8601 string), `end_time` (ISO 8601 string) and `attendees` (email addresses in a Python list) arguments."
 
 [tools.create_calendar_event.settings.requires_approval]
-description = "Whether this tool requires approval or not"
+description = "Require user approval before running tool"
 value = true
 type = "boolean"
 editable = true
 
 [tools.create_calendar_event.settings.follow_up_on_output]
-description = "Whether to follow up on the output or not"
+description = "Generate a new response to tool output"
 value = true
 type = "boolean"
 editable = false
@@ -50,11 +50,11 @@ editable = false
 
 [tools.get_calendar_events]
 display_name = "Get Calendar Events"
-description = "Retrieves calendar events for a given number of days."
+description = "Retrieves calendar events for a given period of days."
 llm_description = "Retrieves the user's upcoming calendar events. Takes optional `days` (integer) argument, where `1` would be today's events, `2` would be today's and tomorrow's events, and so on."
 
 [tools.get_calendar_events.settings.filter_recurring]
-description = "Whether or not to filter out multiple recurring events"
+description = "Display recurring events only once"
 value = true
 type = "boolean"
 editable = true
@@ -66,13 +66,13 @@ type = "boolean"
 editable = true
 
 [tools.get_calendar_events.settings.requires_approval]
-description = "Whether this tool requires approval or not"
+description = "Require user approval before running tool"
 value = false
 type = "boolean"
 editable = true
 
 [tools.get_calendar_events.settings.follow_up_on_output]
-description = "Whether to follow up on the output or not"
+description = "Generate a new response to tool output"
 value = true
 type = "boolean"
 editable = false

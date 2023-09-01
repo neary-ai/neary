@@ -1,6 +1,6 @@
 [metadata]
 display_name = "Local Weather"
-description = "Inserts today's weather."
+description = "Inserts the current weather into context."
 integrations = ["openweathermap"]
 author = "Neary"
 version = "0.1.0"
@@ -9,10 +9,10 @@ github = "https://github.com/neary-ai/neary"
 
 [snippets.insert_local_weather]
 display_name = "Insert Local Weather"
-description = "Inserts today's weather."
+description = "Inserts the current weather at your location."
 
 [snippets.insert_local_weather.settings.location]
-description = "Location for weather data"
+description = "City or zip code to use for weather data"
 value = ""
 type = "string"
 editable = true

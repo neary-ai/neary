@@ -20,7 +20,7 @@ class LocalWeather(BasePlugin):
 
         # First try to get a location from plugin settings, then from profile
         profile_location = await profile_manager.get_field('location')
-        plugin_location =  self.settings['insert_local_weather']['location']['value']
+        plugin_location =  self.settings['insert_local_weather']['location']
         location = plugin_location if plugin_location else profile_location
         
         owm = OWM(credentials['api_key'])

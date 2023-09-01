@@ -11,9 +11,9 @@ class GoogleCalendar(BasePlugin):
 
     @snippet
     async def insert_calendar_events(self, context):
-        days = self.settings['insert_calendar_events']['days']['value']
-        filter_recurring = self.settings['insert_calendar_events']['filter_recurring']['value']
-        concise = self.settings['insert_calendar_events']['concise']['value']
+        days = self.settings['insert_calendar_events']['days']
+        filter_recurring = self.settings['insert_calendar_events']['filter_recurring']
+        concise = self.settings['insert_calendar_events']['concise']
         
         try:
             await self.google_service.authenticate()
@@ -60,8 +60,8 @@ class GoogleCalendar(BasePlugin):
         
     @tool
     async def get_calendar_events(self, days):
-        filter_recurring = self.settings['get_calendar_events']['filter_recurring']['value']
-        concise = self.settings['get_calendar_events']['concise']['value']
+        filter_recurring = self.settings['get_calendar_events']['filter_recurring']
+        concise = self.settings['get_calendar_events']['concise']
         try:
             await self.google_service.authenticate()        
         except Exception as e:

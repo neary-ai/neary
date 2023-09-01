@@ -12,7 +12,7 @@ class DateTimeSnippet(BasePlugin):
     async def insert_date_time(self, context):
         profile_manager = UserProfileManager()
         profile_tz = await profile_manager.get_field('timezone')
-        settings_tz = self.settings['insert_date_time']['timezone']['value']
+        settings_tz = self.settings['insert_date_time']['timezone']
 
         timezone = settings_tz if settings_tz else profile_tz
 

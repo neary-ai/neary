@@ -8,7 +8,7 @@ class DocumentSearch(BasePlugin):
 
     @snippet
     async def insert_similar_documents(self, context):
-        max_results = self.settings['insert_similar_documents']['max_results']['value']
+        max_results = self.settings['insert_similar_documents']['max_results']
 
         query = context.get_user_message()
 
