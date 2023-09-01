@@ -147,6 +147,22 @@ watch(route, async (to) => {
   }
 }, { immediate: true });
 
+watch(
+  () => store.selectedConversation,
+  (newVal, oldVal) => {
+    if (newVal && oldVal && newVal.id === oldVal.id) {
+      newVal.messages.forEach((newId, index) => {
+        let oldId = oldVal.messages[index];
+        if ((typeof oldId === 'string' || oldId === null) && typeof newId === 'number') {
+          // Update temporary message ID with permanent ID
+          store.messages[newId] = store.messages[oldId];
+          delete store.messages[oldId];
+        }
+      });
+    }
+  },
+  { deep: true }
+);
 
 onMounted(async () => {
   await store.initialize();

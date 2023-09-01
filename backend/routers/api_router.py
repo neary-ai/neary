@@ -85,6 +85,13 @@ async def archive_space(space_id: int):
 
     space.is_archived = True
     await space.save()
+
+    conversations = await ConversationModel.filter(space_id=space_id)
+    
+    for conversation in conversations:
+        conversation.space_id = None
+        await conversation.save()
+
     return {"detail": "Space archived"}
 
 
@@ -143,8 +150,8 @@ async def get_settings_options():
                     "value": "gpt-4"
                 },
                 {
-                    "option": "gpt-3.5",
-                    "value": "gpt-3.5"
+                    "option": "gpt-3.5-turbo",
+                    "value": "gpt-3.5-turbo"
                 },
             ]
         }

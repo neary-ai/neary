@@ -247,6 +247,13 @@ export const useAppStore = defineStore('appstore', {
             try {
                 await api.deleteSpace(spaceId);
                 this.selectedSpaceId = null;
+
+                for (let id in this.conversations) {
+                    if (this.conversations[id].space_id === spaceId) {
+                        this.conversations[id].space_id = -1;
+                    }
+                }
+                
                 delete this.spaces[spaceId];
                 this.newNotification("Space deleted")
             } catch (error) {
@@ -326,6 +333,7 @@ export const useAppStore = defineStore('appstore', {
             }
             this.messages[message.id] = message;
             this.conversations[conversationId].messages.push(message.id);
+            this.conversations[conversationId].excerpt = message.content
         },
         removeMessage(messageId, conversationId) {
             delete this.messages[messageId];
@@ -337,6 +345,7 @@ export const useAppStore = defineStore('appstore', {
         updateLastMessage(message, messageId) {
             message.id = messageId
             this.messages[messageId] = message
+            this.conversations[message.conversation_id].excerpt = message.content
         }
     },
 });

@@ -41,18 +41,19 @@
       </div>
     </div>
   </div>
-  <Modal :isOpen="isOpen" @keyup.enter="save" @save="save" @close="close">
+  <Modal :isOpen="isOpen" @close="close">
     <template v-slot:title>
       {{ modalTitle }}
     </template>
     <div class="flex-grow w-full my-5">
       <div>
         <input v-model="spaceName" type="text" placeholder="What should we call it?"
-          class="focus:ring-0 focus:border-nearyblue-300 border border-transparent rounded-md bg-nearygray-100 text-sm w-full px-3 py-2" />
+          class="focus:ring-0 focus:border-nearyblue-300 border border-transparent rounded-md bg-nearygray-100 text-sm w-full px-3 py-2"
+          @keyup.enter="save" />
       </div>
     </div>
     <template v-slot:buttons>
-      <Button @buttonClick="save" button-type="btn-light" class="w-full">Save</Button>
+      <Button @buttonClick="save" button-type="btn-light" class="w-full bg-nearylight-200">Save</Button>
       <Button @buttonClick="close" button-type="btn-outline-light" class="w-full">Cancel</Button>
     </template>
   </Modal>

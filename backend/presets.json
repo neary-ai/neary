@@ -3,7 +3,7 @@
         "id": 1,
         "name": "Chat with Neary",
         "icon": "heroicons:chat-bubble-left-right-solid",
-        "description": "General chat, sensible defaults.",
+        "description": "General chat, light personalization.",
         "settings": {
             "llm": {
                 "api_type": "openai",
@@ -79,7 +79,7 @@
         "id": 3,
         "name": "Document Chat",
         "icon": "heroicons:document-magnifying-glass-solid",
-        "description": "Load documents. Ask questions. Get answers.",
+        "description": "Ask questions about your documents.",
         "settings": {
             "llm": {
                 "api_type": "openai",

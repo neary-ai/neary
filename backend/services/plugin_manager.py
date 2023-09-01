@@ -26,7 +26,7 @@ class PluginManager(metaclass=Singleton):
         plugins_dir = os.path.join(root_dir, 'plugins')
         
         for plugin_name in os.listdir(plugins_dir):
-            if os.path.isdir(os.path.join(plugins_dir, plugin_name)):
+            if not plugin_name.startswith('_') and os.path.isdir(os.path.join(plugins_dir, plugin_name)):
                 self.load_plugin(plugin_name)
 
     def load_plugin(self, plugin_name):
