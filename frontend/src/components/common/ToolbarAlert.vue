@@ -1,8 +1,7 @@
 <template>
   <Transition>
     <div v-if="store.notification" class="absolute left-0 right-0 bottom-[3rem] flex justify-center">
-      <div
-        class="flex flex-shrink-0 items-center justify-between bg-nearypink-300 text-sm text-white px-4 py-2 rounded-full shadow ring-1 ring-nearyblue-300 max-w-sm">
+      <div :class="[store.notification.message.length >= 45 ? 'rounded-lg px-4 py-3' : 'rounded-full px-4 py-2', 'flex flex-shrink-0 items-center justify-between bg-nearypink-300 text-sm text-white shadow ring-1 ring-nearyblue-300 max-w-sm']">
         <div>{{ message }}</div>
         <XMarkIcon v-if="sticky" @click="store.notification = null;"
           class="flex-shrink-0 cursor-pointer ml-1.5 w-4 h-4 text-white/60" />
@@ -38,7 +37,6 @@ const sticky = computed(() => {
   }
   else return null;
 })
-
 </script>
 
 <style>

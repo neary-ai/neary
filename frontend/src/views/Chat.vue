@@ -149,7 +149,6 @@ watch(route, async (to) => {
 
 
 onMounted(async () => {
-
   await store.initialize();
   await initWebSocket();
 

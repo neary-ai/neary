@@ -655,12 +655,10 @@ async def get_initial_data(request: Request):
     if not app_state and not serialized_spaces and not serialized_conversations:
 
         preset = await PresetModel.filter(is_default=True).first()
-        conversation = await ConversationModel.create(title="Welcome to Neary!", space=None, preset=preset, settings=preset.settings)
+        conversation = await ConversationModel.create(title="New Conversation", space=None, preset=preset, settings=preset.settings)
 
         for plugin in preset.plugins:
             await PluginInstanceModel.create(name=plugin["name"], functions=plugin["functions"], conversation=conversation)
-
-        await MessageModel.create(conversation=conversation, role="assistant", content="Welcome to Neary! I'm here to help you get started. 🤗\n\nCan I have your name and your location, if you're comfortable sharing? I can use your location to set your timezone.")
 
         serialized_conversations.append(await conversation.serialize())
 
