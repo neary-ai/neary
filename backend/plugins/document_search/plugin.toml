@@ -20,7 +20,12 @@ editable = false
 [tools.load_url]
 display_name = "Load URL"
 description = "Creates a new document from the provided URL."
-llm_description = "Loads the content from a URL into memory for analysis. Takes a `url` (string) argument."
+llm_description = "Loads the content from a URL into memory for analysis."
+
+[tools.load_url.parameters.url]
+type = "string"
+description = "The URL to load"
+required = true
 
 [tools.load_url.settings.requires_approval]
 description = "Require user approval before running tool"

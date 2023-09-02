@@ -39,9 +39,8 @@ class Conversation:
             context = MessageChain(system_message=self.settings['llm']['system_message'],
                                    user_message=user_message, tool_output=tool_output, conversation_id=self.id)
 
-            # Insert available tools
-            if self.tools:
-                context.add_snippet(self.get_tools_str())
+            # Add tool function definitions
+            functions = [tool['definition'] for tool in self.tools]
 
             # Add context from snippets
             for snippet in self.snippets:
@@ -51,14 +50,21 @@ class Conversation:
             await self.context_manager.generate_context(context)
 
             # Send complete context to the LLM for a response
-            ai_response = await self.message_handler.get_ai_response(self, context)
+            ai_response = await self.message_handler.get_ai_response(self, context, functions)
 
             # Save user message / tool output and AI response to database
             role = "user" if user_message else "tool_output"
             message = user_message if user_message else tool_output
 
+            # Construct metadata
+            metadata = context.get_metadata()
+            if ai_response['function_call']:
+                metadata.append({'function_call': ai_response['function_call']})
+
+            print('Saving metadata: ', metadata)
+
             await self.save_message(role=role, content=message, conversation_id=self.id)
-            await self.save_message(role="assistant", content=ai_response, conversation_id=self.id, metadata=context.get_metadata())
+            await self.save_message(role="assistant", content=ai_response['content'], conversation_id=self.id, metadata=metadata)
 
             # Handle requested tool, if any
             tool_output, follow_up_requested = await self.handle_tool_requests(ai_response)
@@ -81,11 +87,9 @@ class Conversation:
         """
         Entry point for tool requests, used after each AI response
         """
-        tool_request = self.extract_tool(ai_response)
-
-        if tool_request:
-            tool_name, tool_args = tool_request
-
+        if ai_response['function_call']:
+            tool_name = ai_response['function_call']['name']
+            tool_args = ai_response['function_call']['arguments']
             # Find the loaded tool plugin
             for tool in self.tools:
                 if tool['name'] == tool_name:
@@ -98,26 +102,6 @@ class Conversation:
                     break
 
         return None, False
-
-    def extract_tool(self, ai_response):
-        """
-        Parses tool requests and provided arguments from the LLM
-        TO-DO: Implement proper OpenAI function calling
-        """
-        tool_pattern = r'<<tool:([^(\s]+)\(([^>]*)\)>>'
-        match = re.search(tool_pattern, ai_response)
-
-        if match:
-            tool_name = match.group(1)
-            tool_args_json = match.group(2)
-
-            try:
-                tool_kwargs = json.loads(tool_args_json)
-            except json.JSONDecodeError:
-                print("No valid JSON arguments found in tool_args.")
-                tool_kwargs = {}
-
-            return tool_name, tool_kwargs
 
     async def request_approval(self, tool, tool_args):
         """
@@ -241,11 +225,27 @@ class Conversation:
                         'metadata': plugin_info['functions'][function_name]
                     }
 
-                    # Add the function data to the appropriate list
-                    if function_type == 'snippet':
-                        self.snippets.append(function_data)
-                    elif function_type == 'tool':
+                    # Create function definition for tools
+                    if function_type == 'tool':
+                        function_definition = {
+                            "name": function_name,
+                            "description": function_info.get("llm_description", ""),
+                            "parameters": {
+                                "type": "object",
+                                "properties": {
+                                    parameter_name: {
+                                        key: value for key, value in parameter_info.items() if key != "required"
+                                    }
+                                    for parameter_name, parameter_info in function_info.get("parameters", {}).items()
+                                } if "parameters" in function_info else {},
+                                "required": [parameter_name for parameter_name, parameter_info in function_info.get("parameters", {}).items() if parameter_info.get("required", False)]
+                            } if "parameters" in function_info else {"type": "object", "properties": {}}
+                        }
+                        function_data["definition"] = function_definition
                         self.tools.append(function_data)
+                    elif function_type == 'snippet':
+                        self.snippets.append(function_data)
+
 
     async def get_user_profile(self):
         user = await UserModel.first()
@@ -262,7 +262,7 @@ class Conversation:
         return current_space_id, space_options
 
     async def save_message(self, role, content, conversation_id, actions=None, metadata=None):
-        if content and type(content) == str:
+        if (content and type(content) == str) or (metadata and len(metadata) > 0):
             message = await MessageModel.create(role=role, content=content, conversation_id=conversation_id, actions=actions, metadata=metadata)
             conversation = await ConversationModel.get(id=conversation_id)
             conversation.updated_at = datetime.utcnow()

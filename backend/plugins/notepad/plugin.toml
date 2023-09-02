@@ -14,7 +14,12 @@ description = "Inserts the contents of Neary's notepad"
 [tools.make_a_note]
 display_name = "Make a Note"
 description = "Saves a note for Neary's future reference"
-llm_description = "Saves a note to memory for your future reference. Use only when the user asks you to remember something. Takes a `text` argument."
+llm_description = "Saves a note to memory for your future reference. Use only when the user asks you to remember something."
+
+[tools.make_a_note.parameters.text]
+type = "string"
+description = "The text of the note to save"
+required = true
 
 [tools.make_a_note.settings.requires_approval]
 description = "Require user approval before running tool"
@@ -32,7 +37,7 @@ editable = false
 [tools.clear_notes]
 display_name = "Clear Notes"
 description = "Clears Neary's notepad"
-llm_description = "Erases your saved notes. Only use when instructed by the user. Takes no arguments."
+llm_description = "Erases your saved notes. Only use when instructed by the user."
 
 [tools.clear_notes.settings.requires_approval]
 description = "Require user approval before running tool"

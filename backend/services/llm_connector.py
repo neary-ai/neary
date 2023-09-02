@@ -43,13 +43,15 @@ class LLMConnector:
         else:
             openai.api_base = "https://api.openai.com/v1"
 
-    async def create_chat(self, messages, model="gpt-4", temperature=0.7, top_p=1, n=1, stream=True, stop=None, presence_penalty=0, frequency_penalty=0):
+    async def create_chat(self, messages, model="gpt-4", temperature=0.7, top_p=1, n=1, stream=True, functions=None, stop=None, presence_penalty=0, frequency_penalty=0):
+        import json
         model_key = "deployment_id" if self.api_type == "azure" else "model"
         for attempt in range(3):
             try:
                 response = await openai.ChatCompletion.acreate(
                     **{model_key: model},
                     messages=messages,
+                    functions=functions,
                     temperature=temperature,
                     top_p=top_p,
                     n=n,
@@ -62,19 +64,28 @@ class LLMConnector:
                     return response['choices'][0]['message']['content']
                 else:
                     collected_tokens = ""
+                    function_name = ""
+                    function_arguments = ""
                     async for chunk in response:
                         try:
-                            if 'content' in chunk['choices'][0]['delta']:
+                            if 'content' in chunk['choices'][0]['delta'] and chunk['choices'][0]['delta']['content'] is not None:
                                 collected_tokens += chunk['choices'][0]['delta']['content']
-                                ai_message = {'role': 'assistant', 'content': collected_tokens,
-                                              'conversation_id': self.context.conversation_id, 'status': 'incomplete'}
-                                await self.websocket.send_json(ai_message)
-                        except Exception:
+                            if 'function_call' in chunk['choices'][0]['delta']:
+                                if 'name' in chunk['choices'][0]['delta']['function_call']:
+                                    function_name = chunk['choices'][0]['delta']['function_call']['name']
+                                if 'arguments' in chunk['choices'][0]['delta']['function_call']:
+                                    function_arguments += chunk['choices'][0]['delta']['function_call']['arguments']
+                            ai_message = {'role': 'assistant', 'content': collected_tokens,
+                                        'conversation_id': self.context.conversation_id, 'status': 'incomplete'}
+                            await self.websocket.send_json(ai_message)
+                        except Exception as e:
                             print('Error in chunk: ', chunk)
+                            print(e)
+                    function_call = {'name': function_name, 'arguments': json.loads(function_arguments)} if function_name else None
                     ai_message['status'] = 'complete'
                     ai_message['metadata'] = self.context.get_metadata()
-                    ai_message['xray'] = {
-                        'messages': self.context.get_chain_as_dict()}
+                    ai_message['xray'] = {'messages': self.context.get_chain_as_dict()}
+                    ai_message['function_call'] = function_call
                     await self.websocket.send_json(ai_message)
                     return ai_message
             except (Timeout, RateLimitError):

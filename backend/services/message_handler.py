@@ -49,7 +49,7 @@ class MessageHandler:
         else:
             print('No websocket available!')
 
-    async def get_ai_response(self, conversation, context, streaming=True):
+    async def get_ai_response(self, conversation, context, functions=None, streaming=True):
         '''Queries the LLM and streams the response to the UI'''
         llm_settings = conversation.settings['llm']
 
@@ -69,7 +69,8 @@ class MessageHandler:
         ai_response = await llm.create_chat(
             model=llm_settings['model'],
             messages=messages,
+            functions=functions,
             temperature=0.5
         )
 
-        return ai_response['content']
+        return ai_response

@@ -7,6 +7,7 @@ version = "0.1.0"
 github = "https://github.com/neary-ai/neary"
 
 
+
 [snippets.insert_calendar_events]
 display_name = "Insert Calendar Events"
 description = "Insert upcoming calendar events into context."
@@ -33,7 +34,33 @@ editable = true
 [tools.create_calendar_event]
 display_name = "Create Calendar Event"
 description = "Schedules an event on your behalf."
-llm_description = "Creates an event on the user's calendar. Takes `event_title` (string), `event_description` (string), `start_time` (ISO 8601 string), `end_time` (ISO 8601 string) and `attendees` (email addresses in a Python list) arguments."
+llm_description = "Creates an event on the user's calendar."
+
+[tools.create_calendar_event.parameters.event_title]
+type = "string"
+description = "Title of the calendar event"
+required = true
+
+[tools.create_calendar_event.parameters.event_description]
+type = "string"
+description = "Description of the calendar event"
+required = true
+
+[tools.create_calendar_event.parameters.start_time]
+type = "string"
+description = "Time the events starts as a ISO 8601 string"
+required = true
+
+[tools.create_calendar_event.parameters.end_time]
+type = "string"
+description = "Time the events ends as a ISO 8601 string"
+required = true
+
+[tools.create_calendar_event.parameters.attendees]
+type = "array"
+items = { type = "string" }
+description = "Email addresses of any other attendees"
+required = false
 
 [tools.create_calendar_event.settings.requires_approval]
 description = "Require user approval before running tool"
@@ -50,8 +77,13 @@ editable = false
 
 [tools.get_calendar_events]
 display_name = "Get Calendar Events"
-description = "Retrieves calendar events for a given period of days."
-llm_description = "Retrieves the user's upcoming calendar events. Takes optional `days` (integer) argument, where `1` would be today's events, `2` would be today's and tomorrow's events, and so on."
+description = "Retrieves calendar events for a period of time."
+llm_description = "Retrieves the user's upcoming calendar events."
+
+[tools.get_calendar_events.parameters.days]
+type = "integer"
+description = "Number of days worth of events to get, where `1` would be today's events, `2` would be today's and tomorrow's events, and so on."
+required = true
 
 [tools.get_calendar_events.settings.filter_recurring]
 description = "Display recurring events only once"
