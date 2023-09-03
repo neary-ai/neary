@@ -48,20 +48,30 @@ class MessageChain:
     def get_formatted_chain(self):
         # Get the list of messages formatted for API call
         formatted_chain = []
+        snippet_content = ""
+
+        # First pass: compile all snippet content
         for message in self._compiled_chain():
-            if message.role == 'function':
+            if message.role == 'snippet':
+                snippet_content += "\n\n" + message.content
+
+        # Second pass: construct the formatted chain
+        for message in self._compiled_chain():
+            if message.role == 'system':
+                # Append the snippet_content to the system message content
+                system_message_content = message.content + snippet_content
                 formatted_chain.append(
-                    {'role': 'function', 'name': message.name, 'content': message.content})
-            elif message.role == 'snippet':
-                # Convert 'snippet' role to 'user' and prepend the appropriate string
-                formatted_chain.append(
-                    {'role': 'user', 'content': "The user provided the following snippet for your context: \n\n" + message.content})
+                    {'role': message.role, 'content': system_message_content})
             elif message.role == 'assistant' and message.function_call:
                 formatted_chain.append(
                     {'role': message.role, 'content': None, 'function_call': message.function_call})
-            elif message.role in ['system', 'assistant', 'user']:
+            elif message.role == 'function':
+                formatted_chain.append(
+                    {'role': message.role, 'content': message.content, 'name': message.name})
+            elif message.role in ['assistant', 'user']:
                 formatted_chain.append(
                     {'role': message.role, 'content': message.content})
+
         return formatted_chain
 
     def add_system_message(self, message, id=None, tokens=None, index=None):
@@ -86,8 +96,9 @@ class MessageChain:
         # Add an assistant message to the list at a specified index or at the end
         if message or function_call:
             if function_call:
-                function_call['arguments'] = json.dumps(function_call['arguments'])
-            
+                function_call['arguments'] = json.dumps(
+                    function_call['arguments'])
+
             ai_message = Message(role='assistant', content=message,
                                  function_call=function_call, id=id, tokens=tokens)
             if index is not None:

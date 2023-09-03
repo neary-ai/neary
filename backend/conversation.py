@@ -158,11 +158,11 @@ class Conversation:
         if response.lower() == "approve":
             approval_request.status = "approved"
             await self.message_handler.send_status_to_ui(message={"approval_response_processed": message_id}, conversation_id=self.id)
-            await self.process_approval(approval_request.serialize())
         elif response.lower() == "reject":
             await self.message_handler.send_status_to_ui(message={"approval_response_processed": message_id}, conversation_id=self.id)
             approval_request.status = "rejected"
-            return
+
+        await self.process_approval(approval_request.serialize())
 
         message = await MessageModel.get_or_none(id=message_id)
 
@@ -176,10 +176,16 @@ class Conversation:
         return f"Request {approval_request.status}"
 
     async def process_approval(self, approved_request):
+        status = approved_request['status']
         tool_name = approved_request['tool_name']
         tool_args = approved_request['tool_args']
 
-        # Find the loaded tool plugin
+        if status == 'rejected':
+            content = {"name": tool_name, "output": "User rejected function approval request; function not executed."}
+            await self.save_message("function", content=content, conversation_id=self.id, metadata=[])
+            return
+        
+        # If approved, find the loaded tool plugin
         for tool in self.tools:
             if tool['name'] == tool_name:
                 await self.message_handler.send_alert_to_ui(tool['metadata']['display_name'], self.id, "tool_start")
@@ -265,7 +271,6 @@ class Conversation:
         return current_space_id, space_options
 
     async def save_message(self, role, content, conversation_id, actions=None, metadata=None):
-        print(f'Saving message with role {role} and content {content}')
         if role == 'function':
             metadata.append({'function_name': content['name']})
             message = await MessageModel.create(role="function", content=content['output'], conversation_id=conversation_id, actions=actions, metadata=metadata)

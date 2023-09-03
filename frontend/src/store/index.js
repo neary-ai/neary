@@ -272,11 +272,11 @@ export const useAppStore = defineStore('appstore', {
                 // stay visible until cleared
             }
             else if (!sticky) {
-                if (type == 'tool_success' || tool == 'tool_error') {
+                if (type == 'tool_success' || type == 'tool_error') {
                     setTimeout(() => this.notification = null, 2000);
                 }
                 else {
-                    setTimeout(() => this.notification = null, 4000);
+                    setTimeout(() => this.notification = null, 3000);
                 }
 
             }
