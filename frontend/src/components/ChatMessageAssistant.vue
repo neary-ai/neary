@@ -1,5 +1,5 @@
 <template>
-    <div ref="messageContainer" v-if="convertedContent.text != ''"
+    <div ref="messageContainer" v-if="convertedContent != ''"
         class="flex justify-start items-start w-full prose prose-invert max-w-none leading-7 mr-auto text-gray-400 pt-6 pb-3.5 pl-6 pr-8 transition-all duration-50 delay-0" :class="message.is_archived ? 'pattern-diagonal-lines pattern-nearyblue-300 pattern-bg-nearyblue-400 pattern-size-6 pattern-opacity-80' : 'bg-nearyblue-400'">
         <div class="flex w-full items-start">
             <div class="py-3">
@@ -10,19 +10,7 @@
             <div class="flex flex-col min-w-0 pt-[0.75rem]">
                 <div class="overflow-x-scroll min-w-0 max-w-full"
                     :class="[message.is_archived ? 'text-nearygray-200' : 'text-slate-300/80']"
-                    v-html="convertedContent.text"></div>
-                <div v-if="convertedContent.toolName != ''" class="text-sm w-full">
-                    <div class="flex items-center justify-start w-full flex-grow pb-3">
-                        <div class="inline-flex gap-1 text-nearycyan-300">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5">
-                                <path fill-rule="evenodd"
-                                    d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z"
-                                    clip-rule="evenodd" />
-                            </svg>
-                            {{ convertedContent.toolName }}
-                        </div>
-                    </div>
-                </div>
+                    v-html="convertedContent"></div>
                 <div v-if="uniqueSources && uniqueSources.length > 0"
                     class="text-slate-400/80 text-sm py-4 mt-4 border-t border-slate-700">
                     Sources: {{ uniqueSources.join(', ') }}
@@ -98,37 +86,8 @@ watch(() => props.chatWindowHeight, (newVal) => {
 });
 
 const convertedContent = computed(() => {
-    const { finalText, toolName } = processToolRequest(props.message.content);
-    return { "text": renderMarkdown(finalText), "toolName": toolName };
+    return renderMarkdown(props.message.content);
 });
-
-const formatToolName = (slug) => {
-    return slug
-        .split('_')
-        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-        .join(' ');
-}
-
-const processToolRequest = (text) => {
-    const toolRequestRegex = /<<tool:([\w]+)\(([^)]*)\)>>/g;
-    const partialToolRequestRegex = /(.*?)(<<[^>]*$)/;
-
-    let toolName = '';
-
-    const replacedText = text.replace(toolRequestRegex, (match, name) => {
-        toolName = formatToolName(name);
-        return '';
-    });
-
-    const finalText = replacedText.replace(partialToolRequestRegex, (match, before, partial) => {
-        if (partial.startsWith('<<tool:')) {
-            return before;
-        }
-        return match;
-    });
-
-    return { finalText, toolName };
-}
 
 const renderMarkdown = (markdownText) => {
     if (markdownText == '') {

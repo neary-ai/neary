@@ -11,15 +11,21 @@ class MessageHandler:
         else:
             self.websocket = websocket
 
-    async def send_alert_to_ui(self, message, conversation_id):
+    async def send_alert_to_ui(self, message, conversation_id, type=None):
         if self.websocket:
-            await self.websocket.send_json({'role': 'alert', 'content': message, 'conversation_id': conversation_id, 'status': None})
+            await self.websocket.send_json({'role': 'alert', 'content': message, 'conversation_id': conversation_id, 'type': type, 'status': None})
         else:
             print('No websocket available!')
 
     async def send_command_to_ui(self, message, conversation_id):
         if self.websocket:
             await self.websocket.send_json({'role': 'command', 'content': message, 'conversation_id': conversation_id, 'status': None})
+        else:
+            print('No websocket available!')
+
+    async def send_status_to_ui(self, message, conversation_id):
+        if self.websocket:
+            await self.websocket.send_json({'role': 'status', 'content': message, 'conversation_id': conversation_id, 'status': None})
         else:
             print('No websocket available!')
 

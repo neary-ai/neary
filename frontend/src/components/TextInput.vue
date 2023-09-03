@@ -14,15 +14,17 @@
 </template>
 
 <script setup>
-import { ref, watch, computed, nextTick, onMounted, onUnmounted } from 'vue';
+import { ref, watch, nextTick, onMounted, onUnmounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useAppStore } from '@/store/index.js';
 import { Icon } from '@iconify/vue';
+import useWebSocket from '@/composables/websocket.js';
 import { scrollToBottom } from '../services/scrollFunction.js';
 
 const store = useAppStore();
 const router = useRouter();
 const route = useRoute();
+const { sendMessageThroughWebSocket } = useWebSocket();
 
 const currentMessage = ref("");
 const textInputRef = ref(null);
@@ -95,8 +97,8 @@ const sendMessage = async () => {
     await store.updateConversation(store.selectedConversation);
   }
 
-  if (store.ws.readyState === WebSocket.OPEN) {
-    store.ws.send(JSON.stringify(message));
+  try {
+    sendMessageThroughWebSocket(message);
     await store.addMessage(message, conversation.id);
     currentMessage.value = "";
     await nextTick();
@@ -105,8 +107,7 @@ const sendMessage = async () => {
     store.messageTimeout = setTimeout(() => {
       store.newNotification('Waiting for response from chat server..');
     }, 8000);
-
-  } else {
+  } catch (error) {
     store.newNotification('Connecting to server. Wait a moment and try again.');
   }
 };
@@ -188,8 +189,8 @@ onMounted(() => {
     resize();
   })
   setTimeout(() => {
-      initializing.value = false;
-    }, 2000); // delay of 2 seconds
+    initializing.value = false;
+  }, 2000); // delay of 2 seconds
 })
 
 onUnmounted(() => {

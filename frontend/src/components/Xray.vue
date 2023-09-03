@@ -23,6 +23,7 @@
               </div>
               <div class="text-sm text-nearygray-200 whitespace-pre-wrap [overflow-wrap:anywhere] leading-7 mt-4">
                 {{ message.content }}
+                {{ message.function_call }}
               </div>
             </li>
           </ul>

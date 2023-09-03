@@ -28,5 +28,7 @@ class Notepad(BasePlugin):
     async def clear_notes(self):
         self.data['notepad'] = []
         await self.save_state()
+        import time
+        time.sleep(2)  # Add a delay of 2 seconds
 
         return "Notepad cleared."

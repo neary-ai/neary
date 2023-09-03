@@ -38,7 +38,7 @@ class ContextManager:
         insert_index = len(messages.get_precompiled_chain())
 
         for message in sorted_history:
-            if not message['content']:
+            if not message['content'] and len(message['metadata']) == 0:
                 continue
 
             new_message_tokens = len(
@@ -47,12 +47,15 @@ class ContextManager:
             if token_count + new_message_tokens > self.token_limit:
                 break
 
-            if message['role'] == 'user' or message['role'] == 'tool':
+            if message['role'] == 'user':
                 messages.add_user_message(
                     message['content'], id=message['id'], tokens=new_message_tokens, index=insert_index)
             elif message['role'] == 'assistant':
-                messages.add_ai_message(
-                    message['content'], id=message['id'], tokens=new_message_tokens, index=insert_index)
+                function_call = next((item['function_call'] for item in message['metadata'] if 'function_call' in item), None)
+                messages.add_ai_message(message['content'], function_call=function_call, id=message['id'], tokens=new_message_tokens, index=insert_index)
+            elif message['role'] == 'function':
+                function_name = next((item['function_name'] for item in message['metadata'] if 'function_name' in item), None)
+                messages.add_function_message(message['content'], name=function_name, id=message['id'], tokens=new_message_tokens, index=insert_index)
             elif message['role'] == 'system':
                 messages.add_system_message(
                     message['content'], id=message['id'], tokens=new_message_tokens, index=1)

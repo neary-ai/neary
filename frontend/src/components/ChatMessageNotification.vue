@@ -1,30 +1,58 @@
 <template>
-    <div class="flex self-center gap-6 items-start leading-7 px-8 py-4 bg-nearyblue-50 m-4 rounded-lg">
-        <InformationCircleIcon class="flex-shrink-0 text-nearygray-50 flex items-center justify-center w-7 h-7 mt-4" />
-        <div class="flex flex-col min-w-0 pr-8">
-            <div class="flex items-center">
-                <div class="flex items-center overflow-x-scroll text-nearygray-50 min-w-0">
-                    <div class="pt-4 prose prose-invert" v-html="renderMarkdown(message.content)"></div>
+    <div ref="messageContainer"
+        class="flex justify-start items-start w-full prose prose-invert max-w-none leading-7 mr-auto text-gray-400 pt-6 pb-3.5 pl-6 pr-8 transition-all duration-50 delay-0"
+        :class="message.is_archived ? 'pattern-diagonal-lines pattern-nearyblue-300 pattern-bg-nearyblue-400 pattern-size-6 pattern-opacity-80' : 'bg-nearyblue-400'">
+        <div class="flex w-full items-start">
+            <div class="py-3">
+                <div
+                    class="not-prose flex-shrink-0 font-bold rounded h-7 w-7 flex items-center justify-center mr-5 text-sm bg-nearypink-300/20 text-nearypink-200">
+                    N
                 </div>
             </div>
-            <div v-if="!actionResponseLoading" class="flex gap-3 items-center">
-                <div v-if="isActionCompleted"
-                    class="text-sm text-nearyblue-100 bg-slate-400 shadow px-4 py-1.5 mb-4 mt-8 rounded-full font-medium flex items-center">
-                    {{ isActionCompleted }}
+            <div class="flex flex-col min-w-0 pt-[0.75rem]">
+                <div class="overflow-x-scroll min-w-0 max-w-full text-slate-300/80">
+                    <div
+                        class="flex flex-col bg-nearylight-400/20 border-nearylight-400/70 border rounded p-5 max-w-2xl mb-6">
+                        <div class="flex items-start justify-between gap-8">
+                            <div class="flex items-start justify-start gap-3.5">
+                                <InformationCircleIcon
+                                    class="flex-shrink-0 text-nearylight-200 flex items-center justify-center w-5 h-5" />
+                                <div class="flex flex-col items-start justify-start">
+                                    <div class="text-white font-bold text-sm">
+                                        Approval Needed
+                                    </div>
+                                    <div class="flex">
+                                    <div class="mt-2.5 text-sm font-medium text-nearygray-100"
+                                        v-html="renderMarkdown(content.content)"></div>
+                                    </div>
+                                    <div v-if="content.args" class="flex items-center text-sm mb-4 bg-slate-200 py-1.5 px-3 rounded text-nearyblue-100">
+                                        <div v-if="!showArgs" @click="showToolArgs()" class="flex items-center">
+                                            <div>Show details</div> <ChevronDownIcon class="ml-0.5 w-5 h-5" />
+                                        </div>
+                                        <div v-else class="prose-base prose-slate text-nearyblue-100 p-1" v-html="renderMarkdown(content.args)"></div>
+                                    </div>
+                                    <div
+                                        class="text-sm font-medium text-nearygray-200 flex items-center justify-between w-full mt-2">
+                                        <div class="flex gap-3">
+                                            <div v-if="!actionResponseLoading" class="flex gap-3 items-center">
+                                                <button v-for="(action, index) in message.actions" :key="index"
+                                                    @click="handleActionButton(action, message.id)"
+                                                    class="text-nearyblue-300 bg-nearylight-200 rounded-md px-2.5 py-1.5 text-sm font-semibold shadow hover:bg-opacity-80">
+                                                    {{ action.label }}
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <button v-else v-for="(action, index) in message.actions" :key="index"
-                    @click="handleActionButton(action, message.id)"
-                    :disabled="actionCompleted[action.data.request_id] || actionResponseLoading"
-                    class="text-nearyblue-100 bg-slate-400 rounded-md px-3.5 py-2 mb-4 mt-8 text-sm shadow hover:bg-opacity-80"
-                    :class="[actionCompleted[action.data.request_id] ? 'text-slate-600' : 'text-nearyblue-500', actionResponseLoading ? '' : '']">
-                    {{ action.label }}
-                </button>
             </div>
-            <Loading v-if="actionResponseLoading" textColor="text-nearygray-300" class="my-4 -ml-1" />
         </div>
     </div>
 </template>
-  
+
 <script setup>
 import { ref, computed } from 'vue';
 import MarkdownIt from 'markdown-it';
@@ -32,10 +60,10 @@ import DOMPurify from 'dompurify';
 
 import 'prismjs/components/prism-python';
 import 'prismjs/themes/prism-tomorrow.css';
-import { InformationCircleIcon, } from '@heroicons/vue/24/outline';
+import { ChevronDownIcon, InformationCircleIcon, } from '@heroicons/vue/20/solid';
+import { scrollToBottom } from '../services/scrollFunction.js';
 import { useAppStore } from '@/store/index.js';
 import api from '@/services/apiService';
-import Loading from '@/components/common/Loading.vue';
 
 const store = useAppStore();
 
@@ -43,13 +71,28 @@ const props = defineProps({
     message: Object,
 });
 
-let actionCompleted = ref({});
 let actionResponseLoading = ref(false);
+let showArgs = ref(false);
 
-let isActionCompleted = computed(() => {
-    const completedAction = Object.values(actionCompleted.value).find(status => status !== 'error');
-    return completedAction || '';
-});
+const content = computed(() => {
+    if (props.message) {
+        const parsedContent = parseArguments(props.message.content);
+        return parsedContent;
+    }
+})
+
+const parseArguments = (content) => {
+    const argsRegex = /<<args>>(.*?)<<\/args>>/gs;
+    let match;
+    let args = '';
+
+    while ((match = argsRegex.exec(content)) !== null) {
+        args += match[1];
+        content = content.replace(match[0], '');
+    }
+
+    return { content, args };
+}
 
 const handleActionButton = async (action, messageId) => {
     if (action.type === 'link') {
@@ -58,9 +101,6 @@ const handleActionButton = async (action, messageId) => {
         actionResponseLoading.value = true;
         try {
             const response = await api.postActionResponse(action, messageId);
-            if (response.data.detail !== 'error') {
-                actionCompleted.value = { ...actionCompleted.value, [action.data.request_id]: response.data.detail };
-            }
         } catch (error) {
             console.error('Error sending action response:', error);
         }
@@ -79,6 +119,11 @@ const renderMarkdown = (markdownText) => {
     html = html.replace(/^<p>|<\/p>$/g, '');
     const sanitizedHtml = DOMPurify.sanitize(html);
     return sanitizedHtml;
+}
+
+const showToolArgs = () => {
+    showArgs.value = true;
+    scrollToBottom(store.highlighting, true);
 }
 
 </script>

@@ -1,4 +1,5 @@
 import os
+import json
 import asyncio
 import openai
 from openai.error import Timeout, RateLimitError
@@ -44,7 +45,6 @@ class LLMConnector:
             openai.api_base = "https://api.openai.com/v1"
 
     async def create_chat(self, messages, model="gpt-4", temperature=0.7, top_p=1, n=1, stream=True, functions=None, stop=None, presence_penalty=0, frequency_penalty=0):
-        import json
         model_key = "deployment_id" if self.api_type == "azure" else "model"
         for attempt in range(3):
             try:

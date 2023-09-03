@@ -1,3 +1,5 @@
+import json
+
 from .message import Message
 
 
@@ -6,7 +8,7 @@ class MessageChain:
     Helper class to construct a conversation / message chain to pass to AI
     '''
 
-    def __init__(self, system_message=None, user_message=None, tool_output=None, conversation_id=None):
+    def __init__(self, system_message=None, user_message=None, function_output=None, conversation_id=None):
         self.conversation_id = conversation_id
         self.messages = []
         self.metadata = []
@@ -18,14 +20,14 @@ class MessageChain:
         self.user_message = Message(
             role="user", content=user_message) if user_message else None
 
-        self.tool_output = Message(
-            role="tool_output", content=tool_output) if tool_output else None
+        self.function_output = Message(
+            role="function", name=function_output['name'], content=function_output['output']) if function_output else None
 
     def _compiled_chain(self):
         # Return the complete list of messages including the user and tool messages
         compiled_chain = list(self.messages)
-        if self.tool_output:
-            compiled_chain += [self.tool_output]
+        if self.function_output:
+            compiled_chain += [self.function_output]
         if self.user_message:
             compiled_chain += [self.user_message]
         return compiled_chain
@@ -44,17 +46,19 @@ class MessageChain:
         return self.messages
 
     def get_formatted_chain(self):
-        # Get the list of messages formatted for API call (only system, assistant, user roles)
+        # Get the list of messages formatted for API call
         formatted_chain = []
         for message in self._compiled_chain():
-            if message.role == 'tool_output':
-                # Convert 'tool_output' role to 'user' and prepend the appropriate string
+            if message.role == 'function':
                 formatted_chain.append(
-                    {'role': 'user', 'content': "Tool output: " + message.content})
+                    {'role': 'function', 'name': message.name, 'content': message.content})
             elif message.role == 'snippet':
                 # Convert 'snippet' role to 'user' and prepend the appropriate string
                 formatted_chain.append(
                     {'role': 'user', 'content': "The user provided the following snippet for your context: \n\n" + message.content})
+            elif message.role == 'assistant' and message.function_call:
+                formatted_chain.append(
+                    {'role': message.role, 'content': None, 'function_call': message.function_call})
             elif message.role in ['system', 'assistant', 'user']:
                 formatted_chain.append(
                     {'role': message.role, 'content': message.content})
@@ -78,25 +82,29 @@ class MessageChain:
             else:
                 self.messages.append(message_object)
 
-    def add_ai_message(self, message, id=None, tokens=None, index=None):
+    def add_ai_message(self, message, function_call=None, id=None, tokens=None, index=None):
         # Add an assistant message to the list at a specified index or at the end
-        if message:
-            ai_message = Message(
-                role='assistant', content=message, id=id, tokens=tokens)
+        if message or function_call:
+            if function_call:
+                function_call['arguments'] = json.dumps(function_call['arguments'])
+            
+            ai_message = Message(role='assistant', content=message,
+                                 function_call=function_call, id=id, tokens=tokens)
             if index is not None:
                 self.messages.insert(index, ai_message)
             else:
+                print('final message appended: ', ai_message)
                 self.messages.append(ai_message)
 
-    def add_tool_output(self, message, id=None, tokens=None, index=None):
-        # Add tool output to the list at a specified index or at the end
+    def add_function_message(self, message, name, id=None, tokens=None, index=None):
+        # Add function/tool output to the list at a specified index or at the end
         if message:
-            tool_output = Message(role='tool_output',
-                                  content=message, id=id, tokens=tokens)
+            function_output = Message(
+                role='function', content=message, name=name, id=id, tokens=tokens)
             if index is not None:
-                self.messages.insert(index, tool_output)
+                self.messages.insert(index, function_output)
             else:
-                self.messages.append(tool_output)
+                self.messages.append(function_output)
 
     def add_snippet(self, message, id=None, tokens=None, index=None):
         # Add snippet to the list at a specified index or at the end

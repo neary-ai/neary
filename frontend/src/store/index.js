@@ -33,7 +33,8 @@ export const useAppStore = defineStore('appstore', {
         showXray: false,
         xray: {},
         isWebSocketActive: false,
-        availablePlugins: null
+        availablePlugins: null,
+        bufferedMessages: [],
     }),
     getters: {
         selectedSpace(state) {
@@ -267,8 +268,17 @@ export const useAppStore = defineStore('appstore', {
                 "type": type
             }
 
-            if (!sticky) {
-                setTimeout(() => this.notification = null, 4000);
+            if (type == 'tool_start') {
+                // stay visible until cleared
+            }
+            else if (!sticky) {
+                if (type == 'tool_success' || tool == 'tool_error') {
+                    setTimeout(() => this.notification = null, 2000);
+                }
+                else {
+                    setTimeout(() => this.notification = null, 4000);
+                }
+
             }
         },
         // Conversations
