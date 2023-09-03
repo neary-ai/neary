@@ -36,20 +36,20 @@ class GoogleCalendar(BasePlugin):
                 events_strs = [
                     f"{x['summary']} @ {x['start_time']} with {', '.join(x['attendees'])}" for x in events]
                 events_str = "\n".join(events_strs)
-                context.add_snippet(events_str)
+                context.add_snippet(f"Here's the user's calendar for the next {days} day(s):\n{events_str}")
                 return events_str
             context.add_snippet(events)
         context.add_snippet("No calendar events for the next 7 days.")
 
     @tool
-    async def create_calendar_event(self, event_title, event_description, start_time, end_time, attendees):
+    async def create_calendar_event(self, event_title, event_description, start_time, end_time, attendees=[]):
         try:
             await self.google_service.authenticate()        
         except Exception as e:
             print(e)
             message_handler = MessageHandler()
             await message_handler.send_alert_to_ui("Invalid Google Calendar credentials", self.conversation.id)
-            return
+            return "Unable to create calendar event. Invalid Google Calendar credentials. The user should ensure their Google Calendar integration is setup correctly."
         
         res = self.google_service.create_calendar_event(event_title, event_description, start_time, end_time, attendees)
         
@@ -68,7 +68,7 @@ class GoogleCalendar(BasePlugin):
             print(e)
             message_handler = MessageHandler()
             await message_handler.send_alert_to_ui("Invalid Google Calendar credentials", self.conversation.id)
-            return
+            return "Unable to retrieve calendar events. Invalid Google Calendar credentials. The user should ensure their Google Calendar integration is setup correctly."
 
         events = await self.google_service.get_calendar_events(days=days, filter_recurring=filter_recurring)
         if events:

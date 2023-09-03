@@ -229,7 +229,7 @@ class GoogleService:
             send_message = None
         return send_message
 
-    def create_calendar_event(self, event_title, event_description, start_time, end_time, attendees):
+    def create_calendar_event(self, event_title, event_description, start_time, end_time, attendees=[]):
         calendar_service = build('calendar', 'v3', credentials=self.creds)
         event_data = {
             'summary': event_title,

@@ -48,18 +48,21 @@ class LLMConnector:
         model_key = "deployment_id" if self.api_type == "azure" else "model"
         for attempt in range(3):
             try:
-                response = await openai.ChatCompletion.acreate(
-                    **{model_key: model},
-                    messages=messages,
-                    functions=functions,
-                    temperature=temperature,
-                    top_p=top_p,
-                    n=n,
-                    stream=stream,
-                    stop=stop,
-                    presence_penalty=presence_penalty,
-                    frequency_penalty=frequency_penalty
-                )
+                # Create a dictionary for the parameters
+                params = {model_key: model,
+                        'messages': messages,
+                        'temperature': temperature,
+                        'top_p': top_p,
+                        'n': n,
+                        'stream': stream,
+                        'stop': stop,
+                        'presence_penalty': presence_penalty,
+                        'frequency_penalty': frequency_penalty}
+
+                if functions:
+                    params['functions'] = functions
+
+                response = await openai.ChatCompletion.acreate(**params)
                 if not stream:
                     return response['choices'][0]['message']['content']
                 else:

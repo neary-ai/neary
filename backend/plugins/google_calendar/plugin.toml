@@ -14,7 +14,7 @@ description = "Insert upcoming calendar events into context."
 
 [snippets.insert_calendar_events.settings.days]
 description = "How many days of events to insert"
-value = 7
+value = 3
 type = "integer"
 editable = true
 
