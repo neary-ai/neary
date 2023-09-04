@@ -58,8 +58,8 @@ async def register(request: Request):
             "key": "access_token",
             "value": access_token,
             "httponly": True,
-            "secure": True,
-            "samesite": "lax",
+            "secure": request.url.scheme == 'https',
+            "samesite": "strict",
             "max_age": round(access_token_expires.total_seconds()),
         }
 
@@ -79,6 +79,7 @@ async def logout(request: Request) -> JSONResponse:
 
 @router.post("/token")
 async def login(
+    request: Request,
     email: str = Form(...),
     password: str = Form(...)
 ) -> JSONResponse:
@@ -101,8 +102,8 @@ async def login(
         "key": "access_token",
         "value": access_token,
         "httponly": True,
-        "secure": True,
-        "samesite": "lax",
+        "secure": request.url.scheme == 'https',
+        "samesite": "strict",
         "max_age": round(access_token_expires.total_seconds()),
     }
 
