@@ -44,7 +44,7 @@ class LLMConnector:
         else:
             openai.api_base = "https://api.openai.com/v1"
 
-    async def create_chat(self, messages, model="gpt-4", temperature=0.7, top_p=1, n=1, stream=True, functions=None, stop=None, presence_penalty=0, frequency_penalty=0):
+    async def create_chat(self, messages, model="gpt-4", temperature=0.7, top_p=1, n=1, stream=True, functions=None, max_tokens=0, stop=None, presence_penalty=0, frequency_penalty=0):
         model_key = "deployment_id" if self.api_type == "azure" else "model"
         for attempt in range(3):
             try:
@@ -61,6 +61,9 @@ class LLMConnector:
 
                 if functions:
                     params['functions'] = functions
+                
+                if max_tokens and max_tokens > 0:
+                    params['max_tokens'] = max_tokens
 
                 response = await openai.ChatCompletion.acreate(**params)
                 if not stream:

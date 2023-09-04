@@ -15,15 +15,15 @@
                             </div>
                         </div>
                         <div class="col-span-full sm:col-span-4 flex flex-col text-slate-400">
-                            <Card @click="router.push('/presets')" class="cursor-pointer" padding="px-3 py-3">
+                            <Card @click="router.push('/presets')" class="cursor-pointer" padding="px-3 py-2.5">
                                 <template v-slot:icon>
                                     <div class="flex items-center justify-center">
-                                        <Icon
-                                            :icon="store.selectedConversation.preset.icon ? store.selectedConversation.preset.icon : 'heroicons:user-solid'"
-                                            class="text-nearylight-200 w-6 h-6" />
+                                    <Icon
+                                        :icon="store.selectedConversation.preset.icon ? store.selectedConversation.preset.icon : 'heroicons:user-solid'"
+                                        class="text-nearygray-300 w-6 h-6" />
                                     </div>
                                 </template>
-                                <div class="text-nearygray-100 text-sm font-bold py-0.5 -ml-1">
+                                <div class="font-normal text-sm py-0.5 -ml-1 text-field-default-foreground">
                                     {{ store.selectedConversation.preset.name }}</div>
                                 <template v-slot:button>
                                     <ChevronRightIcon class="w-5 h-5 shrink-0"></ChevronRightIcon>
@@ -177,9 +177,12 @@
                             </div>
                         </div>
                         <div class="col-span-1 sm:col-span-4 flex flex-col text-slate-400">
-                            <div class="flex flex-col items-start w-full">
-                                <Button class="shrink-0" @buttonClick="isOpen = true;" button-type="btn-light">Save New
+                            <div class="flex items-start w-full gap-3">
+                                <Button class="shrink-0" @buttonClick="router.push('/preset')" button-type="btn-light">Save New
                                     Preset</Button>
+                                <Button class="shrink-0"
+                                    @buttonClick="updateSelectedPreset(store.selectedConversation.preset)"
+                                    button-type="btn-outline-light">Update Current Preset</Button>
                             </div>
                         </div>
                         <Modal :isOpen="isOpen" @keyup.enter="save" @save="save" @close="close">
@@ -284,12 +287,23 @@ const save = async () => {
 
     try {
         await api.createPreset(createPresetName.value, createPresetDescription.value, store.selectedConversationId)
-        store.newNotification("Preset saved!");
+        store.newNotification("New preset saved");
     }
     catch {
         store.newNotification("Couldn't save preset");
     }
 
+}
+
+const updateSelectedPreset = async (preset) => {
+    try {
+        preset['rebuild_from_conversation'] = store.selectedConversationId;
+        await api.updatePreset(preset);
+        store.newNotification("Preset updated");
+    }
+    catch {
+        store.newNotification("Couldn't update preset");
+    }
 }
 
 const close = () => {

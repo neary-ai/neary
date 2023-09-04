@@ -1,5 +1,5 @@
 <template>
-  <div id="alt-window" class="font-mulish flex flex-col gap-3 w-full overflow-y-scroll">
+  <div v-if="store.availablePresets" id="alt-window" class="font-mulish flex flex-col gap-3 w-full overflow-y-scroll">
     <div class="p-8 pt-[5.5rem] max-w-3xl">
       <div class="flex items-center justify-between">
         <SectionHeading section-name="Presets" @on-click="onBackButtonClick" />
@@ -11,7 +11,7 @@
         <input type="file" @change="importPreset" accept=".json" style="display: none" ref="fileInput" />
       </div>
       <div class="flex flex-col w-full gap-3 mt-6">
-        <template v-for="preset in presets" :key="preset.id">
+        <template v-for="preset in store.availablePresets" :key="preset.id">
           <Card class="cursor-pointer" @click="updatePreset(preset)" :active="isSelected(preset).value">
             <template v-slot:icon>
               <div class="flex items-center justify-center h-9 w-9 rounded shadow bg-nearycyan-500/80 mt-0.5">
@@ -25,7 +25,7 @@
               <div class="text-sm text-nearygray-400">{{ preset.description }}</div>
             </div>
             <template v-slot:button>
-              <Popover class="relative inline-block text-left">
+              <Popover class="relative inline-block text-left z-20">
                 <PopoverButton
                   class="flex items-center group relative cursor-pointer px-2 py-0.5 hover:text-nearygray-100 focus:border-transparent focus:ring-0 focus:outline-none">
                   <Icon icon="heroicons:ellipsis-vertical" class="w-5 h-5" />
@@ -45,6 +45,11 @@
                         class="cursor-pointer flex items-center rounded-t gap-2 px-3 py-2 text-sm hover:bg-nearygray-300">
                         <Icon icon="heroicons:cursor-arrow-rays-20-solid" class="w-5 h-5" />
                         <div>Set as Default</div>
+                      </li>
+                      <li @click.stop="router.push(`/preset/${preset.id}`);"
+                        class="cursor-pointer flex items-center rounded-b gap-2 px-3 py-2 text-sm hover:bg-nearygray-300">
+                        <Icon icon="heroicons:pencil" class="w-5 h-5" />
+                        <div>Edit Preset</div>
                       </li>
                       <li @click.stop="deletePreset(preset, close)"
                         class="cursor-pointer flex items-center rounded-b gap-2 px-3 py-2 text-sm hover:bg-nearygray-300">
@@ -69,19 +74,17 @@
 </template>
 
 <script setup>
-import { ref, watch, computed } from 'vue';
+import { computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { Icon } from '@iconify/vue';
 import { useAppStore } from '@/store/index.js';
 import { Popover, PopoverButton, PopoverPanel } from '@headlessui/vue';
 import SectionHeading from './common/SectionHeading.vue'
 import Card from './common/Card.vue';
-import Button from './common/Button.vue';
 import api from '../services/apiService';
 
 const store = useAppStore();
 const router = useRouter();
-const presets = ref([]);
 
 const isSelected = (preset) => computed(() => {
   return store.selectedConversation.preset && store.selectedConversation.preset.id === preset.id;
@@ -139,7 +142,7 @@ const importPreset = async (event) => {
           store.newNotification("A preset with this name already exists");
           return;
         }
-        presets.value = await api.importPreset(preset);
+        store.availablePresets = await api.importPreset(preset);
       } catch (err) {
         console.log(err)
         store.newNotification("Unable to import preset");
@@ -150,22 +153,16 @@ const importPreset = async (event) => {
 };
 
 const deletePreset = async (preset) => {
-  presets.value = await api.deletePreset(preset);
+  store.availablePresets = await api.deletePreset(preset);
 }
 
 const setDefault = async (preset) => {
   preset['is_default'] = true;
-  presets.value = await api.updatePreset(preset);
+  store.availablePresets = await api.updatePreset(preset);
 }
 
 const onBackButtonClick = () => {
   router.go(-1);
 };
-
-watch(() => store.selectedConversationId, async (newVal) => {
-  if (newVal) {
-    presets.value = await api.getAvailablePresets();
-  }
-}, { immediate: true });
 
 </script>

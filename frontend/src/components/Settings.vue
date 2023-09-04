@@ -50,7 +50,12 @@
               <div class="flex flex-col items-start">
                 <label class="text-sm font-semibold text-slate-300 w-full mb-1.5">Input Tokens</label>
                 <NumberInputField @change="store.updateConversation(store.selectedConversation)" class="w-full mb-6"
-                  v-model="store.selectedConversation.settings.token_limit" />
+                  v-model="store.selectedConversation.settings.max_input_tokens" />
+              </div>
+              <div class="flex flex-col items-start">
+                <label class="text-sm font-semibold text-slate-300 w-full mb-1.5">Max Tokens (0 = infinite)</label>
+                <NumberInputField @change="store.updateConversation(store.selectedConversation)" class="w-full mb-6"
+                  v-model="store.selectedConversation.settings.llm.max_tokens" />
               </div>
             </div>
           </div>

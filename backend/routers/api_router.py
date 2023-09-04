@@ -328,16 +328,40 @@ async def export_preset(preset_id: int):
 @router.put("/presets/{preset_id}")
 async def update_preset(preset_id: int, preset_data: dict = Body(...)):
     preset_data = preset_data['preset']
+    
     preset = await PresetModel.get_or_none(id=preset_id)
     if preset is None:
         raise HTTPException(status_code=404, detail="Preset not found")
+    
+    if 'rebuild_from_conversation' in preset_data:
+        # Update preset with data from conversation
+        conversation = await ConversationModel.get(id=preset_data['rebuild_from_conversation'])
 
-    # If the updated preset is set to default, unset all other presets
-    if preset_data['is_default']:
-        await PresetModel.filter(is_default=True).update(is_default=False)
+        conversation_plugins = await conversation.plugins.all()
+        serialized_plugins = [await plugin.serialize() for plugin in conversation_plugins]
 
-    preset.update_from_dict(preset_data)
-    await preset.save()
+        plugins = []
+
+        for plugin in serialized_plugins:
+            plugins.append({
+                "name": plugin['name'],
+                "functions": plugin['functions'],
+                "data": None
+            })
+
+        preset.plugins = plugins
+        preset.settings = conversation.settings
+        preset.is_custom = True,
+        await preset.save()
+
+        print('Updated preset: ', preset.serialize())
+    else:
+        # If the updated preset is set to default, unset all other presets
+        if preset_data['is_default']:
+            await PresetModel.filter(is_default=True).update(is_default=False)
+
+        preset.update_from_dict(preset_data)
+        await preset.save()
 
     presets = await PresetModel.filter(is_active=True)
     presets = [preset.serialize() for preset in presets]
@@ -352,8 +376,8 @@ async def get_presets():
 
 
 @router.post("/presets")
-async def create_preset(preset_name: str = Body(...), preset_description: str = Body(None), conversation_id: int = Body(...)):
-    conversation = await ConversationModel.get_or_none(id=conversation_id)
+async def create_preset(preset_data: dict = Body(...)):
+    conversation = await ConversationModel.get_or_none(id=preset_data['conversation_id'])
     if not conversation:
         raise HTTPException(status_code=404, detail="Conversation not found")
 
@@ -370,8 +394,9 @@ async def create_preset(preset_name: str = Body(...), preset_description: str = 
         })
 
     preset = await PresetModel.create(
-        name=preset_name,
-        description=preset_description,
+        name=preset_data['name'],
+        description=preset_data['description'],
+        icon=preset_data['icon'],
         plugins=plugins,
         settings=conversation.settings,
         is_custom=True,
@@ -380,8 +405,6 @@ async def create_preset(preset_name: str = Body(...), preset_description: str = 
     )
 
     serialized = preset.serialize()
-
-    print ('preset: ', serialized)
 
     return serialized
 
@@ -669,12 +692,17 @@ async def get_initial_data(request: Request):
 
         serialized_conversations.append(await conversation.serialize())
 
+    # Get presets
+    presets = await PresetModel.filter(is_active=True)
+    presets = [preset.serialize() for preset in presets]
+
     initial_data = {
         'app_state': app_state,
         'user_profile': user_profile,
         'spaces': serialized_spaces,
         'conversations': serialized_conversations,
-        'plugins': plugin_manager.get_serialized_plugins()
+        'plugins': plugin_manager.get_serialized_plugins(),
+        'presets': presets
     }
 
     return initial_data

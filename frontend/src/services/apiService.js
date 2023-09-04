@@ -189,9 +189,9 @@ const api = {
             console.error('Error getting presets:', error);
         }
     },
-    async createPreset(name, description, conversationId) {
+    async createPreset(newPreset) {
         try {
-            const response = await axios.post(`${apiBaseUrl}/api/presets`, { "preset_name": name, "preset_description": description, "conversation_id": conversationId }, { withCredentials: true });
+            const response = await axios.post(`${apiBaseUrl}/api/presets`, newPreset, { withCredentials: true });
             return response.data;
         } catch (error) {
             console.error('Error adding preset:', error);

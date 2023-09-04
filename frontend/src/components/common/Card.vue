@@ -1,6 +1,6 @@
 <template>
     <div
-        :class="['flex w-full items-center justify-between gap-3 text-sm rounded-lg text-field-default-foreground', active ? 'ring-2 ring-nearycyan-500' : '', bgColor, padding]">
+        :class="['flex w-full items-center justify-between gap-3 text-sm rounded-md text-field-default-foreground', active ? 'ring-2 ring-nearycyan-500' : '', bgColor, padding]">
         <div class="flex items-start gap-4">
             <div class="flex-1 text-nearygray-500">
                 <slot name="icon"></slot>

@@ -89,10 +89,10 @@ async def load_presets():
         except DoesNotExist:
             await PresetModel.create(**preset)
         else:
-            for key, value in preset.items():
-                setattr(existing_preset, key, value)
-            await existing_preset.save()
-
+            if not existing_preset.is_custom:
+                for key, value in preset.items():
+                    setattr(existing_preset, key, value)
+                await existing_preset.save()
 
 async def load_integrations():
     """

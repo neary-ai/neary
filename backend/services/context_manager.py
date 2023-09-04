@@ -6,7 +6,7 @@ from backend.models.models import ConversationModel
 class ContextManager:
     def __init__(self, conversation):
         self.conversation = conversation
-        self.token_limit = conversation.settings['token_limit']
+        self.max_input_tokens = conversation.settings['max_input_tokens']
 
     async def generate_context(self, messages):
         conversation_model = await ConversationModel.get_or_none(id=self.conversation.id)
@@ -44,7 +44,7 @@ class ContextManager:
             new_message_tokens = len(
                 list(tokenizer.encode(message['content'])))
 
-            if token_count + new_message_tokens > self.token_limit:
+            if token_count + new_message_tokens > self.max_input_tokens:
                 break
 
             if message['role'] == 'user':

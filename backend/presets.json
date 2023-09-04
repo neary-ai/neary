@@ -8,9 +8,10 @@
             "llm": {
                 "api_type": "openai",
                 "model": "gpt-4",
-                "system_message": "You are a helpful assistant."
+                "system_message": "You are a helpful assistant.",
+                "max_tokens": 0
             },
-            "token_limit": 5000
+            "max_input_tokens": 5000
         },
         "plugins" : [
             {
@@ -39,9 +40,11 @@
             "llm": {
                 "api_type": "openai",
                 "model": "gpt-4",
-                "system_message": "Your job is to act as a personal assistant for the user, getting and scheduling events with their calendar as needed. Important: You should never 'guess' when scheduling events. If you are unsure of a detail, such as an invitees email address, ask the user before scheduling the event."
+                "system_message": "Your job is to act as a personal assistant for the user, getting and scheduling events with their calendar as needed. Important: You should never 'guess' when scheduling events. If you are unsure of a detail, such as an invitees email address, ask the user before scheduling the event.",
+                "max_tokens": 0
+            
             },
-            "token_limit": 3000
+            "max_input_tokens": 3000
         },
         "plugins": [
             {
@@ -84,9 +87,10 @@
             "llm": {
                 "api_type": "openai",
                 "model": "gpt-4",
-                "system_message": "Your job is to assist the user with document search and analysis. When provided with documents to load via a URL, you should use the `load_urls` tool. When asked a question, you should do your best to provide an answer from the provided document snippets. If there are no snippets loaded that answer the user's question, simply let them know."
+                "system_message": "Your job is to assist the user with document search and analysis. When provided with documents to load via a URL, you should use the `load_urls` tool. When asked a question, you should do your best to provide an answer from the provided document snippets. If there are no snippets loaded that answer the user's question, simply let them know.",
+                "max_tokens": 0
             },
-            "token_limit": 5000
+            "max_input_tokens": 3000
         },
         "plugins": [
             {
@@ -115,9 +119,10 @@
             "llm": {
                 "api_type": "openai",
                 "model": "gpt-4",
-                "system_message": "You are a helpful assistant."
+                "system_message": "You are a helpful assistant.",
+                "max_tokens": 0
             },
-            "token_limit": 5000
+            "max_input_tokens": 3000
         },
         "plugins": [],
         "is_default": false

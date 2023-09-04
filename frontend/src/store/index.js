@@ -33,6 +33,7 @@ export const useAppStore = defineStore('appstore', {
         showXray: false,
         xray: {},
         isWebSocketActive: false,
+        availablePresets: null,
         availablePlugins: null,
         bufferedMessages: [],
     }),
@@ -100,6 +101,9 @@ export const useAppStore = defineStore('appstore', {
                 initialSpaceId = null;
                 initialConversationId = null;
             }
+
+            // Set presets
+            this.availablePresets = initial_data.presets;
 
             // Set plugins
             this.availablePlugins = initial_data.plugins;

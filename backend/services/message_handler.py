@@ -74,9 +74,10 @@ class MessageHandler:
 
         ai_response = await llm.create_chat(
             model=llm_settings['model'],
+            max_tokens=llm_settings['max_tokens'],
             messages=messages,
             functions=functions,
-            temperature=0.5
+            temperature=0.5,
         )
 
         return ai_response

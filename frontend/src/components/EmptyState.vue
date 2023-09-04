@@ -16,19 +16,16 @@
       </div>
       <div class="flex flex-col gap-2.5">
         <label class="text-sm text-field-label">Select Preset</label>
-        <Card @click="router.push('/stack')" class="cursor-pointer">
+        <Card @click="router.push('/stack')" class="cursor-pointer" padding="px-3 py-2.5">
           <template v-slot:icon>
-            <div class="flex items-center justify-center h-9 w-9 rounded shadow bg-nearycyan-500 mt-0.5">
+            <div class="flex items-center justify-center">
               <Icon
                 :icon="store.selectedConversation.preset.icon ? store.selectedConversation.preset.icon : 'heroicons:user-solid'"
-                class="text-white w-5 h-5" />
+                class="text-nearygray-300 w-6 h-6" />
             </div>
           </template>
-          <div class="leading-7">
-            <div class="text-field-default-foreground text-sm font-medium">
-              {{ store.selectedConversation.preset.name }}</div>
-            <div class="text-sm text-nearygray-400">{{ store.selectedConversation.preset.description }}</div>
-          </div>
+          <div class="font-normal text-sm py-0.5 -ml-1 text-field-default-foreground">
+            {{ store.selectedConversation.preset.name }}</div>
           <template v-slot:button>
             <ChevronRightIcon class="w-5 h-5 shrink-0"></ChevronRightIcon>
           </template>
