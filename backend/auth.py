@@ -9,8 +9,8 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from backend.config import settings
 from backend.models import UserModel
 
-ENABLE_AUTH = settings.get("ENABLE_AUTH", False)
-JWT_SECRET = settings.get("JWT_SECRET", "your-secret-key")
+ENABLE_AUTH = settings.application.get("ENABLE_AUTH", False)
+JWT_SECRET = settings.application.get("JWT_SECRET", "your-secret-key")
 ACCESS_TOKEN_EXPIRE_MINUTES = 60*24*30
 ALGORITHM = "HS256"
 
@@ -19,6 +19,7 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 async def get_current_user(request: Request):
     token = request.cookies.get("access_token")
+    print(token)
     if token:
         try:
             jwt.decode(token, JWT_SECRET, algorithms=[ALGORITHM])

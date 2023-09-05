@@ -6,16 +6,6 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: neary
-    environment:
-      - BASE_URL
-      - JWT_SECRET
-      - ENABLE_AUTH
-      - CUSTOM_ENDPOINT
-      - OPENAI_API_KEY
-      - AZURE_OPENAI_KEY
-      - AZURE_OPENAI_ENDPOINT
-      - AZURE_OPENAI_API_VERSION
-      - OAUTHLIB_INSECURE_TRANSPORT
     ports:
       - "8000:8000"
     extra_hosts:
