@@ -4,9 +4,10 @@ import asyncio
 import openai
 from openai.error import Timeout, RateLimitError
 
+from backend.config import settings
 
 class LLMConnector:
-    def __init__(self, context, api_type="openai", api_key=None, api_base=None, api_version=None, websocket=None):
+    def __init__(self, context, api_type="openai", websocket=None):
         self.api_type = api_type
         self.websocket = websocket
         self.context = context
@@ -14,16 +15,13 @@ class LLMConnector:
         # Azure config
         if self.api_type == "azure":
             openai.api_type = api_type
-            api_key = os.getenv(
-                "AZURE_OPENAI_KEY") if api_key is None else api_key
-            api_base = os.getenv(
-                "AZURE_OPENAI_ENDPOINT") if api_base is None else api_base
-            api_version = os.getenv(
-                "AZURE_OPENAI_API_VERSION") if api_version is None else api_version
+            api_key = settings.chat_models.get("azure_openai_key", None)
+            api_base = settings.chat_models.get("azure_openai_endpoint", None)
+            api_version = settings.chat_models.get("azure_openai_api_version", None)
 
             if not api_key or not api_base:
                 raise ValueError(
-                    "AZURE_OPENAI_KEY and AZURE_OPENAI_ENDPOINT must be set in environment variables.")
+                    "AZURE_OPENAI_KEY and AZURE_OPENAI_ENDPOINT must be set")
 
             openai.api_key = api_key
             openai.api_base = api_base
@@ -31,9 +29,8 @@ class LLMConnector:
 
         # Custom config
         elif self.api_type == "custom":
-            api_base = os.getenv(
-                "CUSTOM_ENDPOINT") if not api_base else api_base
-
+            api_base = settings.chat_models.get("custom_endpoint", None)
+            
             if not api_base:
                 raise ValueError(
                     "CUSTOM_ENDPOINT must be set in environment variables.")
@@ -42,6 +39,7 @@ class LLMConnector:
 
         # Default OpenAI config
         else:
+            openai.api_key = settings.chat_models.openai_api_key
             openai.api_base = "https://api.openai.com/v1"
 
     async def create_chat(self, messages, model="gpt-4", temperature=0.7, top_p=1, n=1, stream=True, functions=None, max_tokens=0, stop=None, presence_penalty=0, frequency_penalty=0):
@@ -110,6 +108,7 @@ class LLMConnector:
 
 
 async def get_embeddings(doc):
+    openai.api_key = settings.chat_models.openai_api_key
     response = openai.Embedding.create(
         input=doc,
         model="text-embedding-ada-002"

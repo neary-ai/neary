@@ -1,10 +1,14 @@
+import os
 import json
 import secrets
 from requests_oauthlib import OAuth2Session
 
+from backend.config import settings
+
 class OAuthHandler:
     def __init__(self, integration, token=None):
         self.integration = integration
+        os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = str(settings.APPLICATION.oauthlib_insecure_transport)
         self.oauth = OAuth2Session(
             self.integration.data["client_id"],
             scope=self.integration.data["scopes"],

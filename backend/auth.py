@@ -6,15 +6,16 @@ from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordBearer
 from starlette.middleware.base import BaseHTTPMiddleware
 
+from backend.config import settings
 from backend.models import UserModel
 
-JWT_SECRET = os.environ.get("JWT_SECRET", "your-secret-key")
-ALGORITHM = "HS256"
+ENABLE_AUTH = settings.get("ENABLE_AUTH", False)
+JWT_SECRET = settings.get("JWT_SECRET", "your-secret-key")
 ACCESS_TOKEN_EXPIRE_MINUTES = 60*24*30
+ALGORITHM = "HS256"
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
-ENABLE_AUTH = os.environ.get("ENABLE_AUTH", "false").lower() == "true"
 
 async def get_current_user(request: Request):
     token = request.cookies.get("access_token")

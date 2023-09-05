@@ -8,6 +8,7 @@ from fastapi import HTTPException, status, Request, APIRouter, Body, UploadFile,
 from fastapi.responses import JSONResponse, RedirectResponse, FileResponse
 
 from backend.models import *
+from backend.config import settings
 from backend.auth import get_current_user
 from backend.utils.utils import export_conversation
 from backend.services.documents.document_manager import DocumentManager
@@ -775,7 +776,7 @@ async def oauth_callback(request: Request):
         await instance.save()
 
     # Redirect the user to a frontend route
-    base_url = os.environ.get("BASE_URL", "http://localhost:3000")
+    base_url = settings.application.get("base_url", "http://localhost:8000")
     return RedirectResponse(url=base_url, status_code=302)
 
 

@@ -5,9 +5,6 @@ from pathlib import Path
 current_dir = Path(__file__).resolve().parent
 sys.path.append(str(Path(__file__).parent.parent))
 
-from dotenv import load_dotenv
-load_dotenv(current_dir / ".." / ".env")
-
 import os
 import uvicorn
 from fastapi import FastAPI, Request
@@ -15,7 +12,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 from fastapi.responses import FileResponse
 
-from backend.config import run_setup
+from backend.setup import run_setup
 from backend.auth import AuthMiddleware
 from backend.routers.auth_router import router as auth_router
 from backend.routers.api_router import router as api_router

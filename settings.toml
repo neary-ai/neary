@@ -1,0 +1,32 @@
+[chat_models]
+
+# OpenAI setup
+# https://platform.openai.com/account/api-keys)
+openai_api_key = ""
+
+# Azure OpenAI setup
+# https://learn.microsoft.com/en-us/azure/ai-services/openai/how-to/switching-endpoints
+azure_openai_key = ""
+azure_openai_endpoint = ""
+azure_openai_api_version = "2023-05-15"
+
+# Specify a custom endpoint via a "drop-in" OpenAI API replacement
+# Docker users may need to replace `localhost` with `host.docker.internal`
+custom_endpoint = "http://localhost:8080/v1"
+
+
+[application]
+
+# These defaults are setup for running on localhost
+# Configure these if you plan to deploy in some other manner
+
+base_url = "http://localhost:8000"
+enable_auth = true # Set to false to disable email/password authentication
+jwt_secret = "choose-a-secret"
+oauthlib_insecure_transport = 1 # Allow oauth2 support over http connections
+
+[integrations]
+
+# OAuth credentials for use with Google-based integrations
+google_client_id = ""
+google_client_secret = ""

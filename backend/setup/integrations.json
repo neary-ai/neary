@@ -4,9 +4,9 @@
         "display_name": "Google Calendar",
         "auth_method": "oauth",
         "data": {
-            "client_id": "YOUR_CLIENT_ID",
-            "client_secret": "YOUR_CLIENT_SECRET",
-            "redirect_uri": "http://localhost:8000/api/oauth2/callback",
+            "client_id": "{INTEGRATIONS__GOOGLE_CLIENT_ID}",
+            "client_secret": "{INTEGRATIONS__GOOGLE_CLIENT_SECRET}",
+            "redirect_uri": "{APPLICATION__BASE_URL}/api/oauth2/callback",
             "auth_url": "https://accounts.google.com/o/oauth2/auth",
             "token_url": "https://oauth2.googleapis.com/token",
             "scopes": [
