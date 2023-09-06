@@ -11,7 +11,7 @@
                                 <div class="text-slate-300 font-semibold mb-2">Preset Info</div>
                                 <div class="text-sm text-nearygray-400">To add an icon, find one you like on <a
                                         href="https://icon-sets.iconify.design/" target="_blank"
-                                        class="font-semibold text-nearygray-200">Iconify</a> and add the shortcode.</div>
+                                        class="font-semibold text-nearygray-200">Iconify</a> and add the shortcode</div>
                             </div>
                         </div>
                         <div class="col-span-full sm:col-span-4 flex flex-col text-slate-400">
@@ -39,7 +39,7 @@
                         <div class="col-span-1 sm:col-span-3 pr-12">
                             <div class="flex flex-col mb-6 sm:mb-0">
                                 <div class="text-slate-300 font-semibold mb-2">Actions</div>
-                                <div class="text-sm text-nearygray-400">Exported presets include custom settings, but no user data.</div>
+                                <div class="text-sm text-nearygray-400">Exported presets include custom settings, but no user data</div>
                             </div>
                         </div>
                         <div class="col-span-1 sm:col-span-4 flex flex-col text-slate-400">

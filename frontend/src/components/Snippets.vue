@@ -16,7 +16,7 @@
                         </div>
                         <template v-slot:button>
                             <Icon icon="heroicons:plus" @click="addSnippet(snippet.name)"
-                                class="cursor-pointer shrink-0 ml-4 w-5 h-5" />
+                                class="cursor-pointer shrink-0 ml-4 mr-2 w-5 h-5" />
                         </template>
                     </Card>
                 </template>

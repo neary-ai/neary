@@ -77,7 +77,7 @@ class MessageHandler:
             max_tokens=llm_settings['max_tokens'],
             messages=messages,
             functions=functions,
-            temperature=0.5,
+            temperature=llm_settings['temperature'],
         )
 
         return ai_response

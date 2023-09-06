@@ -4,11 +4,10 @@
             <SectionHeading section-name="Manage Account" @on-click="onBackButtonClick" />
             <div class="divide-y divide-slate-400/20">
                 <div class="grid grid-cols-1 sm:grid-cols-7 py-12">
-                    <div class="col-span-full sm:col-span-3 pr-6">
+                    <div class="col-span-full sm:col-span-3 pr-12">
                         <div class="flex flex-col mb-6 sm:mb-0">
                             <div class="text-nearygray-50 font-semibold mb-2">User Profile</div>
-                            <div class="text-sm text-slate-400">Information in your profile is made available to all
-                                conversations.</div>
+                            <div class="text-sm text-slate-400">Information in your profile can be used to customize the AI's responses</div>
                         </div>
                     </div>
                     <div class="col-span-full sm:col-span-4 flex flex-col text-slate-400">
@@ -58,7 +57,7 @@
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-7 py-12">
-                    <div class="col-span-full sm:col-span-3 pr-6">
+                    <div class="col-span-full sm:col-span-3 pr-12">
                         <div class="flex flex-col mb-6 sm:mb-0">
                             <div class="text-nearygray-50 font-semibold mb-2">Change Password</div>
                         </div>
@@ -76,7 +75,7 @@
                     </div>
                 </div>
                 <div class="grid grid-cols-1 sm:grid-cols-7 py-12">
-                    <div class="col-span-full sm:col-span-3 pr-6">
+                    <div class="col-span-full sm:col-span-3 pr-12">
                         <div class="flex flex-col mb-6 sm:mb-0">
                             <div class="text-nearygray-50 font-semibold mb-2">Account Actions</div>
                             <div class="text-sm text-slate-400"></div>

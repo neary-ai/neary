@@ -29,9 +29,7 @@
             <div class="col-span-full sm:col-span-3 pr-12">
               <div class="flex flex-col mb-6 sm:mb-0">
                 <div class=" text-slate-300 font-semibold mb-2">AI Settings</div>
-                <div class="text-sm text-nearygray-400">The default settings work well for most conversations. If in
-                  doubt,
-                  leave them as is. </div>
+                <div class="text-sm text-nearygray-400">Configure the chat model to shape the AI's output and performance</div>
               </div>
             </div>
             <div class="col-span-full sm:col-span-4 flex flex-col text-slate-400">
@@ -48,13 +46,18 @@
                   v-model="store.selectedConversation.settings.llm.model" :options="store.settingsOptions.llm.model" />
               </div>
               <div class="flex flex-col items-start">
+                <label class="text-sm font-semibold text-slate-300 w-full mb-1.5">Temperature</label>
+                <NumberInputField step=".1" minValue="0" maxValue="1" @change="store.updateConversation(store.selectedConversation)" class="w-full mb-6"
+                  v-model="store.selectedConversation.settings.llm.temperature" />
+              </div>
+              <div class="flex flex-col items-start">
                 <label class="text-sm font-semibold text-slate-300 w-full mb-1.5">Input Tokens</label>
-                <NumberInputField @change="store.updateConversation(store.selectedConversation)" class="w-full mb-6"
+                <NumberInputField step="100" minValue="0" @change="store.updateConversation(store.selectedConversation)" class="w-full mb-6"
                   v-model="store.selectedConversation.settings.max_input_tokens" />
               </div>
               <div class="flex flex-col items-start">
                 <label class="text-sm font-semibold text-slate-300 w-full mb-1.5">Max Tokens (0 = infinite)</label>
-                <NumberInputField @change="store.updateConversation(store.selectedConversation)" class="w-full mb-6"
+                <NumberInputField step="100" minValue="0" @change="store.updateConversation(store.selectedConversation)" class="w-full mb-6"
                   v-model="store.selectedConversation.settings.llm.max_tokens" />
               </div>
             </div>

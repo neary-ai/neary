@@ -21,8 +21,8 @@
                                 :class="['bg-nearyblue-50 text-nearygray-200 w-full sm:w-24 shrink-0 px-3 py-2 text-sm rounded']">
                                 Disconnect
                             </Button>
-                            <Button v-else @click="connectIntegration(integration)" button-type="btn-outline-light"
-                                :class="['bg-nearyblue-50 text-nearygray-200 w-full sm:w-24 shrink-0 px-3 py-2 text-sm rounded']">
+                            <Button v-else @click="connectIntegration(integration)" button-type="btn-light"
+                                :class="['w-full sm:w-24 shrink-0 px-3 py-2 text-sm rounded']">
                                 Connect
                             </Button>
                         </template>

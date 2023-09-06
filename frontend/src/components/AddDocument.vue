@@ -1,18 +1,18 @@
 <template>
-  <div class="text-slate-300 py-5">
+  <div class="text-nearygray-100 py-5 text-sm">
     To add new documents, enter a URL or upload a text file using the form below.
   </div>
-  <div class="container mx-auto px-2 pb-4 pt-2">
+  <div class="container mx-auto pb-4 pt-2 text-sm">
     <form @submit.prevent="uploadDocument" class="text-field-label">
       <div class="mb-4">
-        <label for="url" class="block mb-2">Enter URL:</label>
+        <label for="url" class="block mb-2 font-semibold">Enter URL:</label>
         <input type="url" id="url" name="url" placeholder="https://www.example.com/article"
-          class="text-field-default-foreground placeholder:text-field-default-foreground/60 bg-field-default w-full px-3 py-2 border border-nearyblue-100 rounded-md focus:outline-none focus:border-field-active focus:ring-0"
+          class="text-field-default-foreground text-sm placeholder:text-field-default-foreground/60 bg-field-default w-full px-3 py-2 border border-nearyblue-100 rounded-md focus:outline-none focus:border-field-active focus:ring-0"
           v-model="url" @input="clearFile">
       </div>
       <p class="text-center font-semibold">- OR -</p>
-      <div class="mb-4">
-        <label for="file" class="block mb-2">Drag and drop a file:</label>
+      <div class="mb-8">
+        <label for="file" class="block mb-2 font-semibold">Drag and drop a file:</label>
         <div id="dragArea"
           class="bg-field-default rounded-md border border-nearyblue-100 text-field-default-foreground w-full h-40 flex items-center justify-center text-center drag-area"
           @click="triggerFileInput" @dragover.prevent="handleDragOver" @dragleave="handleDragLeave"

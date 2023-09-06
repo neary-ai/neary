@@ -10,7 +10,7 @@
                             <div class="flex flex-col mb-6 sm:mb-0">
                                 <div class="text-slate-300 font-semibold mb-2">Preset</div>
                                 <div class="text-sm text-nearygray-400">Start your stack with a ready-made conversation
-                                    recipe.
+                                    recipe
                                 </div>
                             </div>
                         </div>
@@ -35,8 +35,8 @@
                         <div class="col-span-1 sm:col-span-3 pr-12">
                             <div class="flex flex-col mb-6 sm:mb-0">
                                 <div class=" text-slate-300 font-semibold mb-2">Instructions</div>
-                                <div class="text-sm text-nearygray-400">Customize these instructions (or system message) to
-                                    tell the AI how it should behave.</div>
+                                <div class="text-sm text-nearygray-400">Custom instructions
+                                    tell the AI how it should behave</div>
                             </div>
                         </div>
                         <div class="col-span-full sm:col-span-4 flex flex-col text-slate-400">
@@ -51,7 +51,7 @@
                             <div class="flex flex-col mb-6 sm:mb-0">
                                 <div class=" text-slate-300 font-semibold mb-2">Snippets</div>
                                 <div class="text-sm text-nearygray-400">Automatically insert pieces of context into the
-                                    conversation, so Neary is always in the know.</div>
+                                    conversation</div>
                             </div>
                         </div>
                         <div class="col-span-full sm:col-span-4 flex flex-col text-slate-400">
@@ -61,17 +61,14 @@
                                         <template v-slot:icon>
                                             <div
                                                 class="flex items-center justify-center h-9 w-9 rounded shadow bg-neutral-100 mt-0.5">
-                                                <Icon icon="mdi:note-text-outline" class="text-nearycyan-300 w-5 h-5" />
+                                                <Icon icon="mdi:note-text-outline" class="text-nearycyan-400 w-5 h-5" />
                                             </div>
                                         </template>
-                                        <div class="text-field-default-foreground text-sm font-medium">{{
-                                            snippet.display_name }}</div>
-                                        <div class="text-sm font-normal text-nearygray-400">{{
-                                            snippet.description }}</div>
+                                        <div class="text-field-default-foreground text-sm font-medium">{{ snippet.display_name }}</div>
                                         <template v-slot:button>
                                             <Popover class="relative inline-block text-left">
                                                 <PopoverButton
-                                                    class="flex items-center group relative cursor-pointer px-2 py-0.5 hover:text-nearygray-100 focus:border-transparent focus:ring-0 focus:outline-none">
+                                                    class="flex items-center group relative cursor-pointer pl-2 py-0.5 hover:text-nearygray-100 focus:border-transparent focus:ring-0 focus:outline-none">
                                                     <Icon icon="heroicons:ellipsis-vertical" class="w-5 h-5" />
                                                 </PopoverButton>
                                                 <Transition as="div" enter="transition ease-out duration-200"
@@ -110,7 +107,7 @@
                         <div class="col-span-1 sm:col-span-3 pr-12">
                             <div class="flex flex-col mb-6 sm:mb-0">
                                 <div class=" text-slate-300 font-semibold mb-2">Tools</div>
-                                <div class="text-sm text-nearygray-400">Choose which tools, or actions, the AI can take on
+                                <div class="text-sm text-nearygray-400">Tools are actions the AI can take on
                                     your behalf
                                 </div>
                             </div>
@@ -126,15 +123,12 @@
                                             </div>
                                         </template>
                                         <div class="leading-7">
-                                            <div class="text-field-default-foreground text-sm font-medium">{{
-                                                tool.display_name }}</div>
-                                            <div class="text-sm font-normal text-nearygray-400">{{
-                                                tool.description }}</div>
+                                            <div class="text-field-default-foreground text-sm font-medium">{{ tool.display_name }}</div>
                                         </div>
                                         <template v-slot:button>
                                             <Popover class="relative inline-block text-left">
                                                 <PopoverButton
-                                                    class="flex items-center group relative cursor-pointer px-2 py-0.5 hover:text-nearygray-100 focus:border-transparent focus:ring-0 focus:outline-none">
+                                                    class="flex items-center group relative cursor-pointer pl-2 py-0.5 hover:text-nearygray-100 focus:border-transparent focus:ring-0 focus:outline-none">
                                                     <Icon icon="heroicons:ellipsis-vertical" class="w-5 h-5" />
                                                 </PopoverButton>
                                                 <Transition as="div" enter="transition ease-out duration-200"
@@ -173,7 +167,7 @@
                         <div class="col-span-1 sm:col-span-3 pr-12">
                             <div class="flex flex-col mb-6 sm:mb-0">
                                 <div class=" text-slate-300 font-semibold mb-2">Save Settings</div>
-                                <div class="text-sm text-nearygray-400">Use these settings for new conversations</div>
+                                <div class="text-sm text-nearygray-400">Save your stack as a preset for easy reuse</div>
                             </div>
                         </div>
                         <div class="col-span-1 sm:col-span-4 flex flex-col text-slate-400">

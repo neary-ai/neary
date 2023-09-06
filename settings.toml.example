@@ -1,7 +1,7 @@
 [chat_models]
 
 # OpenAI setup
-# https://platform.openai.com/account/api-keys)
+# https://platform.openai.com/account/api-keys
 openai_api_key = ""
 
 # Azure OpenAI setup

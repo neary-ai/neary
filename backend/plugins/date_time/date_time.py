@@ -28,4 +28,4 @@ class DateTimeSnippet(BasePlugin):
             utc_time_str = utc_time.strftime('%Y-%m-%d %H:%M:%S %Z%z')
             day = utc_time.strftime('%A')
 
-            context.add_snippet(f"It is {day}. The current date and time in UTC is: {utc_time_str}. The user can set the `timezone` field in their user profile to get the local time, using tz database format.")
+            context.add_snippet(f"Important! The user's timezone is not currently set. You should offer to set the `timezone` field in tz database format for them using the `update_profile_tool` (if available). The current date and time in UTC is: {utc_time_str}.")

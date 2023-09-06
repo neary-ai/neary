@@ -133,7 +133,7 @@ async def get_settings_options():
         "llm": {
             "api_type": [
                 {
-                    "option": "Open AI",
+                    "option": "OpenAI",
                     "value": "openai",
                 },
                 {

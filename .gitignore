@@ -1,6 +1,7 @@
 .vscode
 .env
 .pytest*
+settings.toml
 backend/credentials/*
 !/backend/credentials/.gitkeep
 backend/data/*

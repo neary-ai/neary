@@ -26,11 +26,11 @@
       </ul>
       <div v-else class="flex items-center justify-start max-w-lg">
         <div class="text-center py-12 px-14 mt-8 rounded-lg border-2 border-dashed border-neutral-100">
-          <Squares2X2Icon class="mx-auto h-12 w-12 text-nearygray-200 mb-4" />
+          <Squares2X2Icon class="mx-auto h-12 w-12 text-nearylight-300 mb-4" />
           <h3 class="mt-2 text-sm font-semibold text-nearygray-50">Organize your conversations</h3>
           <p class="mt-1 text-sm text-nearygray-300">Create your first space</p>
           <div class="mt-6">
-            <Button @buttonClick="newSpace" button-type="btn-pink">
+            <Button @buttonClick="newSpace" button-type="btn-light">
               <div class="flex items-center gap-1 pr-1.5">
                 <PlusIcon class="w-5 h-5" />
                 New Space
