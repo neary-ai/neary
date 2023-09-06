@@ -19,7 +19,6 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 async def get_current_user(request: Request):
     token = request.cookies.get("access_token")
-    print(token)
     if token:
         try:
             jwt.decode(token, JWT_SECRET, algorithms=[ALGORITHM])
@@ -50,7 +49,9 @@ Auth Middleware
 class AuthMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         protected_routes = []
-        if ENABLE_AUTH and (request.url.path in protected_routes or request.url.path.startswith("/api")):
+        unprotected_routes = ["/api/oauth2/callback"]
+
+        if ENABLE_AUTH and (request.url.path in protected_routes or (request.url.path.startswith("/api") and request.url.path not in unprotected_routes)):
             try:
                 await get_current_user(request)
             except HTTPException as e:
