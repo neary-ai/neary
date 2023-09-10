@@ -14,19 +14,20 @@ export default function useWebSocket() {
 
     const initWebSocket = async () => {
         if (!store.ws || store.ws.readyState === WebSocket.CLOSED) {
+            console.log('connecting to websocket..')
             try {
                 const ws = new WebSocket(getWebSocketUrl());
 
                 ws.onmessage = handleMessage;
                 ws.onopen = () => store.isWebSocketActive = true;
                 ws.onclose = async () => {
-                    store.isWebSocketActive = false;
                     await new Promise((resolve) => setTimeout(resolve, 2000));
+                    store.isWebSocketActive = false;
                     await initWebSocket();
                 };
                 ws.onerror = async (error) => {
-                    store.isWebSocketActive = false;
                     await new Promise((resolve) => setTimeout(resolve, 2000));
+                    store.isWebSocketActive = false;
                     await initWebSocket();
                 };
 

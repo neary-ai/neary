@@ -84,11 +84,11 @@ description = "Inserts the contents of Neary's notepad"
 [tools.update_user_profile]
 display_name = "Update User Profile"
 description = "Adds new information to your profile."
-llm_description = "Updates the user's profile with new information. Takes a `fields` (json) argument that contains key-value pairs of the information to be added or updated. E.g. {'name': 'Joe', 'timezone': 'America/Denver'}."
+llm_description = "Updates the user's profile with new information."
 
 [tools.update_user_profile.parameters.fields]
 type = "object"
-description = "The fields to update as key-value pairs."
+description = "An object that contains key-value pairs representing user profile details. The keys should be the names of the profile fields you want to update (for example, 'name', 'location'), and the values should be the new values for those fields. The entire 'fields' object should be nested within the main object you're sending with the request."
 required = true
 
 [tools.update_user_profile.settings.requires_approval]
@@ -108,3 +108,37 @@ editable = false
 [snippets.insert_user_profile]
 display_name = "Insert User Profile"
 description = "Inserts the contents of your profile into context."
+
+# Tool: Create Text File
+
+[tools.create_text_file]
+display_name = "Create Text File"
+description = "Generates a downloadable text file."
+llm_description = "Creates a downloadable text file and delivers it to the user. Use this function only when the user specifically asks for you to respond with a file."
+
+[tools.create_text_file.parameters.text]
+type = "string"
+description = "The content of the file."
+required = true
+
+[tools.create_text_file.parameters.filename]
+type = "string"
+description = "A concise but descriptive name for the file."
+required = false
+
+[tools.create_text_file.parameters.extension]
+type = "string"
+description = "The file's extension. If not specified, 'txt' is used."
+required = false
+
+[tools.create_text_file.settings.requires_approval]
+description = "Require user approval before running tool"
+value = false
+type = "boolean"
+editable = true
+
+[tools.create_text_file.settings.follow_up_on_output]
+description = "Generate a new response to tool output"
+value = false
+type = "boolean"
+editable = false

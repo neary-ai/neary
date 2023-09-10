@@ -8,7 +8,7 @@ from backend.utils.utils import export_conversation
 
 router = APIRouter()
 
-@router.get("/")
+@router.get("")
 async def get_conversations(space_id: int = Body(...)):
     """Get conversations"""
     if space_id == -1:
@@ -20,9 +20,13 @@ async def get_conversations(space_id: int = Body(...)):
 
     return serialized_conversations
 
-@router.post("/")
-async def create_conversation(space_id: int = Body(...)):
+@router.post("")
+async def create_conversation(request: Request):
     """Create a conversation"""
+    # space_id: int = Body(...)) doesn't play nice with negatives
+    data = await request.json()
+    space_id = data['space_id']
+
     space = await SpaceModel.get_or_none(id=space_id)
 
     preset = await PresetModel.filter(is_default=True).first()
@@ -161,7 +165,6 @@ async def update_conversation(request: Request, conversation_id: int):
 
     # Now add, remove or update plugins from conversation model
     for plugin in new_plugin_data:
-        print(plugin)
         # See if instance already exists
         plugin_registry = await PluginRegistryModel.get_or_none(name=plugin["name"])
         plugin_instance = await PluginInstanceModel.get_or_none(plugin=plugin_registry, conversation=conversation)

@@ -6,7 +6,7 @@ import Chat from './views/Chat.vue';
 import Welcome from './views/Welcome.vue';
 import ChatWindow from './components/ChatWindow.vue';
 import Settings from './components/Settings.vue';
-import Configure from './components/Configure.vue';
+import Setup from './components/Setup.vue';
 import Stack from './components/Stack.vue';
 import Account from './components/Account.vue';
 import ManageSpaces from './components/ManageSpaces.vue';
@@ -14,7 +14,6 @@ import Documents from './components/Documents.vue';
 import Presets from './components/Presets.vue';
 import Snippets from './components/Snippets.vue';
 import Tools from './components/Tools.vue';
-import Integrations from './components/Integrations.vue';
 import Conversations from './components/Conversations.vue';
 import Plugin from './components/Plugin.vue';
 import Preset from './components/Preset.vue';
@@ -48,9 +47,9 @@ const routes = [
 
       },
       {
-        path: 'config',
-        name: 'Configure',
-        component: Configure
+        path: 'setup',
+        name: 'Setup',
+        component: Setup
 
       },
       {
@@ -87,12 +86,6 @@ const routes = [
         path: 'plugins/:name',
         name: 'Plugin',
         component: Plugin
-      },
-      {
-        path: 'integrations',
-        name: 'Integrations',
-        component: Integrations
-
       },
       {
         path: 'spaces',

@@ -4,14 +4,14 @@ from backend.models import *
 
 router = APIRouter()
 
-@router.get("/")
+@router.get("")
 async def get_presets():
     presets = await PresetModel.filter(is_active=True)
     presets = [preset.serialize() for preset in presets]
     return presets
 
 
-@router.post("/")
+@router.post("")
 async def create_preset(preset_data: dict = Body(...)):
     conversation = await ConversationModel.get_or_none(id=preset_data['conversation_id'])
     if not conversation:
@@ -73,8 +73,6 @@ async def update_preset(preset_id: int, preset_data: dict = Body(...)):
         preset.settings = conversation.settings
         preset.is_custom = True,
         await preset.save()
-
-        print('Updated preset: ', preset.serialize())
     else:
         # If the updated preset is set to default, unset all other presets
         if preset_data['is_default']:

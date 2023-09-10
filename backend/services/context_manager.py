@@ -51,7 +51,9 @@ class ContextManager:
                 messages.add_user_message(
                     message['content'], id=message['id'], tokens=new_message_tokens, index=insert_index)
             elif message['role'] == 'assistant':
-                function_call = next((item['function_call'] for item in message['metadata'] if 'function_call' in item), None)
+                function_call = None
+                if message['metadata']:
+                    function_call = next((item['function_call'] for item in message['metadata'] if 'function_call' in item), None)
                 messages.add_ai_message(message['content'], function_call=function_call, id=message['id'], tokens=new_message_tokens, index=insert_index)
             elif message['role'] == 'function':
                 function_name = next((item['function_name'] for item in message['metadata'] if 'function_name' in item), None)

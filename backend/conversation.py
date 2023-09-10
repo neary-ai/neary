@@ -217,12 +217,8 @@ class Conversation:
             if not plugin['is_enabled']:
                 continue
 
-            print('Loading: ', plugin["name"])
-
             plugin_name = plugin["name"]
             plugin_info = plugin_manager.get_plugin(plugin_name)
-
-            print(f'\n\n{plugin_info}\n\n')
 
             for function_type in ['snippets', 'tools']:
                 for function_name, function_info in plugin['functions'].get(function_type, {}).items():

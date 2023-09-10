@@ -80,7 +80,6 @@
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAppStore } from '@/store/index.js';
-import SectionHeading from './common/SectionHeading.vue'
 import Card from './common/Card.vue'
 import Modal from './common/Modal.vue'
 import Button from './common/Button.vue'
@@ -88,7 +87,6 @@ import api from '../services/apiService';
 import { Icon } from '@iconify/vue';
 
 const store = useAppStore();
-const router = useRouter();
 
 const integrations = ref([])
 
@@ -128,11 +126,6 @@ const save = async () => {
 
 const close = () => {
     isOpen.value = false;
-};
-
-
-const onBackButtonClick = () => {
-    router.go(-1);
 };
 
 

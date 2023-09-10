@@ -24,12 +24,14 @@ class BasePlugin(ABC):
 
     def load_config(self):
         # Load the default settings & metadata from the TOML file
-        config_path = os.path.join(os.path.dirname(inspect.getfile(self.__class__)), "plugin.toml")
+        config_dir = os.path.dirname(inspect.getfile(self.__class__))
+        config_path = os.path.join((config_dir), "plugin.toml")
         config = toml.load(config_path)
 
         settings = {}
         metadata = config.get("metadata", {})
-
+        metadata['name'] = os.path.basename(config_dir)
+        
         # Load settings for each tool
         for tool_name, tool_config in config.get("tools", {}).items():
             tool_settings = tool_config.get("settings", {})

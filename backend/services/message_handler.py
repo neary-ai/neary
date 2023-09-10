@@ -1,3 +1,5 @@
+import json
+
 from backend.models import MessageModel
 from .llm_connector import LLMConnector
 
@@ -35,6 +37,20 @@ class MessageHandler:
             message_data = message.serialize()
         else:
             message_data = {"role": "assistant", "content": message,
+                            "conversation_id": conversation_id, 'status': None}
+
+        if self.websocket:
+            await self.websocket.send_json(message_data)
+        else:
+            print('No websocket available!')
+
+    async def send_file_to_ui(self, filename, filesize, file_url, conversation_id, save_to_db=True):
+        content = json.dumps({'filename': filename, 'filesize': filesize, 'url': file_url})
+        if save_to_db:
+            message = await MessageModel.create(role="file", content=content, conversation_id=conversation_id, status=None)
+            message_data = message.serialize()
+        else:
+            message_data = {"role": "file", "content": content,
                             "conversation_id": conversation_id, 'status': None}
 
         if self.websocket:

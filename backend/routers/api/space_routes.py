@@ -5,7 +5,7 @@ from backend.models import *
 
 router = APIRouter()
 
-@router.post("/")
+@router.post("")
 async def create_space(name: str = Body(...)):
     """Create a new space"""
     space = await SpaceModel.create(name=name)
@@ -13,7 +13,7 @@ async def create_space(name: str = Body(...)):
     return await space.serialize()
 
 
-@router.get("/")
+@router.get("")
 async def get_spaces(request: Request):
     """Get spaces"""
     spaces = await SpaceModel.filter(is_archived=False)

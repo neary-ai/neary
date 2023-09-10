@@ -18,9 +18,9 @@
                             <Card @click="router.push('/presets')" class="cursor-pointer" padding="px-3 py-2.5">
                                 <template v-slot:icon>
                                     <div class="flex items-center justify-center">
-                                    <Icon
-                                        :icon="store.selectedConversation.preset.icon ? store.selectedConversation.preset.icon : 'heroicons:user-solid'"
-                                        class="text-nearygray-300 w-6 h-6" />
+                                        <Icon
+                                            :icon="store.selectedConversation.preset.icon ? store.selectedConversation.preset.icon : 'heroicons:user-solid'"
+                                            class="text-nearygray-300 w-6 h-6" />
                                     </div>
                                 </template>
                                 <div class="font-medium text-sm py-0.5 -ml-1 text-field-default-foreground">
@@ -35,8 +35,8 @@
                         <div class="col-span-1 sm:col-span-3 pr-12">
                             <div class="flex flex-col mb-6 sm:mb-0">
                                 <div class=" text-slate-300 font-semibold mb-2">Instructions</div>
-                                <div class="text-sm text-nearygray-400">Custom instructions
-                                    tell the AI how it should behave</div>
+                                <div class="text-sm text-nearygray-400">Custom instructions tell the AI how it should behave
+                                </div>
                             </div>
                         </div>
                         <div class="col-span-full sm:col-span-4 flex flex-col text-slate-400">
@@ -57,15 +57,15 @@
                         <div class="col-span-full sm:col-span-4 flex flex-col text-slate-400">
                             <div class="flex flex-col gap-3 items-start">
                                 <template v-for="snippet in enabledSnippets" :key="snippet.name">
-                                    <Card padding="p-3.5">
+                                    <Card>
                                         <template v-slot:icon>
                                             <div
                                                 class="flex items-center justify-center h-9 w-9 rounded shadow bg-neutral-100 mt-0.5">
                                                 <Icon icon="mdi:note-text-outline" class="text-nearycyan-400 w-5 h-5" />
                                             </div>
                                         </template>
-                                        <div class="text-xs text-nearygray-600">{{ snippet.plugin_display_name }}</div>
-                                        <div class="text-field-default-foreground text-sm font-medium leading-6">{{ snippet.display_name }}</div>
+                                        <div class="text-field-default-foreground text-sm font-medium leading-6">{{
+                                            snippet.display_name }}</div>
                                         <template v-slot:button>
                                             <Popover class="relative inline-block text-left">
                                                 <PopoverButton
@@ -116,15 +116,15 @@
                         <div class="col-span-1 sm:col-span-4 flex flex-col text-slate-400">
                             <div class="flex flex-col gap-3 items-start">
                                 <template v-for="tool in enabledTools" :key="tool.name">
-                                    <Card padding="p-3.5">
+                                    <Card>
                                         <template v-slot:icon>
                                             <div
                                                 class="flex items-center justify-center h-9 w-9 rounded shadow bg-neutral-100 mt-0.5">
                                                 <Icon icon="mdi:function" class="text-nearyyellow-100 w-5 h-5" />
                                             </div>
                                         </template>
-                                        <div class="text-xs text-nearygray-600">{{ tool.plugin_display_name }}</div>
-                                        <div class="text-field-default-foreground text-sm font-medium leading-6">{{ tool.display_name }}</div>
+                                        <div class="text-field-default-foreground text-sm font-medium leading-6">{{
+                                            tool.display_name }}</div>
                                         <template v-slot:button>
                                             <Popover class="relative inline-block text-left">
                                                 <PopoverButton
@@ -172,7 +172,8 @@
                         </div>
                         <div class="col-span-1 sm:col-span-4 flex flex-col text-slate-400">
                             <div class="flex items-start w-full gap-3">
-                                <Button class="shrink-0" @buttonClick="router.push('/preset')" button-type="btn-light">Save New
+                                <Button class="shrink-0" @buttonClick="router.push('/preset')" button-type="btn-light">Save
+                                    New
                                     Preset</Button>
                                 <Button class="shrink-0"
                                     @buttonClick="updateSelectedPreset(store.selectedConversation.preset)"
@@ -221,7 +222,6 @@ import Card from './common/Card.vue';
 import Modal from './common/Modal.vue';
 import { Icon } from '@iconify/vue';
 import { ChevronRightIcon } from '@heroicons/vue/20/solid';
-import { PiniaVuePlugin } from 'pinia';
 
 const store = useAppStore();
 const router = useRouter();
@@ -230,7 +230,6 @@ const router = useRouter();
 function getEnabledFunctions(functionType) {
     return computed(() => {
         const selectedPlugins = store.selectedConversation.plugins;
-        console.log('Choosing from: ', store.selectedConversation.plugins)
         let functions = [];
 
         selectedPlugins.forEach(plugin => {

@@ -25,6 +25,7 @@
 import { ref, watch, computed, onMounted, onUnmounted } from "vue";
 import { useAppStore } from "@/store/index.js";
 import ChatMessageUser from "./ChatMessageUser.vue";
+import ChatMessageFile from "./ChatMessageFile.vue";
 import ChatMessageAssistant from "./ChatMessageAssistant.vue";
 import ChatMessageNotification from "./ChatMessageNotification.vue";
 import EmptyState from "./EmptyState.vue";
@@ -78,6 +79,8 @@ const selectMessageComponent = (message) => {
       return ChatMessageUser;
     case 'assistant':
       return ChatMessageAssistant;
+    case 'file':
+      return ChatMessageFile;
     case 'notification':
       return ChatMessageNotification;
     default:

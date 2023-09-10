@@ -126,6 +126,7 @@ const api = {
             spaceId = -1;
         }
         try {
+            console.log('creating in space: ', spaceId)
             const url = `${apiBaseUrl}/api/conversations`;
             const response = await axios.post(url, {space_id: spaceId}, { withCredentials: true });
             return response.data;

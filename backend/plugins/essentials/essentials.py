@@ -1,9 +1,11 @@
+from io import BytesIO
 import datetime
 import pytz
 
 from pyowm import OWM
 
-from backend.services import UserProfileManager, MessageHandler, CredentialManager
+from backend.config import settings
+from backend.services import UserProfileManager, MessageHandler, CredentialManager, FileManager
 from backend.plugins import BasePlugin, snippet, tool
 
 
@@ -121,13 +123,31 @@ class Essentials(BasePlugin):
             context.add_snippet("The user's profile is currently empty!")
 
     @tool
-    async def update_user_profile(self, fields):
+    async def update_user_profile(self, **kwargs):
         profile_manager = UserProfileManager()
         existing_profile = await profile_manager.get_profile()
 
-        if existing_profile:
-            await profile_manager.set_profile({**existing_profile, **fields})
+        # Check if the 'fields' key is present in kwargs, since function calling is inconsistent
+        if 'fields' in kwargs:
+            profile_fields = kwargs['fields']
         else:
-            await profile_manager.set_profile(fields)
+            profile_fields = kwargs
+
+        if existing_profile:
+            await profile_manager.set_profile({**existing_profile, **profile_fields})
+        else:
+            await profile_manager.set_profile(profile_fields)
 
         return "The user's profile was updated!"
+
+    @tool
+    async def create_text_file(self, text, filename=None, extension="txt"):
+        message_handler = MessageHandler()
+        file_manager = FileManager(self)
+        # Create a file_obj from the text
+        file_obj = BytesIO(text.encode())
+        # Save the file and get the file info
+        file_info = file_manager.save_file(file_obj, filename, extension)
+        # Return the file info
+        await message_handler.send_file_to_ui(file_info['filename'], file_info['filesize'], file_info['url'], self.conversation.id)
+        return file_info

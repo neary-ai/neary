@@ -1,9 +1,9 @@
 [
     {
         "id": 1,
-        "name": "Chat with Neary",
+        "name": "Just Chatting",
         "icon": "heroicons:chat-bubble-left-right-solid",
-        "description": "General chat, light personalization.",
+        "description": "General chat with light personalization.",
         "settings": {
             "llm": {
                 "api_type": "openai",
@@ -22,14 +22,11 @@
                     "snippets": {
                         "insert_user_profile": {
                             "settings": null
-                        },
-                        "insert_notes": {
-                            "settings": null
                         }
                     },
                     "tools": {
-                        "make_a_note": {
-                            "settings": {"requires_approval": {"value": false}}
+                        "update_user_profile": {
+                            "settings": null
                         }
                     }
                 }

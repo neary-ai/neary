@@ -62,17 +62,11 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
 import { useAppStore } from '@/store/index.js';
-import SectionHeading from './common/SectionHeading.vue'
 import Card from './common/Card.vue'
 import Button from './common/Button.vue'
-import Modal from './common/Modal.vue'
-import api from '../services/apiService';
 import { Icon } from '@iconify/vue';
 
 const store = useAppStore();
-const router = useRouter();
 
 </script>

@@ -76,14 +76,30 @@ const addTool = (toolName) => {
     });
 
     if (availablePlugin) {
-        const pluginInstance = store.selectedConversation.plugins.find(plugin => plugin.name === availablePlugin.name);
+        let pluginInstance = store.selectedConversation.plugins.find(plugin => plugin.name === availablePlugin.name);
 
-        if (pluginInstance) {
-            pluginInstance.functions['tools'][toolName] = availablePlugin.functions['tools'][toolName];
+        if (!pluginInstance) {
+            pluginInstance = {
+                "plugin_id": availablePlugin.id,
+                "conversation_id": store.selectedConversation.id,
+                "name": availablePlugin.name,
+                "display_name": availablePlugin.display_name,
+                "description": availablePlugin.description,
+                "author": availablePlugin.author,
+                "url": availablePlugin.url,
+                "version": availablePlugin.version,
+                "data": null,
+                "settings": availablePlugin.settings,
+                "functions": {"tools": {}},
+                "is_enabled": true
+            };
+            store.selectedConversation.plugins.push(pluginInstance);
         }
+        pluginInstance.functions['tools'][toolName] = availablePlugin.functions['tools'][toolName];
         store.updateConversation(store.selectedConversation);
     }
-};
+}
+
 const onBackButtonClick = () => {
     router.go(-1);
 };

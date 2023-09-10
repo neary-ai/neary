@@ -7,7 +7,7 @@ router = APIRouter()
 plugin_manager = PluginManager()
 
 
-@router.get("/")
+@router.get("")
 async def get_loaded_plugins():
     plugins = plugin_manager.get_serialized_plugins()
     return plugins

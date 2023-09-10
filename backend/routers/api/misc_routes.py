@@ -12,6 +12,7 @@ from backend.services.oauth_handler import OAuthHandler
 
 router = APIRouter()
 
+
 @router.put("/profile")
 async def update_user_profile(request: Request):
     user = await UserModel.first()
@@ -19,6 +20,7 @@ async def update_user_profile(request: Request):
     await user.save()
 
     return {"message": "Profile updated successfully"}
+
 
 @router.patch("/messages/{message_id}")
 async def archive_message(message_id: int):
@@ -98,8 +100,9 @@ async def get_initial_data(request: Request):
                 await plugin_registry.save()
                 await PluginInstanceModel.create(name=plugin["name"], plugin=plugin_registry, functions=plugin["functions"], settings=plugin.get("settings", None), conversation=conversation)
             else:
-                print('Registry information not found for plugin: ', plugin["name"])
-        
+                print('Registry information not found for plugin: ',
+                      plugin["name"])
+
         serialized_conversations.append(await conversation.serialize())
 
     # Get presets
@@ -192,8 +195,9 @@ async def oauth_callback(request: Request):
     return RedirectResponse(url=base_url, status_code=302)
 
 
-@router.get("/files/{plugin}/{filename}")
-async def serve_file(plugin: str, filename: str):
-    base_directory = Path(__file__).resolve().parent.parent / 'data' / 'files'
-    file_path = base_directory / plugin / filename
-    return FileResponse(str(file_path))
+@router.get("/files/{conversation_id}/{filename}")
+async def serve_file(conversation_id: int, filename: str):
+    base_directory = Path(__file__).resolve(
+    ).parent.parent.parent / 'data' / 'files'
+    file_path = base_directory / str(conversation_id) / filename
+    return FileResponse(str(file_path), headers={"Content-Disposition": f"attachment; filename={filename}"})

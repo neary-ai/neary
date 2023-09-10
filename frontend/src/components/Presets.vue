@@ -25,7 +25,7 @@
               <div class="text-sm text-nearygray-400">{{ preset.description }}</div>
             </div>
             <template v-slot:button>
-              <Popover class="relative inline-block text-left z-20">
+              <Popover class="relative inline-block text-left">
                 <PopoverButton
                   class="flex items-center group relative cursor-pointer px-2 py-0.5 hover:text-nearygray-100 focus:border-transparent focus:ring-0 focus:outline-none">
                   <Icon icon="heroicons:ellipsis-vertical" class="w-5 h-5" />
@@ -34,7 +34,7 @@
                   enterTo="opacity-100 translate-y-0" leave="transition ease-in duration-150"
                   leaveFrom="opacity-100 translate-y-0" leaveTo="opacity-0 translate-y-1">
                   <PopoverPanel v-slot="{ close }"
-                    class="absolute w-40 bottom-8 -right-0 origin-top-right ring-1 ring-nearygray-500  bg-nearygray-200 text-nearyblue-300 rounded-md focus:outline-none">
+                    class="absolute w-40 bottom-8 -right-0 origin-top-right ring-1 ring-nearygray-500  bg-nearygray-200 text-nearyblue-300 rounded-md focus:outline-none z-20">
                     <ul class="divide-y divide-nearygray-500">
                       <li v-if="preset.is_default"
                         class="text-nearygray-800 flex items-center rounded-t gap-2 px-3 py-2 text-sm">

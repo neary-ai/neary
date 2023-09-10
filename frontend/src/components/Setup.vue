@@ -6,8 +6,8 @@
                 <div class="block">
                     <div class="border-b border-field-divide">
                         <nav class="-mb-px flex space-x-8" aria-label="Tabs">
-                            <a href="#" @click="activeTab = 'plugins'" :class="[activeTab == 'plugins' ? 'border-nearycyan-300 text-nearycyan-400 font-semibold' : 'text-nearylight-200 border-transparent font-medium', 'whitespace-nowrap border-b-2 py-4 px-1 text-sm']">Plugins</a>
-                            <a href="#" @click="activeTab = 'integrations'" :class="[activeTab == 'integrations' ? 'border-nearycyan-300 text-nearycyan-400 font-semibold' : 'text-nearylight-200 border-transparent font-medium', 'whitespace-nowrap border-b-2 py-4 px-1 text-sm']">Integrations</a>
+                            <a href="#" @click.prevent="activeTab = 'plugins'" :class="[activeTab == 'plugins' ? 'border-nearycyan-300 text-nearycyan-400 font-semibold' : 'text-nearylight-200 border-transparent font-medium', 'whitespace-nowrap border-b-2 py-4 px-1 text-sm']">Plugins</a>
+                            <a href="#" @click.prevent="activeTab = 'integrations'" :class="[activeTab == 'integrations' ? 'border-nearycyan-300 text-nearycyan-400 font-semibold' : 'text-nearylight-200 border-transparent font-medium', 'whitespace-nowrap border-b-2 py-4 px-1 text-sm']">Integrations</a>
                         </nav>
                     </div>
                 </div>
@@ -23,8 +23,6 @@ import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAppStore } from '@/store/index.js';
 import SectionHeading from './common/SectionHeading.vue'
-import api from '../services/apiService';
-import { Icon } from '@iconify/vue';
 import Integrations from './Integrations.vue';
 import Plugins from './Plugins.vue';
 
@@ -34,6 +32,7 @@ const router = useRouter();
 const activeTab = ref('plugins')
 
 const onBackButtonClick = () => {
+    console.log('Going back!')
     router.go(-1);
 };
 

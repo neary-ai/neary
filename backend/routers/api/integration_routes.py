@@ -5,14 +5,14 @@ from backend.models import IntegrationRegistryModel, IntegrationInstanceModel
 router = APIRouter()
 
 
-@router.get("/")
+@router.get("")
 async def get_integrations():
+    print('getting integrations!')
     integrations = await IntegrationRegistryModel.filter()
     serialized = [await integration.serialize() for integration in integrations]
     return serialized
 
-
-@router.post("/")
+@router.post("")
 async def new_integration(integration: dict = Body(...)):
     # Retrieve the existing integration from the database
     existing_integration = await IntegrationRegistryModel.get_or_none(id=integration['id'])
