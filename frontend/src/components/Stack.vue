@@ -23,7 +23,7 @@
                                         class="text-nearygray-300 w-6 h-6" />
                                     </div>
                                 </template>
-                                <div class="font-normal text-sm py-0.5 -ml-1 text-field-default-foreground">
+                                <div class="font-medium text-sm py-0.5 -ml-1 text-field-default-foreground">
                                     {{ store.selectedConversation.preset.name }}</div>
                                 <template v-slot:button>
                                     <ChevronRightIcon class="w-5 h-5 shrink-0"></ChevronRightIcon>
@@ -57,14 +57,15 @@
                         <div class="col-span-full sm:col-span-4 flex flex-col text-slate-400">
                             <div class="flex flex-col gap-3 items-start">
                                 <template v-for="snippet in enabledSnippets" :key="snippet.name">
-                                    <Card>
+                                    <Card padding="p-3.5">
                                         <template v-slot:icon>
                                             <div
                                                 class="flex items-center justify-center h-9 w-9 rounded shadow bg-neutral-100 mt-0.5">
                                                 <Icon icon="mdi:note-text-outline" class="text-nearycyan-400 w-5 h-5" />
                                             </div>
                                         </template>
-                                        <div class="text-field-default-foreground text-sm font-medium">{{ snippet.display_name }}</div>
+                                        <div class="text-xs text-nearygray-600">{{ snippet.plugin_display_name }}</div>
+                                        <div class="text-field-default-foreground text-sm font-medium leading-6">{{ snippet.display_name }}</div>
                                         <template v-slot:button>
                                             <Popover class="relative inline-block text-left">
                                                 <PopoverButton
@@ -84,7 +85,7 @@
                                                                     class="w-5 h-5" />
                                                                 <div>Settings</div>
                                                             </li>
-                                                            <li @click.stop="removeFunction(snippet.name, close)"
+                                                            <li @click.stop="removeFunction(snippet.name, 'snippets', close)"
                                                                 class="cursor-pointer flex items-center rounded-b gap-2 px-3 py-2 text-sm hover:bg-nearygray-300">
                                                                 <Icon icon="heroicons:x-mark" class="w-5 h-5" />
                                                                 <div>Remove</div>
@@ -115,16 +116,15 @@
                         <div class="col-span-1 sm:col-span-4 flex flex-col text-slate-400">
                             <div class="flex flex-col gap-3 items-start">
                                 <template v-for="tool in enabledTools" :key="tool.name">
-                                    <Card>
+                                    <Card padding="p-3.5">
                                         <template v-slot:icon>
                                             <div
                                                 class="flex items-center justify-center h-9 w-9 rounded shadow bg-neutral-100 mt-0.5">
                                                 <Icon icon="mdi:function" class="text-nearyyellow-100 w-5 h-5" />
                                             </div>
                                         </template>
-                                        <div class="leading-7">
-                                            <div class="text-field-default-foreground text-sm font-medium">{{ tool.display_name }}</div>
-                                        </div>
+                                        <div class="text-xs text-nearygray-600">{{ tool.plugin_display_name }}</div>
+                                        <div class="text-field-default-foreground text-sm font-medium leading-6">{{ tool.display_name }}</div>
                                         <template v-slot:button>
                                             <Popover class="relative inline-block text-left">
                                                 <PopoverButton
@@ -144,7 +144,7 @@
                                                                     class="w-5 h-5" />
                                                                 <div>Settings</div>
                                                             </li>
-                                                            <li @click.stop="removeFunction(tool.name, close)"
+                                                            <li @click.stop="removeFunction(tool.name, 'tools', close)"
                                                                 class="cursor-pointer flex items-center rounded-b gap-2 px-3 py-2 text-sm hover:bg-nearygray-300">
                                                                 <Icon icon="heroicons:x-mark" class="w-5 h-5" />
                                                                 <div>Remove</div>
@@ -221,6 +221,7 @@ import Card from './common/Card.vue';
 import Modal from './common/Modal.vue';
 import { Icon } from '@iconify/vue';
 import { ChevronRightIcon } from '@heroicons/vue/20/solid';
+import { PiniaVuePlugin } from 'pinia';
 
 const store = useAppStore();
 const router = useRouter();
@@ -229,39 +230,45 @@ const router = useRouter();
 function getEnabledFunctions(functionType) {
     return computed(() => {
         const selectedPlugins = store.selectedConversation.plugins;
+        console.log('Choosing from: ', store.selectedConversation.plugins)
         let functions = [];
 
         selectedPlugins.forEach(plugin => {
-            Object.entries(plugin.functions).forEach(([name, details]) => {
-                if (details.type === functionType) {
+            if (plugin.is_enabled && plugin['functions'][functionType]) {
+                Object.entries(plugin['functions'][functionType]).forEach(([name, details]) => {
                     functions.push({
                         name: name,
                         display_name: details.display_name,
                         description: details.description,
-                        plugin: plugin.name
+                        plugin: plugin.name,
+                        plugin_display_name: plugin.display_name,
                     });
-                }
-            });
+                });
+            }
         });
-
         return functions;
     });
 }
 
-const enabledSnippets = getEnabledFunctions('snippet');
-const enabledTools = getEnabledFunctions('tool');
+const enabledSnippets = getEnabledFunctions('snippets');
+const enabledTools = getEnabledFunctions('tools');
 
-const removeFunction = (functionName) => {
+const removeFunction = (functionName, functionType, close) => {
+    close();
     if (store.selectedConversation && store.selectedConversation.plugins) {
         store.selectedConversation.plugins.forEach(plugin => {
-            if (plugin.functions[functionName]) {
-                delete plugin.functions[functionName];
+            if (plugin.functions[functionType] && plugin.functions[functionType][functionName]) {
+                delete plugin.functions[functionType][functionName];
 
                 // If there are no functions left in the plugin, remove the plugin
-                if (Object.keys(plugin.functions).length === 0) {
-                    const index = store.selectedConversation.plugins.indexOf(plugin);
-                    if (index > -1) {
-                        store.selectedConversation.plugins.splice(index, 1);
+                if (Object.keys(plugin.functions[functionType]).length === 0) {
+                    delete plugin.functions[functionType];
+
+                    if (Object.keys(plugin.functions).length === 0) {
+                        const index = store.selectedConversation.plugins.indexOf(plugin);
+                        if (index > -1) {
+                            store.selectedConversation.plugins.splice(index, 1);
+                        }
                     }
                 }
             }

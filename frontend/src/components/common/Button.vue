@@ -1,5 +1,5 @@
 <template>
-  <button :class="[...btn]" @click="$emit('buttonClick')" :disabled="disabled">
+  <button :class="[...btn, ...buttonSize]" @click="$emit('buttonClick')" :disabled="disabled">
     <slot></slot>
   </button>
 </template>
@@ -12,14 +12,16 @@ const props = defineProps({
     type: String,
     default: 'btn-pink'
   },
+  buttonSize: {
+    type: String,
+    default: 'medium'
+  },
   disabled: Boolean
 });
 
 const btn = computed(() => {
   const baseClasses = [
     'rounded-md',
-    'px-2.5',
-    'py-2',
     'font-semibold',
     'text-sm',
     'shadow-sm',
@@ -54,5 +56,15 @@ const btn = computed(() => {
   };
 
   return [...baseClasses, ...buttonTypes[props.buttonType]];
+});
+
+const buttonSize = computed(() => {
+  const buttonSizes = {
+    'small': ['px-2', 'py-1.5'],
+    'medium': ['px-2.5', 'py-2'],
+    'large': ['px-4', 'py-4'],
+  };
+  
+  return buttonSizes[props.buttonSize] || [];
 });
 </script>

@@ -8,6 +8,7 @@ from backend.config import settings
 class OAuthHandler:
     def __init__(self, integration, token=None):
         self.integration = integration
+        os.environ['OAUTHLIB_RELAX_TOKEN_SCOPE'] = '1'
         os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = str(settings.APPLICATION.oauthlib_insecure_transport)
         self.oauth = OAuth2Session(
             self.integration.data["client_id"],

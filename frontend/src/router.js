@@ -6,6 +6,7 @@ import Chat from './views/Chat.vue';
 import Welcome from './views/Welcome.vue';
 import ChatWindow from './components/ChatWindow.vue';
 import Settings from './components/Settings.vue';
+import Configure from './components/Configure.vue';
 import Stack from './components/Stack.vue';
 import Account from './components/Account.vue';
 import ManageSpaces from './components/ManageSpaces.vue';
@@ -44,6 +45,12 @@ const routes = [
         path: 'settings/:id',
         name: 'Settings',
         component: Settings
+
+      },
+      {
+        path: 'config',
+        name: 'Configure',
+        component: Configure
 
       },
       {

@@ -39,9 +39,7 @@ async def run_setup(app):
     await load_presets()
     await load_integrations()
 
-    # Load PluginManager into memory as a singleton
-    PluginManager()
-
+    await PluginManager().load_plugins()
 
 async def apply_migrations():
     """

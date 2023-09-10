@@ -18,7 +18,7 @@
                 <Icon icon="heroicons:square-3-stack-3d-20-solid" class="w-[1.1rem] h-[1.1rem]" />
             </li>
             <li @click="toggleSettings()" class="px-2.5 py-0.5 hover:text-nearylight-200/90 cursor-pointer group relative">
-                <Icon icon="heroicons:cog-6-tooth-20-solid" class="w-[1.1rem] h-[1.1rem]" />
+                <Icon icon="heroicons:adjustments-horizontal-20-solid" class="w-[1.1rem] h-[1.1rem]" />
             </li>
             <li class="flex items-center group relative">
                 <Popover class="relative inline-block text-left">

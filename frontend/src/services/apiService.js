@@ -126,8 +126,8 @@ const api = {
             spaceId = -1;
         }
         try {
-            const url = `${apiBaseUrl}/api/spaces/${spaceId}/conversations`;
-            const response = await axios.post(url, {}, { withCredentials: true });
+            const url = `${apiBaseUrl}/api/conversations`;
+            const response = await axios.post(url, {space_id: spaceId}, { withCredentials: true });
             return response.data;
         } catch (error) {
             console.error('Error creating conversation:', error);
@@ -253,6 +253,22 @@ const api = {
             console.error('Error getting plugin info: ', error);
         }
     },
+    async enablePlugin(pluginId) {
+        try {
+            const response = await axios.get(`${apiBaseUrl}/api/plugin/${pluginId}/enable`, { withCredentials: true });
+            return response.data;
+        } catch (error) {
+            console.error('Error enabling plugin: ', error);
+        }
+    },
+    async disablePlugin(pluginId) {
+        try {
+            const response = await axios.get(`${apiBaseUrl}/api/plugin/${pluginId}/disable`, { withCredentials: true });
+            return response.data;
+        } catch (error) {
+            console.error('Error disabling plugin: ', error);
+        }
+    },
     async updatePluginSettings(pluginName, conversationId, updatedSettings) {
         try {
             const response = await axios.put(`${apiBaseUrl}/api/plugins/${pluginName}/${conversationId}`, updatedSettings, { withCredentials: true });
@@ -329,7 +345,7 @@ const api = {
     // Documents
     async getDocuments(conversationId) {
         try {
-            const response = await axios.get(`${apiBaseUrl}/api/conversations/${conversationId}/documents`, { withCredentials: true });
+            const response = await axios.get(`${apiBaseUrl}/api/documents/${conversationId}`, { withCredentials: true });
             return response.data
         } catch (error) {
             console.error("Error fetching documents:", error);
@@ -337,7 +353,7 @@ const api = {
     },
     async createDocumentFromURL(conversationId, url) {
         try {
-            const response = await axios.post(`${apiBaseUrl}/api/conversations/${conversationId}/documents/add_url`, url, { withCredentials: true });
+            const response = await axios.post(`${apiBaseUrl}/api/documents/${conversationId}/add_url`, url, { withCredentials: true });
             return response.data;
         } catch (error) {
             console.error("Error creating document from URL:", error);
@@ -348,7 +364,7 @@ const api = {
             const formData = new FormData();
             formData.append("file", file);
             const response = await axios.post(
-                `${apiBaseUrl}/api/conversations/${conversationId}/documents/add_file`,
+                `${apiBaseUrl}/api/documents/${conversationId}/add_file`,
                 formData,
                 {
                     withCredentials: true,

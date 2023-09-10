@@ -360,6 +360,40 @@ export const useAppStore = defineStore('appstore', {
             message.id = messageId
             this.messages[messageId] = message
             this.conversations[message.conversation_id].excerpt = message.content
-        }
+        },
+        // Plugins
+        async enablePlugin(pluginId) {
+            try {
+                await api.enablePlugin(pluginId);
+                let plugin = this.availablePlugins.find(plugin => plugin.id === pluginId)
+                if (plugin) {
+                    plugin.is_enabled = true;
+                    let instance = this.selectedConversation.plugins.find(plugin => plugin.plugin_id === pluginId)
+                    if (instance) {
+                        instance.is_enabled = true;
+                    }
+                }
+            }
+            catch (e) {
+                console.log('Error enabling plugin: ', e)
+            }
+        },
+        async disablePlugin(pluginId) {
+            try {
+                await api.disablePlugin(pluginId);
+                let plugin = this.availablePlugins.find(plugin => plugin.id === pluginId)
+                if (plugin) {
+                    plugin.is_enabled = false;
+
+                    let instance = this.selectedConversation.plugins.find(plugin => plugin.plugin_id === pluginId)
+                    if (instance) {
+                        instance.is_enabled = false;
+                    }
+                }
+            }
+            catch (e) {
+                console.log('Error disabling plugin: ', e)
+            }
+        },
     },
 });

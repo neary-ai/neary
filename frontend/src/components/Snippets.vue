@@ -41,25 +41,28 @@ const filteredSnippets = computed(() => {
         let selectedSnippets = [];
 
         store.selectedConversation.plugins.forEach(plugin => {
-            Object.entries(plugin.functions).forEach(([name, details]) => {
-                if (details.type === 'snippet') {
+            if (plugin.functions.snippets) {
+                Object.entries(plugin.functions.snippets).forEach(([name, details]) => {
                     selectedSnippets.push(name);
-                }
-            });
+                });
+            }
         });
 
         let snippets = [];
 
         store.availablePlugins.forEach(plugin => {
-            Object.entries(plugin.functions).forEach(([name, details]) => {
-                if (details.type === 'snippet' && !selectedSnippets.includes(name)) {
-                    snippets.push({
-                        name: name,
-                        display_name: details.display_name,
-                        description: details.description
-                    });
-                }
-            });
+            if (plugin.is_enabled && plugin.functions.snippets) {
+                Object.entries(plugin.functions.snippets).forEach(([name, details]) => {
+                    if (!selectedSnippets.includes(name)) {
+                        snippets.push({
+                            name: name,
+                            plugin_name: plugin.display_name,
+                            display_name: details.display_name,
+                            description: details.description
+                        });
+                    }
+                });
+            }
         });
 
         return snippets;
@@ -69,31 +72,33 @@ const filteredSnippets = computed(() => {
 
 const addSnippet = (snippetName) => {
     const availablePlugin = store.availablePlugins.find(plugin => {
-        return Object.keys(plugin.functions).includes(snippetName);
+        return plugin.functions.snippets && Object.keys(plugin.functions.snippets).includes(snippetName);
     });
 
     if (availablePlugin) {
-        const existingPlugin = store.selectedConversation.plugins.find(plugin => plugin.name === availablePlugin.name);
+        let pluginInstance = store.selectedConversation.plugins.find(plugin => plugin.name === availablePlugin.name);
 
-        if (existingPlugin) {
-            existingPlugin.functions[snippetName] = availablePlugin.functions[snippetName];
-        } else {
-            const newPlugin = {
-                id: null,
-                name: availablePlugin.name,
-                conversation_id: store.selectedConversation.id,
-                data: null,
-                functions: {
-                    [snippetName]: availablePlugin.functions[snippetName]
-                },
-                metadata: availablePlugin.metadata
+        if (!pluginInstance) {
+            pluginInstance = {
+                "plugin_id": availablePlugin.id,
+                "conversation_id": store.selectedConversation.id,
+                "name": availablePlugin.name,
+                "display_name": availablePlugin.display_name,
+                "description": availablePlugin.description,
+                "author": availablePlugin.author,
+                "url": availablePlugin.url,
+                "version": availablePlugin.version,
+                "data": null,
+                "settings": availablePlugin.settings,
+                "functions": {"snippets": {}},
+                "is_enabled": true
             };
-
-            store.selectedConversation.plugins.push(newPlugin);
+            store.selectedConversation.plugins.push(pluginInstance);
         }
+        pluginInstance.functions['snippets'][snippetName] = availablePlugin.functions['snippets'][snippetName];
         store.updateConversation(store.selectedConversation);
     }
-};
+}
 
 const onBackButtonClick = () => {
     router.go(-1);

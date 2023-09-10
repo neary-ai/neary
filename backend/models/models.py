@@ -108,31 +108,86 @@ class PresetModel(Model):
             "plugins": self.plugins,
             "settings": self.settings,
             "is_default": self.is_default,
-            "is_custom": self.is_custom,
+            "is_custom": self.is_custom
         }
 
+class PluginRegistryModel(Model):
+    id = fields.IntField(pk=True)
+    name = fields.CharField(max_length=255)
+    display_name = fields.CharField(max_length=255)
+    icon = fields.TextField(null=True)
+    description = fields.TextField(null=True)
+    author = fields.CharField(null=True, max_length=255)
+    url = fields.CharField(null=True, max_length=255)
+    version = fields.CharField(null=True, max_length=255)
+    settings = fields.JSONField(null=True)
+    functions = fields.JSONField(null=True)
+    is_enabled = fields.BooleanField(default=False)
+    
+    async def serialize(self):
+        return {
+            "id": self.id,
+            "name": self.name,
+            "display_name": self.display_name,
+            "icon": self.icon,
+            "description": self.description,
+            "author": self.author,
+            "url": self.url,
+            "version": self.version,
+            "settings": self.settings,
+            "functions": self.functions,
+            "is_enabled": self.is_enabled
+        }
 
 class PluginInstanceModel(Model):
     id = fields.IntField(pk=True)
     name = fields.CharField(max_length=255)
-    conversation = fields.ForeignKeyField(
-        "models.ConversationModel", related_name="plugins")
+    plugin = fields.ForeignKeyField("models.PluginRegistryModel", related_name="instances")
+    conversation = fields.ForeignKeyField("models.ConversationModel", related_name="plugins")
+    settings = fields.JSONField(null=True)
     data = fields.JSONField(null=True)
     functions = fields.JSONField(null=True)
 
+    def merge_settings(self, instance, registry):
+        if registry:
+            for key in registry.keys():
+                if instance is not None and key in instance and instance[key] is not None and 'value' in instance[key]:
+                    registry[key]['value'] = instance[key]['value']
+
+            return registry
+
+    def merge_functions(self, instance, registry):
+        if registry:
+            registry_keys = list(registry.keys())
+            for category in registry_keys:
+                if category in instance:
+                    function_keys = list(registry[category].keys())
+                    for key in function_keys:
+                        if key in instance[category]:
+                            if 'settings' in registry[category][key] and 'settings' in instance[category][key]:
+                                registry[category][key]['settings'] = self.merge_settings(instance[category][key]['settings'], registry[category][key]['settings'])
+                        else:
+                            del registry[category][key]
+                else:
+                    del registry[category]  # Delete the category key if it doesn't exist in the instance
+        return registry
+    
     async def serialize(self):
-        from backend.services import PluginManager
-        plugin_manager = PluginManager()
-
-        functions, metadata = plugin_manager.add_metadata(self)
-
+        plugin = await self.plugin
         return {
             "id": self.id,
-            "name": self.name,
+            "plugin_id": plugin.id,
             "conversation_id": self.conversation_id,
+            "name": self.name,
+            "display_name": plugin.display_name,
+            "description": plugin.description,
+            "author": plugin.author,
+            "url": plugin.url,
+            "version": plugin.version,
             "data": self.data,
-            "functions": functions,
-            "metadata": metadata
+            "settings": self.merge_settings(self.settings, plugin.settings),
+            "functions": self.merge_functions(self.functions, plugin.functions),
+            "is_enabled": plugin.is_enabled
         }
 
 

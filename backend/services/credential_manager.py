@@ -29,7 +29,7 @@ class CredentialManager:
         credentials = instance.credentials
 
         # Check if the token is expired or about to expire
-        if self.oauth_handler and credentials['expires_at'] - time.time() < 300:  # less than 5 minutes to expiry
+        if self.oauth_handler and 'expires_at' in credentials and credentials['expires_at'] - time.time() < 300:  # less than 5 minutes to expiry
             # Refresh the token
             new_credentials = self.oauth_handler.refresh_access_token(credentials)
 

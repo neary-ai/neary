@@ -3,6 +3,7 @@ import importlib
 import inspect
 from copy import deepcopy
 from toml import load
+from backend.models import PluginRegistryModel
 from backend.plugins import BasePlugin
 
 class Singleton(type):
@@ -10,7 +11,6 @@ class Singleton(type):
     def __call__(cls, *args, **kwargs):
         if cls not in cls._instances:
             instance = super(Singleton, cls).__call__(*args, **kwargs)
-            instance.load_plugins()
             cls._instances[cls] = instance
         return cls._instances[cls]
 
@@ -20,16 +20,16 @@ class PluginManager(metaclass=Singleton):
         self.tools = {}
         self.snippets = {}
 
-    def load_plugins(self):
+    async def load_plugins(self):
         current_dir = os.path.dirname(os.path.abspath(__file__))
         root_dir = os.path.dirname(current_dir)
         plugins_dir = os.path.join(root_dir, 'plugins')
         
         for plugin_name in os.listdir(plugins_dir):
             if not plugin_name.startswith('_') and os.path.isdir(os.path.join(plugins_dir, plugin_name)):
-                self.load_plugin(plugin_name)
+                await self.load_plugin(plugin_name)
 
-    def load_plugin(self, plugin_name):
+    async def load_plugin(self, plugin_name):
         try:
             # Import the plugin module
             plugin_module = importlib.import_module(f'plugins.{plugin_name}.{plugin_name}')
@@ -47,9 +47,38 @@ class PluginManager(metaclass=Singleton):
 
                     # Register the plugin's snippets and tools
                     self.register_decorated_methods(cls, plugin_name, config)
-        
+
+            # Update registry with plugin info
+            await self.update_registry(config)
+
         except Exception as e:
             print(f'Error loading plugin {plugin_name}: {e}')
+
+    async def update_registry(self, config):
+        metadata = config["metadata"]
+
+        plugin = await PluginRegistryModel.get_or_none(name=metadata['name'])
+        
+        default_plugins = ["essentials"]
+
+        if plugin is None:
+            plugin = PluginRegistryModel(name=metadata['name'])
+            plugin.is_enabled = True if metadata['name'] in default_plugins else False
+
+        # Update plugin metadata
+        plugin.display_name = metadata['display_name']
+        plugin.description = metadata['description']
+        plugin.icon = metadata.get('icon', None)
+        plugin.author = metadata['author']
+        plugin.url = metadata['url']
+        plugin.version = metadata['version']
+        plugin.settings = config.get("settings", None)
+
+        # Update tools and snippets
+        functions = {key: value for key, value in config.items() if key != 'metadata'}
+        plugin.functions = functions
+
+        await plugin.save()
 
     def register_decorated_methods(self, cls, plugin_name, config):
         # Get all methods of the plugin class
@@ -61,39 +90,36 @@ class PluginManager(metaclass=Singleton):
 
         # Register snippets and tools
         for name, method in snippets:
-            self.register_function(name, method, plugin_name, config, 'snippet')
+            self.register_function(name, method, plugin_name, config['snippets'], 'snippets')
 
         for name, method in tools:
-            self.register_function(name, method, plugin_name, config, 'tool')
+            self.register_function(name, method, plugin_name, config['tools'], 'tools')
 
 
     def register_function(self, name, method, plugin_name, config, function_type):
-        if name not in config[function_type+'s']:
-            print(f"Error: No matching {function_type} found in config for {name}")
+        if name not in config:
+            print(f"Error: No matching function found in config for {name}")
             return
-        
+
         # Check if function name already exists
         for plugin in self.plugins.values():
-            if name in plugin['functions']:
-                print(f"Warning: {function_type} `{name}` in plugin `{plugin_name}` conflicts with an existing function in plugin `{plugin['metadata']['name']}`")
+            if name in plugin['functions'].get(function_type, {}):
+                print(f"Warning: Function `{name}` in plugin `{plugin_name}` conflicts with an existing function in plugin `{plugin['metadata']['name']}`")
                 return
 
         # Create a copy of function's config
-        function_config = config[function_type+'s'][name].copy()
+        function_config = config[name].copy()
         function_settings = function_config.pop('settings', {})
-        self.plugins[plugin_name]['functions'][name] = {
+        self.plugins[plugin_name]['functions'].setdefault(function_type, {})[name] = {
             'method': method,
-            'type': function_type,
             'settings': function_settings
         }
         # Add the function metadata
-        self.plugins[plugin_name]['functions'][name].update(function_config)
+        self.plugins[plugin_name]['functions'][function_type][name].update(function_config)
+
 
     def get_plugin(self, plugin_name):
         return self.plugins[plugin_name]
-
-    def get_plugins(self):
-        return self.plugins
 
     def get_serialized_plugins(self):
         serialized_plugins = []
@@ -117,36 +143,3 @@ class PluginManager(metaclass=Singleton):
             # Add the plugin to the list of serialized plugins
             serialized_plugins.append(serialized_plugin)
         return serialized_plugins
-
-    def add_metadata(self, plugin_instance):
-        # Get the plugin from the manager
-        functions = plugin_instance.functions
-        plugin_name = plugin_instance.name
-
-        plugin = self.plugins[plugin_name]
-
-        # Merge the functions from the model and the manager
-        for function_name, function_data in functions.items():
-            if function_name in plugin['functions']:
-                # Merge the two dictionaries
-                merged_function_data = {**function_data, **plugin['functions'][function_name]}
-                
-                # If 'settings' key exists in both, merge them
-                if 'settings' in function_data and 'settings' in plugin['functions'][function_name]:
-                    user_settings = function_data['settings'] if function_data['settings'] is not None else {}
-                    default_settings = plugin['functions'][function_name]['settings'] if plugin['functions'][function_name]['settings'] is not None else {}
-                    
-                    # Update only the 'value' key in each setting
-                    for setting_name, setting_value in user_settings.items():
-                        if setting_name in default_settings:
-                            default_settings[setting_name]['value'] = setting_value['value']
-                    
-                    # Update the merged function data with the updated settings
-                    merged_function_data['settings'] = default_settings
-
-                # Remove the method reference
-                merged_function_data.pop('method', None)
-                
-                functions[function_name] = merged_function_data
-
-        return functions, plugin['metadata']

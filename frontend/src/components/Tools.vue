@@ -42,25 +42,27 @@ const filteredTools = computed(() => {
         let selectedTools = [];
 
         store.selectedConversation.plugins.forEach(plugin => {
-            Object.entries(plugin.functions).forEach(([name, details]) => {
-                if (details.type === 'tool') {
+            if (plugin.functions.tools) {
+                Object.entries(plugin.functions.tools).forEach(([name, details]) => {
                     selectedTools.push(name);
-                }
-            });
+                });
+            }
         });
 
         let tools = [];
 
         store.availablePlugins.forEach(plugin => {
-            Object.entries(plugin.functions).forEach(([name, details]) => {
-                if (details.type === 'tool' && !selectedTools.includes(name)) {
-                    tools.push({
-                        name: name,
-                        display_name: details.display_name,
-                        description: details.description
-                    });
-                }
-            });
+            if (plugin.is_enabled && plugin.functions.tools) {
+                Object.entries(plugin.functions.tools).forEach(([name, details]) => {
+                    if (!selectedTools.includes(name)) {
+                        tools.push({
+                            name: name,
+                            display_name: details.display_name,
+                            description: details.description
+                        });
+                    }
+                });
+            }
         });
 
         return tools;
@@ -70,32 +72,18 @@ const filteredTools = computed(() => {
 
 const addTool = (toolName) => {
     const availablePlugin = store.availablePlugins.find(plugin => {
-        return Object.keys(plugin.functions).includes(toolName);
+        return plugin.functions.tools && Object.keys(plugin.functions.tools).includes(toolName);
     });
 
     if (availablePlugin) {
-        const existingPlugin = store.selectedConversation.plugins.find(plugin => plugin.name === availablePlugin.name);
+        const pluginInstance = store.selectedConversation.plugins.find(plugin => plugin.name === availablePlugin.name);
 
-        if (existingPlugin) {
-            existingPlugin.functions[toolName] = availablePlugin.functions[toolName];
-        } else {
-            const newPlugin = {
-                id: null,
-                name: availablePlugin.name,
-                conversation_id: store.selectedConversation.id,
-                data: null,
-                functions: {
-                    [toolName]: availablePlugin.functions[toolName]
-                },
-                metadata: availablePlugin.metadata
-            };
-
-            store.selectedConversation.plugins.push(newPlugin);
+        if (pluginInstance) {
+            pluginInstance.functions['tools'][toolName] = availablePlugin.functions['tools'][toolName];
         }
         store.updateConversation(store.selectedConversation);
     }
 };
-
 const onBackButtonClick = () => {
     router.go(-1);
 };

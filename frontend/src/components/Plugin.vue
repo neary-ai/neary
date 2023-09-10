@@ -15,29 +15,29 @@
                     <div class="col-span-full sm:col-span-4 flex gap-6 flex-col text-slate-400 text-sm">
                         <div class="flex flex-col items-start">
                             <label class="text-sm font-semibold text-slate-300/90 w-full mb-1.5">Name</label>
-                            <div>{{ settings.parentPluginMetadata.display_name }}</div>
+                            <div>{{ settings.plugin.display_name }}</div>
                         </div>
                         <div class="flex flex-col items-start">
                             <label class="text-sm font-semibold text-slate-300/90 w-full mb-1.5">Author</label>
-                            <div>{{ settings.parentPluginMetadata.author }}</div>
+                            <div>{{ settings.plugin.author }}</div>
                         </div>
                         <div class="flex flex-col items-start">
                             <label class="text-sm font-semibold text-slate-300/90 w-full mb-1.5">Version</label>
-                            <div>{{ settings.parentPluginMetadata.version }}</div>
+                            <div>{{ settings.plugin.version }}</div>
                         </div>
                         <div class="flex flex-col items-start">
                             <label class="text-sm font-semibold text-slate-300/90 w-full mb-1.5">Description</label>
-                            <div>{{ settings.parentPluginMetadata.description }}</div>
+                            <div>{{ settings.plugin.description }}</div>
                         </div>
-                        <div v-if="settings.parentPluginMetadata.integrations" class="flex flex-col items-start">
+                        <div v-if="settings.plugin.integrations" class="flex flex-col items-start">
                             <label class="text-sm font-semibold text-slate-300/90 w-full mb-1.5">Required
                                 Integrations</label>
-                            <div>{{ settings.parentPluginMetadata.integrations.map(name => formatName(name)).join(', ') }}
+                            <div>{{ settings.plugin.integrations.map(name => formatName(name)).join(', ') }}
                             </div>
                         </div>
                     </div>
                 </div>
-                <template v-for="functionSettings in settings.functionSettingsArray" :key="functionSettings.functionName">
+                <template v-for="functionSettings in settings.functions" :key="functionSettings.functionName">
                     <div class="grid grid-cols-1 sm:grid-cols-7 py-12">
                         <div class="col-span-full sm:col-span-3 pr-12">
                             <div class="flex flex-col mb-6 sm:mb-0">
@@ -49,12 +49,12 @@
                             </div>
                         </div>
                         <div class="col-span-full sm:col-span-4 flex flex-col text-slate-400">
-                            <template v-if="Object.keys(functionSettings.functionSettings).length > 0"
+                            <template v-if="functionSettings.functionSettings && Object.keys(functionSettings.functionSettings).length > 0"
                                 v-for="(setting, key) in functionSettings.functionSettings" :key="key">
                                 <div class="flex flex-col items-start mb-8">
                                     <div v-if="setting.type === 'boolean'"
                                         class="flex w-full items-start justify-start gap-2">
-                                        <CheckboxField v-model="setting.value" class="grow-0 shrink-0" />
+                                        <CheckboxField @change="saveSettings()" v-model="setting.value" class="grow-0 shrink-0" />
                                         <div class="flex flex-col flex-grow">
                                             <label class="text-sm font-bold text-slate-300/90 w-full mb-0.5">{{
                                                 formatName(key) }}</label>
@@ -65,14 +65,12 @@
                                         <label class="text-sm font-bold text-slate-300/90 w-full mb-0.5">{{ formatName(key)
                                         }}</label>
                                         <div v-if="setting.description" class="text-sm">{{ setting.description }}</div>
-                                        <NumberInputField v-if="setting.type === 'integer'" v-model="setting.value"
-                                            class="w-full mt-3" />
-                                        <TextInputField v-else v-model="setting.value" class="w-full mt-3" />
+                                        <NumberInputField v-if="setting.type === 'integer'" v-model="setting.value" @change="saveSettings()" class="w-full mt-3" />
+                                        <TextInputField v-else v-model="setting.value" @change="saveSettings()" class="w-full mt-3" />
                                     </div>
                                 </div>
                             </template>
-                            <div v-else class="text-sm font-semibold">This {{ functionSettings.type }} has no settings.
-                            </div>
+                            <div v-else class="text-sm font-semibold">This {{ functionSettings.type }} has no settings.</div>
                         </div>
                     </div>
                 </template>
@@ -85,9 +83,9 @@
                     </div>
                     <div class="col-span-1 sm:col-span-4 flex flex-col text-slate-400">
                         <div class="flex items-center w-full gap-3">
-                            <Button class="shrink-0" button-type="btn-light" @click="saveSettings">Save Settings</Button>
-                            <Button class="shrink-0" @buttonClick="clearPluginData()"
-                                button-type="btn-outline-light">Clear Plugin Data</Button>
+                            <Button class="shrink-0" @buttonClick="clearPluginData()" button-type="btn-outline-light">Clear Plugin Data</Button>
+                            <Button v-if="settings.plugin.is_enabled" class="shrink-0" @buttonClick="store.disablePlugin(settings.plugin.plugin_id)" button-type="btn-outline-light">Disable Plugin</Button>
+                            <Button v-else class="shrink-0" @buttonClick="store.enablePlugin(settings.plugin.plugin_id)" button-type="btn-outline-light">Disable Plugin</Button>
                         </div>
                     </div>
                 </div>
@@ -119,30 +117,33 @@ const settings = computed(() => {
         const pluginName = router.currentRoute.value.params.name
 
         // Find the parent plugin from selectedConversation
-        const parentPlugin = store.selectedConversation.plugins.find(
+        const selectedPlugin = store.selectedConversation.plugins.find(
             (plugin) => plugin.name === pluginName
         );
 
-        if (parentPlugin) {
-            const functionSettingsArray = [];
+        if (selectedPlugin) {
+            const functions = [];
 
-            for (const functionName in parentPlugin.functions) {
-                // Get the function settings from the parent plugin
-                const functionSettings = parentPlugin.functions[functionName].settings;
+            // Iterate over 'snippets' and 'tools'
+            ['snippets', 'tools'].forEach(functionType => {
+                for (const functionName in selectedPlugin.functions[functionType]) {
+                    // Get the function settings from the parent plugin
+                    const functionSettings = selectedPlugin.functions[functionType][functionName].settings;
 
-                // Add the function settings, metadata, display name and description to the array
-                functionSettingsArray.push({
-                    functionName,
-                    displayName: parentPlugin.functions[functionName].display_name,
-                    description: parentPlugin.functions[functionName].description,
-                    type: parentPlugin.functions[functionName].type,
-                    functionSettings: functionSettings,
-                });
-            }
+                    // Add the function settings, metadata, display name and description to the array
+                    functions.push({
+                        functionName,
+                        displayName: selectedPlugin.functions[functionType][functionName].display_name,
+                        description: selectedPlugin.functions[functionType][functionName].description,
+                        type: functionType == 'snippets' ? 'snippet' : 'tool',
+                        functionSettings: functionSettings,
+                    });
+                }
+            });
 
             return {
-                parentPluginMetadata: parentPlugin.metadata,
-                functionSettingsArray,
+                plugin: selectedPlugin,
+                functions,
             };
         }
     }
@@ -152,7 +153,7 @@ const settings = computed(() => {
 const saveSettings = async () => {
     const updatedSettings = {};
 
-    for (const functionSettings of settings.value.functionSettingsArray) {
+    for (const functionSettings of settings.value.functions) {
         // Gather the updated settings values
         updatedSettings[functionSettings.functionName] = {};
         for (const key in functionSettings.functionSettings) {
@@ -164,7 +165,6 @@ const saveSettings = async () => {
 
     try {
         await api.updatePluginSettings(pluginName, store.selectedConversationId, updatedSettings);
-        store.newNotification('Plugin setting saved!');
     } catch (error) {
         console.error('Failed to update plugin settings:', error);
     }

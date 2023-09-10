@@ -213,48 +213,55 @@ class Conversation:
         self.tools = []
 
         for plugin in self.plugins:
+
+            if not plugin['is_enabled']:
+                continue
+
+            print('Loading: ', plugin["name"])
+
             plugin_name = plugin["name"]
             plugin_info = plugin_manager.get_plugin(plugin_name)
 
-            for function_name, function_info in plugin['functions'].items():
-                if function_name in plugin_info['functions']:
-                    function_method = plugin_info['functions'][function_name]['method']
-                    function_type = plugin_info['functions'][function_name]['type']
-                    function_settings = {function_name: plugin_info['functions'][function_name]['settings']}
+            print(f'\n\n{plugin_info}\n\n')
 
-                    # Create an instance of the plugin class
-                    plugin_instance = plugin_info['class'](
-                        plugin["id"], self, function_settings, plugin["data"])
+            for function_type in ['snippets', 'tools']:
+                for function_name, function_info in plugin['functions'].get(function_type, {}).items():
+                    if function_name in plugin_info['functions'].get(function_type, {}):
+                        function_method = plugin_info['functions'][function_type][function_name]['method']
+                        function_settings = {function_name: plugin_info['functions'][function_type][function_name]['settings']}
 
-                    # Store the function method and its instance
-                    function_data = {
-                        'name': function_name,
-                        'instance': plugin_instance,
-                        'method': function_method,
-                        'metadata': plugin_info['functions'][function_name]
-                    }
+                        # Create an instance of the plugin class
+                        plugin_instance = plugin_info['class'](
+                            plugin["id"], self, function_settings, plugin["data"])
 
-                    # Create function definition for tools
-                    if function_type == 'tool':
-                        function_definition = {
-                            "name": function_name,
-                            "description": function_info.get("llm_description", ""),
-                            "parameters": {
-                                "type": "object",
-                                "properties": {
-                                    parameter_name: {
-                                        key: value for key, value in parameter_info.items() if key != "required"
-                                    }
-                                    for parameter_name, parameter_info in function_info.get("parameters", {}).items()
-                                } if "parameters" in function_info else {},
-                                "required": [parameter_name for parameter_name, parameter_info in function_info.get("parameters", {}).items() if parameter_info.get("required", False)]
-                            } if "parameters" in function_info else {"type": "object", "properties": {}}
+                        # Store the function method and its instance
+                        function_data = {
+                            'name': function_name,
+                            'instance': plugin_instance,
+                            'method': function_method,
+                            'metadata': plugin_info['functions'][function_type][function_name]
                         }
-                        function_data["definition"] = function_definition
-                        self.tools.append(function_data)
-                    elif function_type == 'snippet':
-                        self.snippets.append(function_data)
 
+                        # Create function definition for tools
+                        if function_type == 'tools':
+                            function_definition = {
+                                "name": function_name,
+                                "description": function_info.get("llm_description", ""),
+                                "parameters": {
+                                    "type": "object",
+                                    "properties": {
+                                        parameter_name: {
+                                            key: value for key, value in parameter_info.items() if key != "required"
+                                        }
+                                        for parameter_name, parameter_info in function_info.get("parameters", {}).items()
+                                    } if "parameters" in function_info else {},
+                                    "required": [parameter_name for parameter_name, parameter_info in function_info.get("parameters", {}).items() if parameter_info.get("required", False)]
+                                } if "parameters" in function_info else {"type": "object", "properties": {}}
+                            }
+                            function_data["definition"] = function_definition
+                            self.tools.append(function_data)
+                        elif function_type == 'snippets':
+                            self.snippets.append(function_data)
 
     async def get_user_profile(self):
         user = await UserModel.first()

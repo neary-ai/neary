@@ -1,0 +1,53 @@
+[metadata]
+display_name = "Github"
+description = "Connect to and manage Github repositories."
+icon = "mdi:github"
+author = "Neary"
+version = "0.1.0"
+url = "https://github.com/neary-ai/neary"
+
+[settings.active_repo]
+description = "Sticky an active repo for automatic reference"
+value = ""
+type = "string"
+editable = true
+
+[tools.get_repos]
+display_name = "Get Repos"
+description = "Retrieves your GitHub repositories."
+llm_description = "Retrieves the user's GitHub repositories."
+
+[tools.get_repos.settings.requires_approval]
+description = "Require user approval before running tool"
+value = false
+type = "boolean"
+editable = true
+
+[tools.get_repos.settings.follow_up_on_output]
+description = "Generate a new response to tool output"
+value = true
+type = "boolean"
+editable = false
+
+
+[tools.get_project_tree]
+display_name = "Get Project Tree"
+description = "Retrieves the project tree for a respository."
+llm_description = "Retrieves the project tree for a repository."
+
+[tools.get_project_tree.parameters.repo_name]
+type = "string"
+description = "Name of the repository to retrieve the project tree from"
+required = true
+
+[tools.get_project_tree.settings.requires_approval]
+description = "Require user approval before running tool"
+value = false
+type = "boolean"
+editable = true
+
+[tools.get_project_tree.settings.follow_up_on_output]
+description = "Generate a new response to tool output"
+value = true
+type = "boolean"
+editable = false

@@ -24,7 +24,7 @@
                 class="text-nearygray-300 w-6 h-6" />
             </div>
           </template>
-          <div class="font-normal text-sm py-0.5 -ml-1 text-field-default-foreground">
+          <div class="font-medium text-sm py-0.5 -ml-1 text-field-default-foreground">
             {{ store.selectedConversation.preset.name }}</div>
           <template v-slot:button>
             <ChevronRightIcon class="w-5 h-5 shrink-0"></ChevronRightIcon>

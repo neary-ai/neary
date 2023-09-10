@@ -1,35 +1,13 @@
 [metadata]
 display_name = "Google Calendar"
 description = "Have Neary manage your schedule by answering questions about your calendar and scheduling events on your behalf."
+icon = "fluent:calendar-date-28-regular"
 integrations = ["google_calendar"]
 author = "Neary"
 version = "0.1.0"
-github = "https://github.com/neary-ai/neary"
+url = "https://github.com/neary-ai/neary"
 
-
-
-[snippets.insert_calendar_events]
-display_name = "Insert Calendar Events"
-description = "Insert upcoming calendar events into context."
-
-[snippets.insert_calendar_events.settings.days]
-description = "How many days of events to insert"
-value = 3
-type = "integer"
-editable = true
-
-[snippets.insert_calendar_events.settings.filter_recurring]
-description = "Display recurring events only once"
-value = true
-type = "boolean"
-editable = true
-
-[snippets.insert_calendar_events.settings.concise]
-description = "Use a more concise presentation format"
-value = true
-type = "boolean"
-editable = true
-
+# Tool: Create Calendar Event
 
 [tools.create_calendar_event]
 display_name = "Create Calendar Event"
@@ -74,6 +52,7 @@ value = true
 type = "boolean"
 editable = false
 
+# Tool: Get Calendar Events
 
 [tools.get_calendar_events]
 display_name = "Get Calendar Events"
@@ -108,6 +87,30 @@ description = "Generate a new response to tool output"
 value = true
 type = "boolean"
 editable = false
+
+# Snippet: Insert Calendar Events
+
+[snippets.insert_calendar_events]
+display_name = "Insert Calendar Events"
+description = "Insert upcoming calendar events into context."
+
+[snippets.insert_calendar_events.settings.days]
+description = "How many days of events to insert"
+value = 3
+type = "integer"
+editable = true
+
+[snippets.insert_calendar_events.settings.filter_recurring]
+description = "Display recurring events only once"
+value = true
+type = "boolean"
+editable = true
+
+[snippets.insert_calendar_events.settings.concise]
+description = "Use a more concise presentation format"
+value = true
+type = "boolean"
+editable = true
 
 
 

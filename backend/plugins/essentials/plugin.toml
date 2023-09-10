@@ -1,0 +1,110 @@
+[metadata]
+display_name = "Essentials"
+description = "A collection of essential tools and snippets."
+icon = "solar:star-bold-duotone"
+version = "0.1.0"
+author = "Neary"
+url = "https://github.com/neary-ai/neary"
+
+# Snippet: Local Date & Time
+
+[snippets.insert_date_time]
+display_name = "Local Date & Time"
+description = "Inserts the current date and time"
+
+[snippets.insert_date_time.settings.timezone]
+description = "Timezone (e.g. America/New_York)"
+value = ""
+type = "string"
+editable = true
+
+# Snippet: Insert Local Weather
+
+[snippets.insert_local_weather]
+display_name = "Insert Local Weather"
+description = "Inserts the current weather at your location."
+
+[snippets.insert_local_weather.settings.location]
+description = "City or zip code to use for weather data"
+value = ""
+type = "string"
+editable = true
+
+# Tool: Make a Note
+
+[tools.make_a_note]
+display_name = "Make a Note"
+description = "Saves a note for Neary's future reference"
+llm_description = "Saves a note to memory for your future reference. Use only when the user asks you to remember something."
+
+[tools.make_a_note.parameters.text]
+type = "string"
+description = "The text of the note to save"
+required = true
+
+[tools.make_a_note.settings.requires_approval]
+description = "Require user approval before running tool"
+value = true
+type = "boolean"
+editable = true
+
+[tools.make_a_note.settings.follow_up_on_output]
+description = "Generate a new response to tool output"
+value = true
+type = "boolean"
+editable = false
+
+# Tool: Clear Notes
+
+[tools.clear_notes]
+display_name = "Clear Notes"
+description = "Clears Neary's notepad"
+llm_description = "Erases your saved notes. Only use when instructed by the user."
+
+[tools.clear_notes.settings.requires_approval]
+description = "Require user approval before running tool"
+value = true
+type = "boolean"
+editable = true
+
+[tools.clear_notes.settings.follow_up_on_output]
+description = "Generate a new response to tool output"
+value = true
+type = "boolean"
+editable = false
+
+# Snippet: Insert Notes
+
+[snippets.insert_notes]
+display_name = "Insert Notes"
+description = "Inserts the contents of Neary's notepad"
+
+# Tool: Update User Profile
+
+[tools.update_user_profile]
+display_name = "Update User Profile"
+description = "Adds new information to your profile."
+llm_description = "Updates the user's profile with new information. Takes a `fields` (json) argument that contains key-value pairs of the information to be added or updated. E.g. {'name': 'Joe', 'timezone': 'America/Denver'}."
+
+[tools.update_user_profile.parameters.fields]
+type = "object"
+description = "The fields to update as key-value pairs."
+required = true
+
+[tools.update_user_profile.settings.requires_approval]
+description = "Require user approval before running tool"
+value = true
+type = "boolean"
+editable = true
+
+[tools.update_user_profile.settings.follow_up_on_output]
+description = "Generate a new response to tool output"
+value = true
+type = "boolean"
+editable = false
+
+# Snippet: Insert User Profile
+
+[snippets.insert_user_profile]
+display_name = "Insert User Profile"
+description = "Inserts the contents of your profile into context."

@@ -4,6 +4,7 @@ from .models import (
     ConversationModel,
     MessageModel,
     PluginInstanceModel,
+    PluginRegistryModel,
     PresetModel,
     DocumentModel,
     IntegrationInstanceModel,

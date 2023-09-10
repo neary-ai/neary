@@ -16,26 +16,21 @@
         },
         "plugins" : [
             {
-                "name": "user_profile",
+                "name": "essentials",
                 "data": null,
                 "functions": {
-                    "insert_user_profile": {
-                        "type": "snippet",
-                        "settings": null
-                    }
-                }
-            },
-            {
-                "name": "notepad",
-                "data": null,
-                "functions" : {
-                    "insert_notes": {
-                        "type": "snippet",
-                        "settings": null
+                    "snippets": {
+                        "insert_user_profile": {
+                            "settings": null
+                        },
+                        "insert_notes": {
+                            "settings": null
+                        }
                     },
-                    "make_a_note": {
-                        "type": "tool",
-                        "settings": null
+                    "tools": {
+                        "make_a_note": {
+                            "settings": {"requires_approval": {"value": false}}
+                        }
                     }
                 }
             }
@@ -60,40 +55,35 @@
         },
         "plugins": [
             {
-                "name": "date_time",
-                "data": null,
-                "functions": {
-                    "insert_date_time": {
-                        "type": "snippet",
-                        "settings": null
-                    }
-                }
-            },
-            {
                 "name": "google_calendar",
                 "data": null,
                 "functions": {
-                    "create_calendar_event": {
-                        "type": "tool",
-                        "settings": null
-                    },
-                    "get_calendar_events": {
-                        "type": "tool",
-                        "settings": null
+                    "tools": {
+                        "create_calendar_event": {
+                            "settings": null
+                        },
+                        "get_calendar_events": {
+                            "settings": null
+                        }
                     }
                 }
             },
             {
-                "name": "user_profile",
+                "name": "essentials",
                 "data": null,
                 "functions": {
-                    "insert_user_profile": {
-                        "type": "snippet",
-                        "settings": null
+                    "snippets": {
+                        "insert_date_time": {
+                            "settings": null
+                        },
+                        "insert_user_profile": {
+                            "settings": null
+                        }
                     },
-                    "update_user_profile": {
-                        "type": "tool",
-                        "settings": null
+                    "tools": {
+                        "update_user_profile": {
+                            "settings": null
+                        }
                     }
                 }
             }
@@ -120,13 +110,15 @@
                 "name": "document_search",
                 "data": null,
                 "functions": {
-                    "insert_similar_documents": {
-                        "type": "snippet",
-                        "settings": null
+                    "snippets": {
+                        "insert_similar_documents": {
+                            "settings": null
+                        }
                     },
-                    "load_url": {
-                        "type": "tool",
-                        "settings": null
+                    "tools": {
+                        "load_url": {
+                            "settings": null
+                        }
                     }
                 }
             }

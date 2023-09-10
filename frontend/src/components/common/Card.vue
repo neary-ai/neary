@@ -1,7 +1,7 @@
 <template>
     <div
-        :class="['flex w-full items-center justify-between gap-3 text-sm rounded-md text-field-default-foreground', active ? 'ring-2 ring-nearycyan-500' : '', bgColor, padding]">
-        <div class="flex items-center gap-4">
+        :class="['flex w-full text-sm rounded-md text-field-default-foreground', outerFlex, active ? 'ring-2 ring-nearycyan-500' : '', bgColor, padding]">
+        <div :class="['flex', flex]">
             <div class="flex-1 text-nearygray-500">
                 <slot name="icon"></slot>
             </div>
@@ -30,6 +30,14 @@ const props = defineProps({
     padding: {
         type: String,
         default: "py-3 px-3"
+    },
+    flex: {
+        type: String,
+        default: "items-center gap-4"
+    },
+    outerFlex: {
+        type: String,
+        default: "items-center justify-between gap-3"
     },
     active: {
         type: Boolean,

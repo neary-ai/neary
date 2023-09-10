@@ -4,9 +4,9 @@
     class="z-10 hidden fixed sm:flex sm:flex-col h-full pb-4 pt-[4.5rem] bg-nearyblue-300 border-r border-slate-400/10 shadow-lg w-44 items-center justify-between">
     <Spaces />
     <div class="flex gap-3 items-center justify-between text-slate-400/80">
-      <Squares2X2Icon @click="toggleManageSpaces()" class="hover:text-slate-300/80 cursor-pointer w-5 h-5" />
-      <UserIcon @click="toggleAccount()" class="hover:text-slate-300/80 cursor-pointer w-5 h-5" />
-      <CloudIcon @click="toggleIntegrations()" class="hover:text-slate-300/80 cursor-pointer w-5 h-5" />
+      <Icon icon="heroicons:squares-2x2-solid" @click="toggleManageSpaces()" class="hover:text-slate-300/80 cursor-pointer w-5 h-5" />
+      <Icon icon="heroicons:cog-6-tooth-solid" @click="toggleConfig()" class="hover:text-slate-300/80 cursor-pointer w-5 h-5" />
+      <Icon icon="heroicons:user-solid" @click="toggleAccount()" class="hover:text-slate-300/80 cursor-pointer w-5 h-5" />
     </div>
   </aside>
   <!-- Compact slide-over -->
@@ -28,15 +28,15 @@
                       class="rounded-md text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-0"
                       @click="toggleSidebar('close')">
                       <span class="sr-only">Close panel</span>
-                      <XMarkIcon class="h-5 w-5 text-nearygray-400" aria-hidden="true" />
+                      <Icon icon="heroicons:x-mark-20-solid" class="h-5 w-5 text-nearygray-400" aria-hidden="true" />
                     </button>
                   </div>
                   <Spaces />
                 </div>
                 <div class="flex gap-3 items-center justify-center text-slate-400/80 w-full pb-4">
-                  <Squares2X2Icon @click="toggleManageSpaces()" class="cursor-pointer w-5 h-5" />
-                  <UserIcon @click="toggleAccount()" class="cursor-pointer w-5 h-5" />
-                  <CloudIcon @click="toggleIntegrations()" class="cursor-pointer w-5 h-5" />
+                  <Icon icon="heroicons:squares-2x2-solid" @click="toggleManageSpaces()" class="cursor-pointer w-5 h-5" />
+                  <Icon icon="heroicons:cog-6-tooth-solid" @click="toggleAccount()" class="cursor-pointer w-5 h-5" />
+                  <Icon icon="heroicons:user-solid" @click="toggleConfig()" class="cursor-pointer w-5 h-5" />
                 </div>
               </DialogPanel>
             </TransitionChild>
@@ -49,8 +49,8 @@
 <script setup>
 import Spaces from './Spaces.vue';
 import logo from '@/assets/images/neary.svg';
+import { Icon } from '@iconify/vue';
 import { XMarkIcon } from '@heroicons/vue/20/solid';
-import { Squares2X2Icon, UserIcon, CloudIcon } from '@heroicons/vue/24/solid';
 import { Dialog, DialogPanel, TransitionRoot, TransitionChild } from '@headlessui/vue';
 import { useAppStore } from '@/store/index.js';
 import { useRouter } from 'vue-router';
@@ -86,11 +86,11 @@ const toggleAccount = () => {
   }
 };
 
-const toggleIntegrations = () => {
-  if (router.currentRoute.value.path.startsWith('/integrations')) {
+const toggleConfig = () => {
+  if (router.currentRoute.value.path.startsWith('/config')) {
     router.go(-1);
   } else {
-    router.push(`/integrations`);
+    router.push(`/config`);
   }
 
   if (store.isMobile) {

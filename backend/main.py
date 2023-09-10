@@ -15,13 +15,27 @@ from fastapi.responses import FileResponse
 from backend.setup import run_setup
 from backend.auth import AuthMiddleware
 from backend.routers.auth_router import router as auth_router
-from backend.routers.api_router import router as api_router
 from backend.routers.ws_router import router as ws_router
+from backend.routers.api import (
+    conversation_router,
+    space_router,
+    preset_router,
+    plugin_router,
+    integration_router,
+    document_router,
+    misc_router
+)
 
 app = FastAPI()
 
+app.include_router(conversation_router, prefix="/api/conversations")
+app.include_router(space_router, prefix="/api/spaces")
+app.include_router(preset_router, prefix="/api/presets")
+app.include_router(plugin_router, prefix="/api/plugins")
+app.include_router(integration_router, prefix="/api/integrations")
+app.include_router(document_router, prefix="/api/documents")
+app.include_router(misc_router, prefix="/api")
 app.include_router(auth_router, prefix="/auth")
-app.include_router(api_router, prefix="/api")
 app.include_router(ws_router)
 
 @app.on_event('startup')

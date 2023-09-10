@@ -15,6 +15,22 @@
         }
     },
     {
+        "name": "github",
+        "display_name": "GitHub",
+        "auth_method": "oauth",
+        "data": {
+            "client_id": "{INTEGRATIONS__GITHUB_CLIENT_ID}",
+            "client_secret": "{INTEGRATIONS__GITHUB_CLIENT_SECRET}",
+            "redirect_uri": "{APPLICATION__BASE_URL}/api/oauth2/callback",
+            "auth_url": "https://github.com/login/oauth/authorize",
+            "token_url": "https://github.com/login/oauth/access_token",
+            "scopes": [
+                "repo",
+                "user"
+            ]
+        }
+    },
+    {
         "name": "openweathermap",
         "display_name": "OpenWeatherMap",
         "auth_method": "api_key",
