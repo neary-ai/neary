@@ -230,14 +230,6 @@ const api = {
             console.error('Error getting snippets:', error);
         }
     },
-    async getAvailablePlugins() {
-        try {
-            const response = await axios.get(`${apiBaseUrl}/api/plugins`, { withCredentials: true });
-            return response.data;
-        } catch (error) {
-            console.error('Error getting plugins:', error);
-        }
-    },
     async getAvailableTools(conversationId) {
         try {
             const response = await axios.get(`${apiBaseUrl}/api/conversations/${conversationId}/tools`, { withCredentials: true });
@@ -256,7 +248,7 @@ const api = {
     },
     async enablePlugin(pluginId) {
         try {
-            const response = await axios.get(`${apiBaseUrl}/api/plugin/${pluginId}/enable`, { withCredentials: true });
+            const response = await axios.get(`${apiBaseUrl}/api/plugins/${pluginId}/enable`, { withCredentials: true });
             return response.data;
         } catch (error) {
             console.error('Error enabling plugin: ', error);
@@ -264,7 +256,7 @@ const api = {
     },
     async disablePlugin(pluginId) {
         try {
-            const response = await axios.get(`${apiBaseUrl}/api/plugin/${pluginId}/disable`, { withCredentials: true });
+            const response = await axios.get(`${apiBaseUrl}/api/plugins/${pluginId}/disable`, { withCredentials: true });
             return response.data;
         } catch (error) {
             console.error('Error disabling plugin: ', error);

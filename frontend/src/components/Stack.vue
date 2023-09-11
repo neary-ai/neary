@@ -61,7 +61,7 @@
                                         <template v-slot:icon>
                                             <div
                                                 class="flex items-center justify-center h-9 w-9 rounded shadow bg-neutral-100 mt-0.5">
-                                                <Icon icon="mdi:note-text-outline" class="text-nearycyan-400 w-5 h-5" />
+                                                <Icon :icon="snippet.plugin_icon ? snippet.plugin_icon : 'mdi:note-text-outline'" class="text-nearycyan-400 w-5 h-5" />
                                             </div>
                                         </template>
                                         <div class="text-field-default-foreground text-sm font-medium leading-6">{{
@@ -120,7 +120,7 @@
                                         <template v-slot:icon>
                                             <div
                                                 class="flex items-center justify-center h-9 w-9 rounded shadow bg-neutral-100 mt-0.5">
-                                                <Icon icon="mdi:function" class="text-nearyyellow-100 w-5 h-5" />
+                                                <Icon :icon="tool.plugin_icon ? tool.plugin_icon : 'mdi:function'" class="text-nearyyellow-200/90 w-5 h-5" />
                                             </div>
                                         </template>
                                         <div class="text-field-default-foreground text-sm font-medium leading-6">{{
@@ -240,6 +240,7 @@ function getEnabledFunctions(functionType) {
                         display_name: details.display_name,
                         description: details.description,
                         plugin: plugin.name,
+                        plugin_icon: plugin.icon,
                         plugin_display_name: plugin.display_name,
                     });
                 });

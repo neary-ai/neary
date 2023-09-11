@@ -1,7 +1,7 @@
 <template>
     <div id="alt-window" class="font-mulish flex flex-col gap-3 w-full overflow-y-scroll">
         <div class="p-8 pt-[5.5rem] max-w-3xl">
-            <SectionHeading section-name="Setup" @on-click="onBackButtonClick" />
+            <SectionHeading section-name="Settings" @on-click="onBackButtonClick" />
             <div class="mt-3">
                 <div class="block">
                     <div class="border-b border-field-divide">

@@ -33,6 +33,12 @@ const btn = computed(() => {
       'bg-nearyyellow-200',
       'text-nearyblue-300',
     ],
+    'btn-outline-blue': [
+      'bg-transparent',
+      'border',
+      'border-nearylight-400',
+      'text-nearylight-400',
+    ],
     'btn-pink': [
       'bg-nearypink-300',
       'text-white',

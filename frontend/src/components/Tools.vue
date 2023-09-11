@@ -1,13 +1,18 @@
 <template>
     <div id="alt-window" class="font-mulish flex flex-col gap-3 w-full overflow-y-scroll">
         <div class="p-8 pt-[5.5rem] max-w-3xl">
-            <SectionHeading section-name="Add Tools" @on-click="onBackButtonClick" />
+            <div class="flex items-center justify-between">
+                <SectionHeading section-name="Add Tools" @on-click="onBackButtonClick" />
+                <Button @buttonClick="router.push('/setup')" buttonSize="small" buttonType="btn-outline-light" class="flex items-center gap-1">
+                    Manage Plugins
+                </Button>
+            </div>
             <div class="mt-6 space-y-4">
                 <template v-for="tool in filteredTools" :key="tool.name">
                     <Card>
                         <template v-slot:icon>
                             <div class="flex items-center justify-center h-9 w-9 rounded shadow bg-neutral-100 mt-0.5">
-                                <Icon icon="mdi:function" class="text-nearyyellow-100 w-5 h-5" />
+                                <Icon :icon="tool.plugin_icon ? tool.plugin_icon : 'mdi:function'" class="text-nearyyellow-200/90 w-5 h-5" />
                             </div>
                         </template>
                         <div class="leading-7">
@@ -31,7 +36,7 @@ import { useRouter } from 'vue-router';
 import { useAppStore } from '@/store/index.js';
 import SectionHeading from './common/SectionHeading.vue'
 import Card from './common/Card.vue'
-import api from '../services/apiService';
+import Button from './common/Button.vue'
 import { Icon } from '@iconify/vue';
 
 const store = useAppStore();
@@ -57,6 +62,7 @@ const filteredTools = computed(() => {
                     if (!selectedTools.includes(name)) {
                         tools.push({
                             name: name,
+                            plugin_icon: plugin.icon,
                             display_name: details.display_name,
                             description: details.description
                         });
@@ -85,6 +91,7 @@ const addTool = (toolName) => {
                 "name": availablePlugin.name,
                 "display_name": availablePlugin.display_name,
                 "description": availablePlugin.description,
+                "icon": availablePlugin.icon,
                 "author": availablePlugin.author,
                 "url": availablePlugin.url,
                 "version": availablePlugin.version,
@@ -94,6 +101,10 @@ const addTool = (toolName) => {
                 "is_enabled": true
             };
             store.selectedConversation.plugins.push(pluginInstance);
+        }
+
+        if (!pluginInstance.functions.tools) {
+            pluginInstance.functions.tools = {}
         }
         pluginInstance.functions['tools'][toolName] = availablePlugin.functions['tools'][toolName];
         store.updateConversation(store.selectedConversation);

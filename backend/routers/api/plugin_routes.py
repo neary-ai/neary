@@ -7,12 +7,6 @@ router = APIRouter()
 plugin_manager = PluginManager()
 
 
-@router.get("")
-async def get_loaded_plugins():
-    plugins = plugin_manager.get_serialized_plugins()
-    return plugins
-
-
 @router.get("/{plugin_id}")
 async def get_plugin_instance(plugin_id: int):
     plugin = await PluginInstanceModel.get_or_none(id=plugin_id)

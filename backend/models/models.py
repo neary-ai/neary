@@ -134,7 +134,6 @@ class PluginRegistryModel(Model):
             "author": self.author,
             "url": self.url,
             "version": self.version,
-            "settings": self.settings,
             "functions": self.functions,
             "is_enabled": self.is_enabled
         }
@@ -169,7 +168,7 @@ class PluginInstanceModel(Model):
                         else:
                             del registry[category][key]
                 else:
-                    del registry[category]  # Delete the category key if it doesn't exist in the instance
+                    del registry[category]
         return registry
     
     async def serialize(self):
@@ -180,12 +179,12 @@ class PluginInstanceModel(Model):
             "conversation_id": self.conversation_id,
             "name": self.name,
             "display_name": plugin.display_name,
+            "icon": plugin.icon,
             "description": plugin.description,
             "author": plugin.author,
             "url": plugin.url,
             "version": plugin.version,
             "data": self.data,
-            "settings": self.merge_settings(self.settings, plugin.settings),
             "functions": self.merge_functions(self.functions, plugin.functions),
             "is_enabled": plugin.is_enabled
         }

@@ -1,8 +1,8 @@
 import os
 import importlib
 import inspect
-from copy import deepcopy
 from toml import load
+
 from backend.models import PluginRegistryModel
 from backend.plugins import BasePlugin
 
@@ -72,7 +72,6 @@ class PluginManager(metaclass=Singleton):
         plugin.author = metadata['author']
         plugin.url = metadata['url']
         plugin.version = metadata['version']
-        plugin.settings = config.get("settings", None)
 
         # Update tools and snippets
         functions = {key: value for key, value in config.items() if key != 'metadata'}
@@ -120,26 +119,3 @@ class PluginManager(metaclass=Singleton):
 
     def get_plugin(self, plugin_name):
         return self.plugins[plugin_name]
-
-    def get_serialized_plugins(self):
-        serialized_plugins = []
-        for plugin_name, plugin in self.plugins.items():
-            serialized_plugin = deepcopy(plugin)
-            serialized_plugin['name'] = plugin_name
-            # Remove the class reference
-            del serialized_plugin['class']
-            # Create the 'functions' dictionary
-            functions = {}
-            for function_name, function in serialized_plugin['functions'].items():
-                # Check if the 'method' key exists
-                if 'method' in function:
-                    del function['method']
-                else:
-                    print(f"Function '{function_name}' in plugin '{plugin_name}' does not have a 'method' key")
-                # Add the function to the 'functions' dictionary
-                functions[function_name] = function
-            # Add the 'functions' dictionary to the plugin
-            serialized_plugin['functions'] = functions
-            # Add the plugin to the list of serialized plugins
-            serialized_plugins.append(serialized_plugin)
-        return serialized_plugins

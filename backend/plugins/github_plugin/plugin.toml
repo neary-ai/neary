@@ -6,11 +6,7 @@ author = "Neary"
 version = "0.1.0"
 url = "https://github.com/neary-ai/neary"
 
-[settings.active_repo]
-description = "Sticky an active repo for automatic reference"
-value = ""
-type = "string"
-editable = true
+# Tool: Get Repos
 
 [tools.get_repos]
 display_name = "Get Repos"
@@ -29,16 +25,53 @@ value = true
 type = "boolean"
 editable = false
 
+# Tool: Set Active Repo
+
+[tools.set_active_repo]
+display_name = "Set Active Repo"
+description = "Sets the active repository"
+llm_description = "Sets the active repository"
+
+[tools.set_active_repo.parameters.repo_name]
+type = "string"
+description = "The name of the repository to set as active"
+required = true
+
+[tools.set_active_repo.settings.repo_name]
+description = "The name of active repository"
+value = ""
+type = "string"
+editable = true
+
+[tools.set_active_repo.settings.requires_approval]
+description = "Require user approval before running tool"
+value = false
+type = "boolean"
+editable = true
+
+[tools.set_active_repo.settings.follow_up_on_output]
+description = "Generate a new response to tool output"
+value = true
+type = "boolean"
+editable = false
+
+# Snippet: Insert Active Repo
+
+[snippets.insert_active_repo]
+display_name = "Insert Active Repo"
+description = "Inserts the active repo into context"
+
+# Tool: Get Project Tree
 
 [tools.get_project_tree]
 display_name = "Get Project Tree"
-description = "Retrieves the project tree for a respository."
-llm_description = "Retrieves the project tree for a repository."
+description = "Retrieves the project tree for a respository"
+llm_description = "Retrieves the project tree for a repository"
 
 [tools.get_project_tree.parameters.repo_name]
 type = "string"
-description = "Name of the repository to retrieve the project tree from"
-required = true
+description = "Name of the repository to retrieve the project tree from. If no repo_name is specified, the active repo will be used."
+required = false
 
 [tools.get_project_tree.settings.requires_approval]
 description = "Require user approval before running tool"
@@ -47,6 +80,64 @@ type = "boolean"
 editable = true
 
 [tools.get_project_tree.settings.follow_up_on_output]
+description = "Generate a new response to tool output"
+value = true
+type = "boolean"
+editable = false
+
+# Tool: Get Files In Directory
+
+[tools.get_files_in_directory]
+display_name = "List Files In Directory"
+description = "Retrieves a list of files at a given path in the respository"
+llm_description = "Retrieves a list of files at a given path in the respository."
+
+[tools.get_files_in_directory.parameters.repo_name]
+type = "string"
+description = "Name of the repository to retrieve the file list from. If no repo_name is specified, the active repo will be used."
+required = false
+
+[tools.get_files_in_directory.parameters.directory_path]
+type = "string"
+description = "The directory path to retrieve the file list from."
+required = true
+
+[tools.get_files_in_directory.settings.requires_approval]
+description = "Require user approval before running tool"
+value = false
+type = "boolean"
+editable = true
+
+[tools.get_files_in_directory.settings.follow_up_on_output]
+description = "Generate a new response to tool output"
+value = true
+type = "boolean"
+editable = false
+
+# Tool: Get File
+
+[tools.get_file]
+display_name = "Get File In Repo"
+description = "Retrieves a file at a given path in the respository"
+llm_description = "Retrieves a file at a given path in the respository."
+
+[tools.get_file.parameters.repo_name]
+type = "string"
+description = "Name of the repository to retrieve the file from. If no repo_name is specified, the active repo will be used."
+required = false
+
+[tools.get_file.parameters.file_path]
+type = "string"
+description = "The file path of the file to be retrieved."
+required = true
+
+[tools.get_file.settings.requires_approval]
+description = "Require user approval before running tool"
+value = false
+type = "boolean"
+editable = true
+
+[tools.get_file.settings.follow_up_on_output]
 description = "Generate a new response to tool output"
 value = true
 type = "boolean"

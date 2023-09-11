@@ -38,7 +38,7 @@ async def create_conversation(request: Request):
         if plugin_registry:
             plugin_registry.is_enabled = True
             await plugin_registry.save()
-        await PluginInstanceModel.create(name=plugin["name"], plugin=plugin_registry, functions=plugin["functions"], settings=plugin.get("settings", None), conversation=conversation)
+        await PluginInstanceModel.create(name=plugin["name"], plugin=plugin_registry, functions=plugin["functions"], conversation=conversation)
 
     return await conversation.serialize()
 
@@ -174,7 +174,7 @@ async def update_conversation(request: Request, conversation_id: int):
             plugin_instance.functions = plugin['functions']
             await plugin_instance.save()
         else:
-            await PluginInstanceModel.create(name=plugin["name"], functions=plugin["functions"], settings=plugin.get("settings", None), plugin=plugin_registry, conversation=conversation)
+            await PluginInstanceModel.create(name=plugin["name"], functions=plugin["functions"], plugin=plugin_registry, conversation=conversation)
     
         # Enable plugins if new preset
         if new_preset:

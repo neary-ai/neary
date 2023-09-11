@@ -1,13 +1,18 @@
 <template>
     <div id="alt-window" class="font-mulish flex flex-col gap-3 max-w-full overflow-y-scroll">
         <div class="p-8 pt-[5.5rem] max-w-3xl">
-            <SectionHeading section-name="Add Snippets" @on-click="onBackButtonClick" />
+            <div class="flex items-center justify-between">
+                <SectionHeading section-name="Add Snippets" @on-click="onBackButtonClick" />
+                <Button @buttonClick="router.push('/setup')" buttonSize="small" buttonType="btn-outline-light" class="flex items-center gap-1">
+                    Manage Plugins
+                </Button>
+            </div>
             <div class="mt-6 space-y-4">
                 <template v-for="snippet in filteredSnippets" :key="snippet.name">
                     <Card>
                         <template v-slot:icon>
                             <div class="flex items-center justify-center h-9 w-9 rounded shadow bg-neutral-100 mt-0.5">
-                                <Icon icon="mdi:note-text-outline" class="text-nearycyan-300 w-5 h-5" />
+                                <Icon :icon="snippet.plugin_icon ? snippet.plugin_icon : 'mdi:note-text-outline'" class="text-nearycyan-300 w-5 h-5" />
                             </div>
                         </template>
                         <div class="leading-7">
@@ -30,6 +35,7 @@ import { computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAppStore } from '@/store/index.js';
 import SectionHeading from './common/SectionHeading.vue'
+import Button from './common/Button.vue'
 import Card from './common/Card.vue'
 import { Icon } from '@iconify/vue';
 
@@ -57,6 +63,7 @@ const filteredSnippets = computed(() => {
                         snippets.push({
                             name: name,
                             plugin_name: plugin.display_name,
+                            plugin_icon: plugin.icon,
                             display_name: details.display_name,
                             description: details.description
                         });
@@ -85,15 +92,19 @@ const addSnippet = (snippetName) => {
                 "name": availablePlugin.name,
                 "display_name": availablePlugin.display_name,
                 "description": availablePlugin.description,
+                "icon": availablePlugin.icon,
                 "author": availablePlugin.author,
                 "url": availablePlugin.url,
                 "version": availablePlugin.version,
                 "data": null,
                 "settings": availablePlugin.settings,
-                "functions": {"snippets": {}},
+                "functions": { "snippets": {} },
                 "is_enabled": true
             };
             store.selectedConversation.plugins.push(pluginInstance);
+        }
+        if (!pluginInstance.functions.snippets) {
+            pluginInstance.functions.snippets = {}
         }
         pluginInstance.functions['snippets'][snippetName] = availablePlugin.functions['snippets'][snippetName];
         store.updateConversation(store.selectedConversation);

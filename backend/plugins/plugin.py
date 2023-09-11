@@ -13,12 +13,12 @@ class BasePlugin(ABC):
         self.conversation = conversation
         self.settings, self.metadata = self.load_config()
 
-        # Simplify settings dict
+        # Simplify settings
         if settings is not None:
-            for key in settings:
-                if key in self.settings:
-                    for subkey in settings[key]:
-                        self.settings[key][subkey] = settings[key][subkey]['value']
+            for function_name in settings:
+                if function_name in self.settings:
+                    for setting_key in settings[function_name]:
+                        self.settings[function_name][setting_key] = settings[function_name][setting_key]['value']
 
         self.data = {} if data is None else data
 
@@ -31,7 +31,7 @@ class BasePlugin(ABC):
         settings = {}
         metadata = config.get("metadata", {})
         metadata['name'] = os.path.basename(config_dir)
-        
+
         # Load settings for each tool
         for tool_name, tool_config in config.get("tools", {}).items():
             tool_settings = tool_config.get("settings", {})
@@ -48,8 +48,16 @@ class BasePlugin(ABC):
 
     async def save_state(self):
         plugin_instance = await PluginInstanceModel.get(id=self.id)
-        plugin_instance.settings = self.settings
         plugin_instance.data = self.data
+
+        # Convert simplified settings back to database format
+        for category in ['snippets', 'tools']:
+            if category in plugin_instance.functions:
+                for function_name in plugin_instance.functions[category]:
+                    if function_name in self.settings:
+                        for setting_key in self.settings[function_name]:
+                            plugin_instance.functions[category][function_name]['settings'][setting_key]['value'] = self.settings[function_name][setting_key]
+        
         await plugin_instance.save()
 
 def snippet(func):

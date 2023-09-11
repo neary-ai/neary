@@ -55,7 +55,8 @@ class Conversation:
             # Construct metadata
             metadata = context.get_metadata()
             if ai_response['function_call']:
-                metadata.append({'function_call': ai_response['function_call']})
+                metadata.append(
+                    {'function_call': ai_response['function_call']})
 
             await self.save_message(role=role, content=message, conversation_id=self.id, metadata=metadata)
             await self.save_message(role="assistant", content=ai_response['content'], conversation_id=self.id, metadata=metadata)
@@ -68,14 +69,6 @@ class Conversation:
                 user_message = None
             else:
                 continue_conversation = False
-
-    def get_tools_str(self):
-        tools_str = """You are a tool-assisted AI assistant. This means you can use tools, if necessary, to accomplish tasks that you wouldn't otherwise be able to accomplish as a Large Language Model.\nTo use a tool, simply append a tool request to the bottom of your response in this format: <<tool:tool_name({"tool_arg": "tool_arg_value"}). Replace 'tool_name', 'tool_arg' and 'tool_arg_value' with the values for the tool you're invoking. Here's a list of tools you have available to you:\n\n"""
-
-        for tool in self.tools:
-            tools_str += f"-`{tool['name']}`: {tool['metadata']['llm_description']}\n"
-        
-        return tools_str
 
     async def handle_tool_requests(self, ai_response):
         """
@@ -141,7 +134,7 @@ class Conversation:
     async def handle_approval_response(self, data, message_id):
         request_id = data.get("request_id")
         response = data.get("response")
-    
+
         try:
             request_id = uuid.UUID(request_id)
         except ValueError:
@@ -151,7 +144,7 @@ class Conversation:
             print("Invalid action. Use 'approve' or 'reject'")
 
         approval_request = await ApprovalRequestModel.get_or_none(id=request_id, status="pending")
-                
+
         if not approval_request:
             print("Approval request not found.")
 
@@ -181,10 +174,11 @@ class Conversation:
         tool_args = approved_request['tool_args']
 
         if status == 'rejected':
-            content = {"name": tool_name, "output": "User rejected function approval request; function not executed."}
+            content = {"name": tool_name,
+                       "output": "User rejected function approval request; function not executed."}
             await self.save_message("function", content=content, conversation_id=self.id, metadata=[])
             return
-        
+
         # If approved, find the loaded tool plugin
         for tool in self.tools:
             if tool['name'] == tool_name:
@@ -213,22 +207,21 @@ class Conversation:
         self.tools = []
 
         for plugin in self.plugins:
-
             if not plugin['is_enabled']:
                 continue
 
             plugin_name = plugin["name"]
             plugin_info = plugin_manager.get_plugin(plugin_name)
 
+            all_function_settings = {function_name: info.get('settings') for function_type in ['snippets', 'tools'] for function_name, info in plugin['functions'].get(function_type, {}).items() if function_name in plugin_info['functions'].get(function_type, {})}
+
             for function_type in ['snippets', 'tools']:
                 for function_name, function_info in plugin['functions'].get(function_type, {}).items():
                     if function_name in plugin_info['functions'].get(function_type, {}):
                         function_method = plugin_info['functions'][function_type][function_name]['method']
-                        function_settings = {function_name: plugin_info['functions'][function_type][function_name]['settings']}
 
                         # Create an instance of the plugin class
-                        plugin_instance = plugin_info['class'](
-                            plugin["id"], self, function_settings, plugin["data"])
+                        plugin_instance = plugin_info['class'](plugin["id"], self, all_function_settings, plugin["data"])
 
                         # Store the function method and its instance
                         function_data = {

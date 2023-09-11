@@ -1,7 +1,7 @@
 [metadata]
 display_name = "Essentials"
 description = "A collection of essential tools and snippets."
-icon = "solar:star-bold-duotone"
+icon = "mdi:required"
 version = "0.1.0"
 author = "Neary"
 url = "https://github.com/neary-ai/neary"
