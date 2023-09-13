@@ -9,41 +9,36 @@
                     N
                 </div>
             </div>
-            <div class="flex flex-col min-w-0 pt-[0.75rem]">
-                <div class="overflow-x-scroll min-w-0 max-w-full text-slate-300/80">
-                    <div
-                        class="flex flex-col bg-nearylight-400/20 border-nearylight-400/70 border rounded p-5 max-w-2xl mb-6">
-                        <div class="flex items-start justify-between gap-8">
-                            <div class="flex items-start justify-start gap-3.5">
-                                <InformationCircleIcon
-                                    class="flex-shrink-0 text-nearylight-200 flex items-center justify-center w-5 h-5" />
-                                <div class="flex flex-col items-start justify-start">
-                                    <div class="text-white font-bold text-sm">
-                                        Approval Needed
-                                    </div>
-                                    <div class="flex">
-                                    <div class="mt-2.5 text-sm font-medium text-nearygray-100"
-                                        v-html="renderMarkdown(content.content)"></div>
-                                    </div>
-                                    <div v-if="content.args" class="flex items-center text-sm mb-4 bg-slate-200 py-1.5 px-3 rounded text-nearyblue-100">
-                                        <div v-if="!showArgs" @click="showToolArgs()" class="flex items-center">
-                                            <div>Show details</div> <ChevronDownIcon class="ml-0.5 w-5 h-5" />
-                                        </div>
-                                        <div v-else class="prose-base prose-slate text-nearyblue-100 p-1" v-html="renderMarkdown(content.args)"></div>
-                                    </div>
-                                    <div
-                                        class="text-sm font-medium text-nearygray-200 flex items-center justify-between w-full mt-2">
-                                        <div class="flex gap-3">
-                                            <div v-if="!actionResponseLoading" class="flex gap-3 items-center">
-                                                <button v-for="(action, index) in message.actions" :key="index"
-                                                    @click="handleActionButton(action, message.id)"
-                                                    class="text-nearyblue-300 bg-nearylight-200 rounded-md px-2.5 py-1.5 text-sm font-semibold shadow hover:bg-opacity-80">
-                                                    {{ action.label }}
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
+            <div
+                class="overflow-x-scroll min-w-0 flex gap-3 max-w-full text-slate-300/80 bg-nearylight-400/20 border-nearylight-400/70 border rounded p-5 pr-10 mb-6">
+                <InformationCircleIcon class="flex-shrink-0 text-nearylight-200 flex items-center justify-center w-5 h-5" />
+                <div class="flex flex-col">
+                    <div class="flex items-stretch justify-start mb-4">
+                        <div class="flex items-center justify-between gap-4">
+                            <div class="flex flex-col items-start justify-start">
+                                <div class="text-white font-bold text-sm">
+                                    Approval Needed
                                 </div>
+                                <div class="flex">
+                                    <div class="mt-3 -mb-2 text-sm font-medium text-nearygray-100" v-html="renderMarkdown(content.content)"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div v-if="showArgs" class="prose prose-invert text-nearylight-100 w-full mb-8 " v-html="renderMarkdown(content.args)"></div>
+                    <div class="text-sm font-medium text-nearygray-200 flex items-center">
+                        <div v-if="!actionResponseLoading" class="flex gap-3">
+                            <button v-for="(action, index) in message.actions" :key="index"
+                                @click="handleActionButton(action, message.id)"
+                                class="bg-nearylight-200 text-nearyblue-400 px-2 py-1.5 rounded text-sm font-semibold">
+                                {{ action.label }}
+                            </button>
+                        </div>
+                        <div v-if="content.args" class="flex ml-3.5">
+                            <div v-if="!showArgs" @click="showToolArgs()"
+                                class="cursor-pointer text-sm text-nearygray-100 font-medium flex">
+                                <div>or <span class="font-semibold text-nearygray-50 inline-block ml-1">view details</span></div>
+                                <ChevronDownIcon class="ml-0.5 w-5 h-5 font-semibold" />
                             </div>
                         </div>
                     </div>
@@ -54,6 +49,7 @@
 </template>
 
 <script setup>
+import { Icon } from '@iconify/vue';
 import { ref, computed } from 'vue';
 import MarkdownIt from 'markdown-it';
 import DOMPurify from 'dompurify';

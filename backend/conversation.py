@@ -125,7 +125,7 @@ class Conversation:
         table_header = "| Name | Value |\n| --- | --- |"
 
         if args_string:
-            notification = f"Neary would like to use the **{tool['metadata']['display_name']}** tool.<<args>>{table_header}\n{args_string}<</args>>"
+            notification = f"Neary would like to use the **{tool['metadata']['display_name']}** tool<<args>>{table_header}\n{args_string}<</args>>"
         else:
             notification = f"Neary would like to use the **{tool['metadata']['display_name']}** tool"
 
