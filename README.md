@@ -1,146 +1,139 @@
-# Neary
+<h1 align="center">
+  <br>
+  <img src="docs/images/neary-icon.png" alt="Markdownify" width="75">
+  <br>
+  Neary
+  <br>
+</h1>
 
-Neary is a chat-based app that helps users **get more done** with large language models. It goes a level deeper than ChatGPT and similar interfaces, with an **intuitive UI** for managing conversations across different contexts and a **fresh take** on leveraging tools and third-party integrations.
+<h4 align="center">An interface designed for LLM powerusers, with a feature-set to match.</h4>
 
-<img src="docs/images/main.png">
-
-## Quick start
-
-1. Clone this respository
-   
-2. Add your OpenAI API key to the .env file in the project root
-   
-3. Run `docker compose up` in the project root
-   
-4. Point your browser to http://localhost:8000
-
-For more options, check out the [full installation guide](#installation-guide).
-
-## Features
-
-### A UI for Power Users
-
-- Conversations can be organized into spaces (like folders for conversations) and then easily filtered, providing a simple way to **manage conversations across different contexts**.
-  
-- Conversations can be opened in tabs for **quick switching**.
-  
-- Carry multiple conversations at once, with support for **simutaneous incoming streaming messages**, thanks to async design.
-
-- A broad range of conversation-level settings make each conversation **fully customizable**.
-
-- Archive messages to start with a fresh context, **without losing your conversation** (or messages).
-
-- Designed for desktop and mobile, with an **integrated PWA** for an app-like experience on iOS and Android.
-
-#### Other Goodies
-
-- Slash commands for creating, archiving and deleting conversations
-  
-- Toggle on and off archived messages with one click
- 
-- Start incoming messages at the top of the window with "room to grow" mode
-
-- Click-to-copy in code blocks and select-to-copy everywhere
-
-
-<br/>
-
-<div align="center">
-  <img src="docs/images/blank.png" style="width: 175px;">
-  &nbsp;&nbsp;
-  <img src="docs/images/settings.png" style="width: 175px">
-</div>
-
-<br/>
-
-### Supercharge Conversations with Programs
-
-Programs can be added to conversations to enhance them with special functionality. Programs offer a deeper level of integration than ChatGPT's plugins or tools alone. They can include:
-
-1. Customized model settings that change the way the AI behaves
-
-2. A set of tools that give the AI special abilities
-
-3. Custom functionality that shapes the conversation
-
-4. A custom presentation layer
-
-Neary currently has three built-in Programs, which are still fairly shallow in scope and *mostly* serve as a proof-of-concept.
-
-#### **Document Chat**
-
-Allows users to "chat" with their documents. Text files (plain-text and pdf) and content from websites can be added to the conversation, and then you can ask the AI questions about them. It's like having a smart friend who does the assigned reading and then gives you the answers you need.
-
-<br />
-<div align="center">
-<img src="docs/images/manage-docs.png" style="width: 175px;">
-&nbsp;
-<img src="docs/images/search-docs.png" style="width: 175px;">
-&nbsp;
-</div>
+<p align="center">
+  <a href="#key-features">Key Features</a> •
+  <a href="#download">Installation</a> •
+  <a href="#credits">User Guide</a> •
+  <a href="#credits">Get Involved</a> •
+  <a href="#license">License</a>
 </p>
 
-#### **Calendar Chat**
+<img src="docs/images/blank.png">
 
-Thanks to a Google Calendar API integration, users can ask questions about their schedule and have the AI schedule events on their behalf. Gmail integration and a true "executive assistant" experience is coming soon.
+## Key Features
 
-Note: This program requires Google OAuth credentials to setup, [see here](docs/calendar_chat.md) for the step-by-step.
+### An Interface For Powerusers
 
-<br />
-<div align="center">
-<img src="docs/images/calendar.png" style="width: 175px">
-</div>
-</p>
+- Open conversations in tabs for easy access
 
-#### **Support**
+- Stay organized with spaces, which act as folders for conversations
 
-This program runs when Neary first starts. It's purpose is to on-board the user by setting up their profile and answering questions about the app.
+- Carry multiple, simultaneous conversations thanks to an async design
 
-*All programs operate on a **zero trust** principle. We never allow the AI to invoke real-world actions that could be undesirable. You'll always be prompted for approval first.*
+- Archive messages to reset context without losing your conversation
+  
+- Manage conversations on the fly with slash commands
 
-### About Your Data
+- Integrated documents for easy document search
+  
+- See the conversation *behind* the conversation with X-Ray
 
-- Conversations are all stored locally
+- Get an app-like experience on iOS and Android with our PWA
 
-- Conversations can be exported in plain-text or JSON
+### A Plugin System With Lots of Tentacles 🐙
 
-- No telemetry or other gotchas
+- Plugins have full control over the context
 
-Note: Messages are sent to OpenAI via the API, but aren't used for training. Read more on OpenAI's policies [here](https://help.openai.com/en/articles/5722486-how-your-data-is-used-to-improve-model-performance).
+- *Snippets* and *tools* are bundled together in one thematic package
 
-## Installation Guide
+  - Snippets are pieces of context automatically inserted into the conversation
+
+  - Tools are actions the AI can take on your behalf
+
+- Snippets and tools can be mixed and matched at the conversation level
+
+- Plugins have a persistant state, removing the limitations of context
+  
+- Support for third-party integrations is baked into the API
+
+- Creating a new plugin is easy. So easy gpt-3.5 can do it!
+  
+
+### Powerful Presets, Fully Customizable
+
+- Customize *everything* at the conversation level
+
+  - Support for OpenAI, Azure and your own custom endpoints
+
+  - Choose a model and configure all the common settings
+
+  - Use your Chat Stack to configure plugins and custom instructions
+
+- Use *presets* to start with a recipe
+
+  - Get started with a range of built-in presets
+
+  - Switch presets on the fly, and keep your conversation
+
+  - Choose a default preset to apply to new conversations
+
+- Perfect, save and share your presets
+
+  - Create a custom preset or update an existing preset
+
+  - Export your preset as a file and share with others
+
+  - Import presets others share with you
+
+## Installation
 
 ### Docker (recommended)
 
-1. Clone this respository
+1. Clone this repository
    
-2. Add your OpenAI API key to the .env file in the project root
+2. Rename `settings.toml.example` to `settings.toml`
    
-3. Run `docker compose up` in the project root
+3. Open `settings.toml` and add your OpenAI API key and/or custom endpoint
    
-4. Point your browser to http://localhost:8000
-
-### Manual installation
-
-1. Clone this respository
-  
-2. Add your OpenAI API key to the .env file in the project root
-
-3. Change directory to /backend 
+4. Run `docker compose up --build`
    
-4. Run `pip install -r requirements.txt`
+5. Point your browser to `http://localhost:8000`
 
-5. Run `python main.py`
+### Manual Installation
+
+1. Clone this repository
    
-6. Point your browser to http://localhost:8000
+2. Rename `settings.toml.example` to `settings.toml`
+   
+3. Open `settings.toml` and add your OpenAI API key and/or custom endpoint
 
-## Usage
+4. Change directory to `/backend`
 
-- Complete guide coming soon!
+5. Run `pip install -r requirements.txt`
 
-## Feedback
+6. While in `/backend`, run `python main.py`
 
-Problems? Ideas? Want to get involved? Feel free to open an issue, start a discussion, or drop me a line at joe@might.works.
+7. Point your browser to `http://localhost:8000`
+
+See the [configuration guide](#) for more details.
+
+### Upgrading
+
+1. Run `git pull` from the project root
+   
+2. If you're using Docker, rebuild the image
+   
+3. Restart the app
+
+## User Guide
+
+The [user guide](#) is the best way to get acquainted with Neary. [Check it out](#)!
+
+## Get Involved
+
+- **[Write a plugin](#)**. It's fun and easy. And all contributors get one of these: 🏆. Actually, just take it 🤲🏆. I have a lot. We'll call it a show of good faith.
+
+- **Share your presets**. When you create a custom present in Neary, you can choose to share it with the community. Preset creators were *supposed* to get one of these: 🏆, but prospective plugin contributors took them all.
+
+- Have something else in mind? Drop me line: [joe@might.works](#). But seriously, I'm out of trophies, so please don't ask.
 
 ## License
 
