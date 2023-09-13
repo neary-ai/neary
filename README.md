@@ -16,7 +16,7 @@
   <a href="#license">License</a>
 </p>
 
-<img src="docs/images/blank.png">
+<img src="docs/images/neary-demo.gif">
 
 ## Key Features
 
@@ -37,6 +37,7 @@
 - See the conversation *behind* the conversation with X-Ray
 
 - Get an app-like experience on iOS and Android with our PWA
+
 
 ### A Plugin System With Lots of Tentacles 🐙
 
@@ -82,6 +83,19 @@
   - Export your preset as a file and share with others
 
   - Import presets others share with you
+
+
+<br/>
+
+<div align="center">
+  <img src="docs/images/plugins.png" style="width: 150px;">
+  &nbsp;&nbsp;
+  <img src="docs/images/messages.png" style="width: 150px">
+  &nbsp;&nbsp;
+  <img src="docs/images/model-settings.png" style="width: 150px">
+</div>
+
+<br/>
 
 ## Installation
 
