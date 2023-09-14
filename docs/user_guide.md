@@ -27,7 +27,7 @@ And you're in! Before you get to typing (you'll have plenty of time for that, tr
 
 ### Your User Profile
 
-Click the &nbsp;<span style="background-color: #808080; padding: 1px; padding-top: 4px; border-radius: 15%;"><img src="https://api.iconify.design/heroicons/user-solid.svg"></span>&nbsp; icon at the bottom of the sidebar. This will take you to your Account Settings, and the first thing you'll see is your user profile.
+Click the user icon &nbsp;<img src="images/account-icon.png">&nbsp; at the bottom of the sidebar. This will take you to your Account Settings, and the first thing you'll see is your user profile.
 
 
 
@@ -42,7 +42,7 @@ Excellent. Now Neary knows who you are. Or who you purport to be.
 
 ### Spaces
 
-Spaces in Neary are like folders for your conversations. They help you stay organized and find what you're looking for more quickly. Click the <img src="https://api.iconify.design/heroicons/squares-2x2-solid.svg"> icon to access your spaces. You can add, edit and remove spaces at any time.
+Spaces in Neary are like folders for your conversations. They help you stay organized and find what you're looking for more quickly. Click the spaces icon &nbsp;<img src="images/spaces-icon.png">&nbsp; to access your spaces. You can add, edit and remove spaces at any time.
 
 You can add a conversation to a space simply by making sure the space is selected when you create a new conversation, and you can always change the space a conversation is assigned to.
 
@@ -80,7 +80,7 @@ We'll get into *how* this happens in a moment, but for now just remember you can
 
 ### The Chat Stack
 
-To see what makes a conversation tick, let's first checkout the **Chat Stack**. After your create a new conversation, click through on the current preset, or click the "stacks" (<img src="https://api.iconify.design/heroicons/square-3-stack-3d-20-solid.svg">)  icon in the toolbar to view that conversation's chat stack.
+To see what makes a conversation tick, let's first checkout the **Chat Stack**. After your create a new conversation, click through on the current preset, or click the stacks icon &nbsp;<img src="images/stack-icon.png">&nbsp;  icon in the toolbar to view that conversation's chat stack.
 
 The chat stack essentially constructs the **flow** of your conversation. In order of their appearance:
 
@@ -101,7 +101,7 @@ Snippets and Tools are packaged together in Plugins, but we'll get to that in a 
 
 ### AI Settings
 
-The other part of a conversation's "anatomy" is the AI--or chat model--settings. To access these, click the settings (<img src="https://api.iconify.design/heroicons/adjustments-horizontal-20-solid.svg">) icon in the chatbox toolbar.
+The other part of a conversation's "anatomy" is the AI--or chat model--settings. To access these, click the settings icon &nbsp;<img src="images/settings-icon.png">&nbsp; in the chatbox toolbar.
 
 You're likely familiar with most of these settings, so we'll just touch on a couple things here:
 
@@ -128,7 +128,7 @@ The last components of Neary you should familiarize yourself with are Plugins an
 
 - Integrations are third-party services and apps that can be connected to in order to enhance the plugins and their functions.
 
-Click the gear (<img src="https://api.iconify.design/heroicons/cog-6-tooth-solid.svg">) icon at the bottom of the sidebar to view your plugins and integrations.
+Click the gear icon &nbsp;<img src="images/setup-icon.png">&nbsp; at the bottom of the sidebar to view your plugins and integrations.
 
 ### Plugins
 
