@@ -1,6 +1,6 @@
 <h1 align="center">
   <br>
-  <img src="docs/images/neary-icon.png" alt="Markdownify" width="75">
+  <img src="docs/images/neary-icon.png" width="75">
   <br>
   Neary
   <br>
@@ -10,9 +10,9 @@
 
 <p align="center">
   <a href="#key-features">Key Features</a> •
-  <a href="#download">Installation</a> •
-  <a href="#credits">User Guide</a> •
-  <a href="#credits">Get Involved</a> •
+  <a href="#installation">Installation</a> •
+  <a href="#user-guide">User Guide</a> •
+  <a href="#get-involved">Get Involved</a> •
   <a href="#license">License</a>
 </p>
 
@@ -143,9 +143,9 @@ The [user guide](#) is the best way to get acquainted with Neary. [Check it out]
 
 ## Get Involved
 
-- **[Write a plugin](#)**. It's fun and easy. And all contributors get one of these: 🏆. Actually, just take it 🤲🏆. I have a lot. We'll call it a show of good faith.
+- [Write a plugin](#)! It's fun and easy. And all contributors get one of these: 🏆. Actually, just take it 🤲🏆. I have a lot. We'll call it a show of good faith.
 
-- **Share your presets**. When you create a custom present in Neary, you can choose to share it with the community. Preset creators were *supposed* to get one of these: 🏆, but prospective plugin contributors took them all.
+- Share your presets with the community. Preset creators were *supposed* to get one of these: 🏆, but prospective plugin contributors took them all.
 
 - Have something else in mind? Drop me line: [joe@might.works](#). But seriously, I'm out of trophies, so please don't ask.
 
