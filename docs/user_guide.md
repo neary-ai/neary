@@ -16,7 +16,7 @@ Make sure you edit `settings.toml` to include your OpenAI key and/or custom endp
 
 Once you've started Neary, head to http://localhost:8000 to create an account.
 
-> [!NOTE]
+> [!NOTE]  
 > Authentication is enabled by default. If you'd like to disable it altogether, set `enable_auth` to false in `settings.toml`.
 
 The first time you load Neary you'll be greeted with a screen asking you to register with an email and a password. Enter whatever you'd like. This information is only used for authentication purposes.
@@ -27,13 +27,13 @@ And you're in! Before you get to typing (you'll have plenty of time for that, tr
 
 ### Your User Profile
 
-Click the <img src="https://api.iconify.design/heroicons/user-solid.svg"> icon at the bottom of the sidebar. This will take you to your Account Settings, and the first thing you'll see is your user profile.
+Click the &nbsp;<span style="background-color: #808080; padding: 1px; padding-top: 4px; border-radius: 15%;"><img src="https://api.iconify.design/heroicons/user-solid.svg"></span>&nbsp; icon at the bottom of the sidebar. This will take you to your Account Settings, and the first thing you'll see is your user profile.
 
 You don't *have* to fill out your profile, but it's a good idea. Information you add to your profile will automatically be added to context in any conversation where the `Insert User Profile` snippet is active.
 
 We recommend adding at least your name and location to start. You can always add new items to your profile later.
 
-> [!NOTE]
+> [!NOTE]  
 > If you have the 'Update User Profile' tool enabled in your conversation, just ask and Neary will update your profile for you!
 
 Excellent. Now Neary knows who you are. Or who you purport to be.
@@ -56,13 +56,13 @@ Let's take a spin through a fresh conversation to see what makes them tick. New 
 
 After you create a new conversation, you'll be greeted with an "empty state" that includes fields to set the title, space and preset for your conversation.
 
->[!NOTE]
+>[!NOTE]  
 > Use these slash commands to quicky manage conversations:
-> 
-> `/new` creates a new conversation
-> `/title [some title]` sets a conversation's title
-> `/archive` archives messages in a conversation
-> `/delete` deletes a conversation
+>
+> `/new` creates a new conversation  
+> `/title [some title]` sets a conversation's title  
+> `/archive` archives messages in a conversation  
+> `/delete` deletes a conversation  
 
 ### Conversation Presets
 
@@ -94,7 +94,7 @@ And this is where it gets *really fun*. You can mix and match snippets and tools
 
 Snippets and Tools are packaged together in Plugins, but we'll get to that in a moment. For now, let's explore the second set of knobs you have for customizing conversations.
 
-> [!WARNING]
+> [!WARNING]  
 > When it comes to LLMs, context is king. Packing a conversation with unrelated snippets and tools will not only result in worse performance, it'll cost you more money! Instead, create several narrowly focused conversations and switch between them as necessary.
 
 ### AI Settings
@@ -109,7 +109,7 @@ You're likely familiar with most of these settings, so we'll just touch on a cou
 
 - `Max Tokens` is a parameter that OpenAI's chat endpoint no longer requires (you can keep it at 0 / infinite), but you may need to set this to a real number if you're using a custom model and getting very short responses.
 
->[!NOTE]
+>[!NOTE]  
 >You can see the "raw" context of your most recent message by selecting the `Show X-Ray` option from the toolbar.
 
 ### Chat Stack + AI Settings = A Preset
@@ -134,7 +134,7 @@ First, you'll see a list of `Enabled Plugins` and a list of `Available Plugins`.
 
 If you're not using a plugin, you can disable it to keep your list of available snippets and tools decluttered.
 
->[!NOTE]
+>[!NOTE]  
 >When you select a preset, it will automatically enable any plugins required by the tools and/or snippets in that preset.
 
 Viewing the details of a plugin will tell you a few things, namely:
