@@ -23,13 +23,9 @@ The first time you load Neary you'll be greeted with a screen asking you to regi
 
 ## Setup Your Space
 
-And you're in! You'll be welcomed with a screen that looks like this:
+And you're in! Before you get to typing (you'll have plenty of time for that, trust me), let's do a bit of setup.
 
-![A fresh install](./images/empty-state.png)
-
-Before you get to typing (you'll have plenty of time for that, trust me), let's do a bit of setup.
-
-### Creating a User Profile
+### Your User Profile
 
 Click the <img src="https://api.iconify.design/heroicons/user-solid.svg"> icon at the bottom of the sidebar. This will take you to your Account Settings, and the first thing you'll see is your user profile.
 
@@ -42,7 +38,7 @@ We recommend adding at least your name and location to start. You can always add
 
 Excellent. Now Neary knows who you are. Or who you purport to be.
 
-### Create a New Space (or Two)
+### Spaces
 
 Spaces in Neary are like folders for your conversations. They help you stay organized and find what you're looking for more quickly. Click the <img src="https://api.iconify.design/heroicons/squares-2x2-solid.svg"> icon to access your spaces. You can add, edit and remove spaces at any time.
 
@@ -60,9 +56,17 @@ Let's take a spin through a fresh conversation to see what makes them tick. New 
 
 After you create a new conversation, you'll be greeted with an "empty state" that includes fields to set the title, space and preset for your conversation.
 
+>[!NOTE]
+> Use these slash commands to quicky manage conversations:
+> 
+> `/new` creates a new conversation
+> `/title [some title]` sets a conversation's title
+> `/archive` archives messages in a conversation
+> `/delete` deletes a conversation
+
 ### Conversation Presets
 
-Presets are essentially pre-packaged "recipes" that imbue your conversation with certain super powers. To illustrate this, let's look at a couple of presets Neary ships with out-of-the-box:
+Presets are essentially pre-packaged "recipes" that imbue your conversation with a set of super powers. To illustrate this, let's look at a couple of presets Neary ships with out-of-the-box:
 
 - `Just Chatting` turns the AI into a friendly conversation partner capable of tailoring responses to your profile and remembering important tidbits, regardless of context.
 
@@ -93,16 +97,74 @@ Snippets and Tools are packaged together in Plugins, but we'll get to that in a 
 > [!WARNING]
 > When it comes to LLMs, context is king. Packing a conversation with unrelated snippets and tools will not only result in worse performance, it'll cost you more money! Instead, create several narrowly focused conversations and switch between them as necessary.
 
-## AI Settings
+### AI Settings
 
-The other of a conversation's "anatomy" is the AI, or chat model settings. To access these, click the "gear" (<img src="https://api.iconify.design/heroicons/square-3-stack-3d-20-solid.svg">)
+The other part of a conversation's "anatomy" is the AI--or chat model--settings. To access these, click the settings (<img src="https://api.iconify.design/heroicons/adjustments-horizontal-20-solid.svg">) icon in the chatbox toolbar.
 
+You're likely familiar with most of these settings, so we'll just touch on a couple things here:
 
-While we're on the the topic of slash commands..
+- `API Type` can be set set a custom endpoint, whether that's a local model or model somewhere in the cloud. Just make sure the endpoint uses the OpenAI API schema, and configure your endpoint in the `settings.toml` file.
 
-#### Other Slash Commands You Should Know
+- `Input Tokens` is a setting Neary uses locally to determine how many tokens of context to pass to the chat model. The user message, system message, and enabled tools and snippets are prioritized first, then context from past messages is used.
 
-- `/new` creates a new conversation
-- `/title [some title]` sets a conversation's title
-- `/archive` archives messages in a conversation
-- `/delete` deletes a conversation
+- `Max Tokens` is a parameter that OpenAI's chat endpoint no longer requires (you can keep it at 0 / infinite), but you may need to set this to a real number if you're using a custom model and getting very short responses.
+
+>[!NOTE]
+>You can see the "raw" context of your most recent message by selecting the `Show X-Ray` option from the toolbar.
+
+### Chat Stack + AI Settings = A Preset
+
+And there you have it. A preset is a combination of these two important parts of a conversation's anatomy. Taken together, they can unlock varied and powerful applications of large language models.
+
+Now things are really starting to heat up 🔥, yes?
+
+## Using Plugins & Integrations
+
+The last components of Neary you should familiarize yourself with are Plugins and Integrations:
+
+- Plugins bundle together a set of themed Snippets and Tools that can be added to a conversation's Chat Stack.
+
+- Integrations are third-party services and apps that can be connected to in order to enhance the plugins and their functions.
+
+Click the gear (<img src="https://api.iconify.design/heroicons/cog-6-tooth-solid.svg">) icon at the bottom of the sidebar to view your plugins and integrations.
+
+### Plugins
+
+First, you'll see a list of `Enabled Plugins` and a list of `Available Plugins`. When a plugin is enabled, the snippets and tools bundled into that plugin are available to add in your conversations.
+
+If you're not using a plugin, you can disable it to keep your list of available snippets and tools decluttered.
+
+>[!NOTE]
+>When you select a preset, it will automatically enable any plugins required by the tools and/or snippets in that preset.
+
+Viewing the details of a plugin will tell you a few things, namely:
+
+- What tools and snippets the plugin provides
+- What settings and configuration options the plugin has
+- What integrations the plugin requires
+
+### Integrations
+
+Selecting the 'Integrations' tab on the setup screen will show you a list of available Integrations.
+
+When you click `Connect` on one of those integrations, you'll either be asked to authenticate your account via an OAuth flow or you'll be asked for an API key.
+
+When complete, the integration will show in the 'Connected Integrations' list and that integration can now be used in supported plugins.
+
+Integrations are decoupled from the plugins themselves so that they can be reused across multiple plugins--you'll only have to connect once to make that integration available to all plugins.
+
+### Creating Your Own Plugins
+
+If you're comfortable with Python, writing your own plugins is easy (and fun!) Checkout this tutorial to find out how to create your first plugin.
+
+## What's Next
+
+With what you've learned here, your in a position to harnass the full power of Neary. Time to experiment! Here's a list of things to do next:
+
+- If you haven't already, fill out your User Profile
+- Create some Spaces to organize your conversations
+- Create a few conversations and use a different preset in each
+- Examine how the preset works by viewing its AI settings and Chat Stack
+- Create your own presets and share them with the community!
+
+If you have any other questions, feel free to open an Issue or a Discussion.
