@@ -29,6 +29,8 @@ And you're in! Before you get to typing (you'll have plenty of time for that, tr
 
 Click the &nbsp;<span style="background-color: #808080; padding: 1px; padding-top: 4px; border-radius: 15%;"><img src="https://api.iconify.design/heroicons/user-solid.svg"></span>&nbsp; icon at the bottom of the sidebar. This will take you to your Account Settings, and the first thing you'll see is your user profile.
 
+
+
 You don't *have* to fill out your profile, but it's a good idea. Information you add to your profile will automatically be added to context in any conversation where the `Insert User Profile` snippet is active.
 
 We recommend adding at least your name and location to start. You can always add new items to your profile later.
