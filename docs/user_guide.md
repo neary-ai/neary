@@ -153,7 +153,7 @@ When you click `Connect` on one of those integrations, you'll either be asked to
 
 When complete, the integration will show in the 'Connected Integrations' list and that integration will now be available in supported plugins.
 
-### Creating Your Own Plugins
+### Writing Your Own Plugins
 
 If you're comfortable with Python, writing your own plugins is easy (and fun!) [Check out this tutorial](./write_a_plugin.md) for an in-depth guide on creating your first plugin.
 

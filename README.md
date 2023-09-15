@@ -24,8 +24,8 @@
   - Open conversations in tabs
   - Organize conversations into Spaces
   - Manage conversations on the fly with slash commands
-  - Integrated file manager for document search
-  - App-like experience in iOS and Android with an integrated PWA
+  - Embedded file manager for document search
+  - App-like experience in iOS and Android through a PWA
 
 - ### A Plugin System With Tentacles 🐙
   - Deeply integrated, with full control over context
@@ -103,7 +103,7 @@ The [user guide](./docs/user_guide.md) is the best way to get acquainted with Ne
 
 - Share your presets with the community. Preset creators were *supposed* to get one of these: 🏆, but prospective plugin contributors took them all.
 
-- Have something else in mind? Drop me line at joe@might.works. But seriously, I'm out of trophies, so please don't ask.
+- Have something else in mind? Drop me line at <joe@might.works>. But seriously, I'm out of trophies, so please don't ask.
 
 ## License
 
