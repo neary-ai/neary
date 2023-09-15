@@ -11,7 +11,7 @@
 <p align="center">
   <a href="#key-features">Key Features</a> •
   <a href="#installation">Installation</a> •
-  <a href="#user-guide">User Guide</a> •
+  <a href="docs/user_guide.md">User Guide</a> •
   <a href="#get-involved">Get Involved</a> •
   <a href="#license">License</a>
 </p>
@@ -99,7 +99,7 @@
 
 ## Installation
 
-### Docker (recommended)
+### Docker
 
 1. Clone this repository
    
@@ -127,8 +127,6 @@
 
 7. Point your browser to `http://localhost:8000`
 
-See the [configuration guide](#) for more details.
-
 ### Upgrading
 
 1. Run `git pull` from the project root
@@ -139,11 +137,11 @@ See the [configuration guide](#) for more details.
 
 ## User Guide
 
-The [user guide](#) is the best way to get acquainted with Neary. [Check it out](#)!
+The [user guide](./docs/user_guide.md) is the best way to get acquainted with Neary. Check it out!
 
 ## Get Involved
 
-- [Write a plugin](#)! It's fun and easy. And all contributors get one of these: 🏆. Actually, just take it 🤲🏆. I have a lot. We'll call it a show of good faith.
+- [Write a plugin](./docs/write_a_plugin.md)! It's fun and easy. And all contributors get one of these: 🏆. Actually, just take it 🤲🏆. I have a lot. We'll call it a show of good faith.
 
 - Share your presets with the community. Preset creators were *supposed* to get one of these: 🏆, but prospective plugin contributors took them all.
 

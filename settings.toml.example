@@ -23,14 +23,16 @@ custom_endpoint = "http://localhost:8080/v1"
 base_url = "http://localhost:8000"
 enable_auth = true # Set to false to disable email/password authentication
 jwt_secret = "choose-a-secret"
-oauthlib_insecure_transport = 1 # Allow oauth2 support over http connections
+oauthlib_insecure_transport = 1 # Enable oauth2 over non-https connections
 
 [integrations]
 
 # OAuth credentials for Google integrations
+# Instructions: https://github.com/neary-ai/neary/blob/main/docs/google_credentials.md
 google_client_id = ""
 google_client_secret = ""
 
 # OAuth credentials for GitHub integration
+# Instructions: https://github.com/neary-ai/neary/blob/main/docs/github_credentials.md
 github_client_id = ""
 github_client_secret = ""
