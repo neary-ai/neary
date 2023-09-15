@@ -20,69 +20,27 @@
 
 ## Key Features
 
-### An Interface For Powerusers
+- ### An Interface For Powerusers
+  - Open conversations in tabs
+  - Organize conversations into Spaces
+  - Manage conversations on the fly with slash commands
+  - Integrated file manager for document search
+  - App-like experience in iOS and Android with an integrated PWA
 
-- Open conversations in tabs for easy access
+- ### A Plugin System With Tentacles 🐙
+  - Deeply integrated, with full control over context
+    - `Snippets` are bits of context inserted into every conversation
+    - `Tools` are actions the AI can take on your behalf
+  - Plugins have persistant state, removing context limitations
+  - Support for third-party integrations is baked in
+  - Writing new plugins is so easy gpt-3.5 can do it!
 
-- Stay organized with spaces, which act as folders for conversations
-
-- Carry multiple, simultaneous conversations thanks to an async design
-
-- Archive messages to reset context without losing your conversation
-  
-- Manage conversations on the fly with slash commands
-
-- Integrated documents for easy document search
-  
-- See the conversation *behind* the conversation with X-Ray
-
-- Get an app-like experience on iOS and Android with our PWA
-
-
-### A Plugin System With Lots of Tentacles 🐙
-
-- Plugins have full control over the context
-
-- *Snippets* and *tools* are bundled together in one thematic package
-
-  - Snippets are pieces of context automatically inserted into the conversation
-
-  - Tools are actions the AI can take on your behalf
-
-- Snippets and tools can be mixed and matched at the conversation level
-
-- Plugins have a persistant state, removing the limitations of context
-  
-- Support for third-party integrations is baked into the API
-
-- Creating a new plugin is easy. So easy gpt-3.5 can do it!
-  
-
-### Powerful Presets, Fully Customizable
-
-- Customize *everything* at the conversation level
-
+- ### A Customizable Everything
+  - Use the `Chat Stack` to organize your Snippets, Tools and Instructions into a blueprint for your conversation
+  - Manage all the chat models settings at the conversation-level
   - Support for OpenAI, Azure and your own custom endpoints
-
-  - Choose a model and configure all the common settings
-
-  - Use your Chat Stack to configure plugins and custom instructions
-
-- Use *presets* to start with a recipe
-
-  - Get started with a range of built-in presets
-
-  - Switch presets on the fly, and keep your conversation
-
-  - Choose a default preset to apply to new conversations
-
-- Perfect, save and share your presets
-
-  - Create a custom preset or update an existing preset
-
-  - Export your preset as a file and share with others
-
-  - Import presets others share with you
+  - Save your favorite configurations as `Presets`
+  - Import and export Presets as json files
 
 
 <br/>
@@ -92,7 +50,7 @@
   &nbsp;&nbsp;
   <img src="docs/images/messages.png" style="width: 150px">
   &nbsp;&nbsp;
-  <img src="docs/images/model-settings.png" style="width: 150px">
+  <img src="docs/images/tools.png" style="width: 150px">
 </div>
 
 <br/>
@@ -141,11 +99,11 @@ The [user guide](./docs/user_guide.md) is the best way to get acquainted with Ne
 
 ## Get Involved
 
-- [Write a plugin](./docs/write_a_plugin.md)! It's fun and easy. And all contributors get one of these: 🏆. Actually, just take it 🤲🏆. I have a lot. We'll call it a show of good faith.
+- [Write a plugin](./docs/write_a_plugin.md)! It's fun and easy. And all contributors get one of these: 🏆. Actually, just go ahead and take one 🤲🏆. I have a lot. We'll call it a show of good faith.
 
 - Share your presets with the community. Preset creators were *supposed* to get one of these: 🏆, but prospective plugin contributors took them all.
 
-- Have something else in mind? Drop me line: [joe@might.works](#). But seriously, I'm out of trophies, so please don't ask.
+- Have something else in mind? Drop me line at joe@might.works. But seriously, I'm out of trophies, so please don't ask.
 
 ## License
 
