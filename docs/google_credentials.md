@@ -1,7 +1,4 @@
---
-# Calendar Chat
-
-To use the 'Google Calendar' program, you need to have a Google Cloud account with the Google Calendar API enabled and an OAuth credentials file. Here's the step-by-step:
+To setup the Google Calendar integration, you need to have a Google Cloud account with the Google Calendar API enabled and a set of OAuth credentials. Here's the step-by-step:
 
 1. Go to the [Google Cloud Console](console.developers.google.com).
 
@@ -21,10 +18,10 @@ To use the 'Google Calendar' program, you need to have a Google Cloud account wi
 
 9.  Click "Create". Your client ID and client secret will be shown.
 
-10. Click the download button (it looks like a down arrow) to the right of the client ID. This will download a JSON file that contains your client ID and client secret.
+10. Open your `settings.toml` file and add your client ID and client secret in the integrations section like so:
 
-11. Rename the downloaded JSON file to "google_oauth.json".
-
-12. Move this file to the "backend/credentials" folder.
-
-Once this is done, you'll be prompted to login with your Google account after you send your first message in any conversation where the 'Calendar Chat' program is activated (you'll only have to do this once).
+```
+# OAuth credentials for Google integrations
+google_client_id = "YOUR_CLIENT_ID"
+google_client_secret = "YOUR_CLIENT_SECRET"
+```
