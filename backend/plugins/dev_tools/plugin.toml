@@ -1,0 +1,208 @@
+[metadata]
+display_name = "Dev Tools"
+description = "Tools and snippets to assist in Neary plugin development."
+icon = "fluent:window-dev-tools-16-filled"
+version = "0.1.0"
+author = "Neary"
+url = "https://github.com/neary-ai/neary"
+
+# Tool: Generate Plugin Files
+
+[tools.generate_plugin_files]
+display_name = "Generate Plugin Files"
+description = "Creates a starter set of plugin files, based on your requirements"
+llm_description = "Creates a starter set of plugin files for the user."
+
+[tools.generate_plugin_files.parameters.plugin_name]
+type = "string"
+description = "The plugin's name in snake_case."
+required = true
+
+[tools.generate_plugin_files.parameters.display_name]
+type = "string"
+description = "The plugin's user-facing display name."
+required = true
+
+[tools.generate_plugin_files.parameters.description]
+type = "string"
+description = "The plugin's user-facing description."
+required = true
+
+[tools.generate_plugin_files.parameters.author]
+type = "string"
+description = "The plugin author's name."
+required = true
+
+[tools.generate_plugin_files.parameters.icon]
+type = "string"
+description = "An icon string in iconify format, e.g. heroicons:user"
+required = false
+
+[tools.generate_plugin_files.parameters.url]
+type = "string"
+description = "The URL to the plugin's homepage."
+required = false
+
+[tools.generate_plugin_files.settings.requires_approval]
+description = "Require user approval before running tool"
+value = true
+type = "boolean"
+editable = true
+
+[tools.generate_plugin_files.settings.follow_up_on_output]
+description = "Generate a new response to tool output"
+value = true
+type = "boolean"
+editable = false
+
+# Tool: Create Snippet Config
+
+[tools.generate_snippet]
+display_name = "Generate Snippet"
+description = "Creates a starter config and function template for a new snippet"
+llm_description = "Creates a configuration entry and function template for a new snippet"
+
+[tools.generate_snippet.parameters.name]
+type = "string"
+description = "The name of the new snippet, in snake_case."
+required = true
+
+[tools.generate_snippet.parameters.display_name]
+type = "string"
+description = "The user-facing display name for the snippet."
+required = true
+
+[tools.generate_snippet.parameters.description]
+type = "string"
+description = "The user-facing description for the snippet."
+required = true
+
+[tools.generate_snippet.parameters.settings]
+type = "array"
+items.type = "object"
+description = "An array containing individual settings for the snippet. Each setting is represented as a separate object."
+required = false
+
+[tools.generate_snippet.parameters.settings.items.properties.name]
+type = "string"
+description = "The setting name in snake_case"
+required = true
+
+[tools.generate_snippet.parameters.settings.items.properties.type]
+type = "string"
+description = "The expected data type of the setting, e.g string, integer, boolean, etc."
+required = true
+
+[tools.generate_snippet.parameters.settings.items.properties.description]
+type = "string"
+description = "A description of the what the setting does"
+required = true
+
+[tools.generate_snippet.parameters.settings.items.properties.editable]
+type = "boolean"
+description = "Whether or not the user can change the value of the setting"
+required = true
+
+[tools.generate_snippet.settings.requires_approval]
+description = "Require user approval before running tool"
+value = false
+type = "boolean"
+editable = true
+
+[tools.generate_snippet.settings.follow_up_on_output]
+description = "Generate a new response to tool output"
+value = false
+type = "boolean"
+editable = false
+
+
+# Tool: Create Tool Config
+
+[tools.generate_tool]
+display_name = "Generate Tool"
+description = "Creates a starter config and function template for a new tool"
+llm_description = "Creates a configuration entry and function template for a new tool"
+
+[tools.generate_tool.parameters.name]
+type = "string"
+description = "The name of the new tool, in snake_case."
+required = true
+
+[tools.generate_tool.parameters.display_name]
+type = "string"
+description = "The user-facing display name for the tool."
+required = true
+
+[tools.generate_tool.parameters.description]
+type = "string"
+description = "The user-facing description for the tool."
+required = true
+
+[tools.generate_tool.parameters.llm_description]
+type = "string"
+description = "An AI-facing description for the tool and when to use it."
+required = true
+
+[tools.generate_tool.parameters.settings]
+type = "array"
+items.type = "object"
+description = "An array containing individual settings for the tool. Each setting is represented as a separate object."
+required = false
+
+[tools.generate_tool.parameters.settings.items.properties.name]
+type = "string"
+description = "The setting name in snake_case"
+required = true
+
+[tools.generate_tool.parameters.settings.items.properties.type]
+type = "string"
+description = "The expected data type of the setting, e.g string, integer, boolean, etc."
+required = true
+
+[tools.generate_tool.parameters.settings.items.properties.description]
+type = "string"
+description = "A description of the what the setting does"
+required = true
+
+[tools.generate_tool.parameters.settings.items.properties.editable]
+type = "boolean"
+description = "Whether or not the user can change the value of the setting"
+required = true
+
+[tools.generate_tool.parameters.parameters]
+type = "array"
+items.type = "object"
+description = "An array containing individual parameters for the tool. Each parameter is represented as a separate object."
+required = false
+
+[tools.generate_tool.parameters.parameters.items.properties.name]
+type = "string"
+description = "The setting name in snake_case"
+required = true
+
+[tools.generate_tool.parameters.parameters.items.properties.type]
+type = "string"
+description = "The expected data type of the parameter"
+required = true
+
+[tools.generate_tool.parameters.parameters.items.properties.description]
+type = "string"
+description = "A description of the what the parameter does in the tool function"
+required = true
+
+[tools.generate_tool.parameters.parameters.items.properties.required]
+type = "boolean"
+description = "Whether or not the parameter is required"
+required = true
+
+[tools.generate_tool.settings.requires_approval]
+description = "Require user approval before running tool"
+value = false
+type = "boolean"
+editable = true
+
+[tools.generate_tool.settings.follow_up_on_output]
+description = "Generate a new response to tool output"
+value = false
+type = "boolean"
+editable = false

@@ -1,0 +1,45 @@
+[metadata]
+display_name = ""
+description = ""
+icon = ""
+version = "0.1.0"
+author = ""
+url = ""
+
+# When you're ready to test, set `live` to `true` or simply remove this line
+live = false
+
+# Snippet: Example Snippet
+
+[snippets.example_snippet]
+display_name = "Example Snippet"
+description = "User-facing snippet description"
+
+# Tool: Example Tool
+
+[tools.example_tool]
+display_name = "Example Tool"
+description = "User-facing tool description"
+llm_description = "User-facing snippet description."
+
+[tools.example_tool.parameters.arg1]
+type = "integer"
+description = "The first number to add"
+required = true
+
+[tools.example_tool.parameters.arg2]
+type = "integer"
+description = "The second number to add"
+required = false
+
+[tools.example_tool.settings.requires_approval]
+description = "Require user approval before running tool"
+value = false
+type = "boolean"
+editable = true
+
+[tools.example_tool.settings.follow_up_on_output]
+description = "Generate a new response to tool output"
+value = true
+type = "boolean"
+editable = false

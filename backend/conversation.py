@@ -36,7 +36,7 @@ class Conversation:
                                    user_message=user_message, function_output=function_output, conversation_id=self.id)
 
             # Add tool function definitions
-            functions = [tool['definition'] for tool in self.tools]
+            functions = [tool['metadata']['definition'] for tool in self.tools]
 
             # Add context from snippets
             for snippet in self.snippets:
@@ -231,23 +231,7 @@ class Conversation:
                             'metadata': plugin_info['functions'][function_type][function_name]
                         }
 
-                        # Create function definition for tools
                         if function_type == 'tools':
-                            function_definition = {
-                                "name": function_name,
-                                "description": function_info.get("llm_description", ""),
-                                "parameters": {
-                                    "type": "object",
-                                    "properties": {
-                                        parameter_name: {
-                                            key: value for key, value in parameter_info.items() if key != "required"
-                                        }
-                                        for parameter_name, parameter_info in function_info.get("parameters", {}).items()
-                                    } if "parameters" in function_info else {},
-                                    "required": [parameter_name for parameter_name, parameter_info in function_info.get("parameters", {}).items() if parameter_info.get("required", False)]
-                                } if "parameters" in function_info else {"type": "object", "properties": {}}
-                            }
-                            function_data["definition"] = function_definition
                             self.tools.append(function_data)
                         elif function_type == 'snippets':
                             self.snippets.append(function_data)

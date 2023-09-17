@@ -2,8 +2,10 @@ import os
 import importlib
 import inspect
 from toml import load
+from pydantic import ValidationError
 
 from backend.models import PluginRegistryModel
+from backend.plugins.schema import PluginConfig
 from backend.plugins import BasePlugin
 
 class Singleton(type):
@@ -37,19 +39,33 @@ class PluginManager(metaclass=Singleton):
             # Find the plugin class in the module
             for name, cls in inspect.getmembers(plugin_module):
                 if inspect.isclass(cls) and issubclass(cls, BasePlugin) and cls is not BasePlugin:
-                    # Load the plugin's config
+                    # Load and validate the plugin's config
                     config = load(os.path.join('plugins', plugin_name, 'plugin.toml'))
-
+                    
                     config['metadata']['name'] = plugin_name
+                    
+                    # Check if 'live' exists and is False, if so, return early
+                    if not config['metadata'].get('live', True):
+                        plugin = await PluginRegistryModel.get_or_none(name=plugin_name)
+                        if plugin:
+                            await plugin.delete()
+                        print(f'Plugin {plugin_name} has `live` set to `false`; skipping.')
+                        return
+
+                    try:
+                        validated_config = PluginConfig(**config)
+                    except ValidationError as e:
+                        print(f'Invalid configuration for plugin {plugin_name}: {e}')
+                        return
 
                     # Store the plugin class and config in the plugins dict
-                    self.plugins[plugin_name] = {'class': cls, 'functions': {}, 'metadata': config['metadata']}
+                    self.plugins[plugin_name] = {'class': cls, 'functions': {}, 'metadata': validated_config.metadata.dict(exclude_unset=True)}
 
                     # Register the plugin's snippets and tools
-                    self.register_decorated_methods(cls, plugin_name, config)
+                    self.register_decorated_methods(cls, plugin_name, validated_config.dict(exclude_unset=True))
 
             # Update registry with plugin info
-            await self.update_registry(config)
+            await self.update_registry(validated_config.dict(exclude_unset=True))
 
         except Exception as e:
             print(f'Error loading plugin {plugin_name}: {e}')
@@ -111,11 +127,57 @@ class PluginManager(metaclass=Singleton):
         function_settings = function_config.pop('settings', {})
         self.plugins[plugin_name]['functions'].setdefault(function_type, {})[name] = {
             'method': method,
+            'definition': self.get_function_definition(name, function_config),
             'settings': function_settings
         }
         # Add the function metadata
         self.plugins[plugin_name]['functions'][function_type][name].update(function_config)
 
+    def parse_parameter(self, param_data):
+        if param_data['type'] == 'array' and 'items' in param_data:
+            items_properties = self.parse_parameter(param_data['items'])
+            return {
+                "type": 'array',
+                "items": items_properties
+            }
+        elif param_data['type'] == 'object' and 'properties' in param_data:
+            properties = {}
+            required = []
+            for item_name, item_data in param_data['properties'].items():
+                if item_data.get('required'):
+                    required.append(item_name)
+                properties[item_name] = self.parse_parameter(item_data)
+            return {
+                "type": 'object',
+                "properties": properties,
+                "required": required
+            }
+        else:
+            return {
+                "type": param_data.get('type'),
+                "description": param_data.get('description')
+            }
+
+    def get_function_definition(self, tool_name, tool_data):
+        function_dict = {}
+        function_dict['name'] = tool_name
+        function_dict['description'] = tool_data.get('llm_description')
+
+        function_dict['parameters'] = {
+            "type": "object",
+            "properties": {},
+            "required": []
+        }
+
+        # Iterate over each parameter in the tool
+        for param_name, param_data in tool_data.get('parameters', {}).items():
+            function_dict['parameters']['properties'][param_name] = self.parse_parameter(param_data)
+
+            # Check if the parameter is required
+            if param_data.get('required'):
+                function_dict['parameters']['required'].append(param_name)
+        
+        return function_dict
 
     def get_plugin(self, plugin_name):
         return self.plugins[plugin_name]
