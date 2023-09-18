@@ -21,8 +21,7 @@
 ## Key Features
 
 - ### An Interface For Powerusers
-  - Open conversations in tabs
-  - Organize conversations into Spaces
+  - Organize conversations into tabs and spaces
   - Manage conversations on the fly with slash commands
   - Embedded file manager for document search
   - App-like experience in iOS and Android through a PWA
@@ -31,7 +30,7 @@
   - Deeply integrated, with full control over context
     - `Snippets` are bits of context inserted into every conversation
     - `Tools` are actions the AI can take on your behalf
-  - Plugins have persistant state, removing context limitations
+  - Plugins have persistent state, removing context limitations
   - Support for third-party integrations is baked in
   - Writing new plugins is so easy gpt-3.5 can do it!
 
