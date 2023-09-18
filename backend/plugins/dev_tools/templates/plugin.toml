@@ -20,7 +20,9 @@ description = "User-facing snippet description"
 [tools.example_tool]
 display_name = "Example Tool"
 description = "User-facing tool description"
-llm_description = "User-facing snippet description."
+llm_description = "LLM-facing tool description"
+
+# Example Tool -> Parameters
 
 [tools.example_tool.parameters.arg1]
 type = "integer"
@@ -31,6 +33,8 @@ required = true
 type = "integer"
 description = "The second number to add"
 required = false
+
+# Example Tool -> Settings
 
 [tools.example_tool.settings.requires_approval]
 description = "Require user approval before running tool"
