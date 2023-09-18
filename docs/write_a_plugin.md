@@ -21,7 +21,7 @@ At its most fundamental level, **a plugin bundles together complementary snippet
 
 ### An Simple Example
 
-To illustrate, let's look a snippet and tool from the `Essentials` plugin:
+To illustrate, let's look at a snippet and tool from the `Essentials` plugin:
 
 ```python
     class Essentials(BasePlugin):
@@ -77,12 +77,15 @@ To use it, create a new conversation and select the `Plugin Assistant` preset. Y
 
 We'll ask our assistant to generate files for our new plugin using the `Generate Plugin Files` tool. Once we've provided it with all the info it needs, it will create our plugin in the appropriate directory:
 
+<br/>
 
 <div align="center">
   <img src="images/plugin_assistant_1.png" style="width: 150px;">
   &nbsp;&nbsp;
   <img src="images/plugin_assistant_2.png" style="width: 150px">
 </div>
+
+<br/>
 
 Our newly created plugin directory contains two files: `calorie_tracker.py` and `plugin.toml`.
 
@@ -95,11 +98,11 @@ Note that:
   - `my_plugin.py`, which contains your plugin class and functions
 
 >[!IMPORTANT]  
->Your .py filename should always match the name of your plugin folder.
+>Your .py filename should always match the name of your plugin folder
 
 ### The Plugin Class
 
-Let's open plugin module and a take a look at the code:
+Let's open the plugin module and take a look at the code:
 
 ```python
 from backend.plugins import BasePlugin, snippet, tool
@@ -135,7 +138,7 @@ The included examples, while simplistic, highlight a couple of important pieces 
 
 Each plugin has its own persistent state, and this state is made up of two attributes, `settings` and `data`:
 
-- All of plugin's settings are available in the `self.settings` dict. Settings are always stored at the function-level, using the function name as a key. For example, settings for a tool named `example_tool` would be available at `self.settings['example_tool']`.
+- All of a plugin's settings are available in the `self.settings` dict. Settings are always stored at the function-level, using the function name as a key. For example, settings for a tool named `example_tool` would be available at `self.settings['example_tool']`.
 
 - Each plugin has its own unstructured key-value store available in the `self.data` attribute. This variable is initalized as an empty dict and can be used in any way we see fit. This is useful for maintaining internal data or state variables that shouldn't be exposed as settings.
 
@@ -173,9 +176,9 @@ description = "User-facing snippet description"
 ```
 
 >[!IMPORTANT]  
->Every tool and snippet in the plugin module should have a corresponding entry in the configuration file.
+>Every tool and snippet in the plugin module should have a corresponding entry in the configuration file
 
-This config entry is as simple as it gets. It defines a `display_name` and a `description` for the Snippet under the appropriate header (`[snippets.example_snippet]`). These values are used to present the snippet to the user on the frontend.
+This config entry is as simple as it gets. It defines a `display_name` and a `description` for the snippet under the appropriate header (`[snippets.example_snippet]`). These values are used to present the snippet to the user on the frontend.
 
 Next up is the entry for our tool, which has a bit more meat to it:
 
@@ -240,7 +243,7 @@ First, let's decide what we want our Calorie Tracker plugin to do. At a minimum,
 
 - Record food and calories consumed throughout the day
 
-- Get an up-to-date tally on how many calories we left in our "budget"
+- Get an up-to-date tally on how many calories we have left in our "budget"
 
 We'll accomplish those things with two tools and one snippet.
 
