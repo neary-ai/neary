@@ -85,10 +85,15 @@ class Conversation:
                         await self.request_approval(tool, tool_args)
                     else:
                         await self.message_handler.send_alert_to_ui(tool['metadata']['display_name'], self.id, "tool_start")
-                        result = await tool['method'](tool['instance'], **tool_args)
-                        function_output = {"name": tool_name, "output": result}
-                        await self.message_handler.send_alert_to_ui(tool['metadata']['display_name'], self.id, "tool_success")
-                        return function_output, tool['metadata']['settings']['follow_up_on_output']['value']
+                        try:
+                            result = await tool['method'](tool['instance'], **tool_args)
+                            function_output = {"name": tool_name, "output": result}
+                            await self.message_handler.send_alert_to_ui(tool['metadata']['display_name'], self.id, "tool_success")
+                            return function_output, tool['metadata']['settings']['follow_up_on_output']['value']
+                        except Exception as e:
+                            await self.message_handler.send_alert_to_ui(tool['metadata']['display_name'], self.id, "tool_error")
+                            print(f"An error occurred while using tool `{tool_name}`: {e}")
+                            return None, False
                     break
 
         return None, False

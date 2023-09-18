@@ -98,11 +98,9 @@ The [user guide](./docs/user_guide.md) is the best way to get acquainted with Ne
 
 ## Get Involved
 
-- [Write a plugin](./docs/write_a_plugin.md)! It's fun and easy. And all contributors get one of these: 🏆. Actually, just go ahead and take one 🤲🏆. I have a lot. We'll call it a show of good faith.
+- [Write a plugin](./docs/write_a_plugin.md)! Plugin development is fun and easy to pickup. When you're ready to share, submit it as a PR.
 
-- Share your presets with the community. Preset creators were *supposed* to get one of these: 🏆, but prospective plugin contributors took them all.
-
-- Have something else in mind? Drop me line at <joe@might.works>. But seriously, I'm out of trophies, so please don't ask.
+- Have something else in mind? [Drop me a line](mailto:joe@might.works).
 
 ## License
 
