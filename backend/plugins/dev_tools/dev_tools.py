@@ -6,6 +6,10 @@ from backend.services import MessageHandler
 from backend.plugins import BasePlugin, tool
 from backend.plugins.schema import *
 
+"""
+Add function descriptions as doc strings
+Access set settings in functions
+"""
 
 class DevTools(BasePlugin):
     def __init__(self, id, conversation, settings=None, data=None):
@@ -58,7 +62,7 @@ class DevTools(BasePlugin):
 
 
     @tool
-    async def generate_snippet(self, name, display_name, description, settings):
+    async def generate_snippet(self, name, display_name, description, settings=None):
         message_handler = MessageHandler()
         try:
             # Prepare the data
@@ -80,9 +84,34 @@ class DevTools(BasePlugin):
 
             # Convert the dictionary to a TOML string
             toml_string = toml.dumps({"snippets": {name: config_dict}})
-            response = f"Here's your snippet configuration:\n\n```\n{toml_string}```"
-            # Add the function signature to the response
-            response += "\n\nAnd here's your template function:\n\n```python\n@snippet\nasync def {name}(self, context):\n    \"\"\"\n    Execute your snippet logic here\n    \"\"\"\n    output = \"...\"\n    \n    # Add your output string to context\n    context.add_snippet(output)\n```".format(name=name)
+            toml_config = f"# Snippet: {display_name}\n\n" + toml_string
+            response = f"Here's your snippet configuration:\n\n```\n{toml_config}```"
+
+            # Prepare the function template 
+            function_template = f"""
+            @snippet
+            async def {name}(self, context):
+                \"\"\"
+                {description}
+                \"\"\"
+
+                # Your snippet logic here
+                output = \"...\""""
+
+            # Show the user how to access the settings
+            if settings:
+                for setting in settings:
+                    function_template += f"\n    # {setting['name']} = self.settings['{name}']['{setting['name']}']"
+
+            function_template += """
+
+                # Add your output string to context
+                context.add_snippet(output)
+            """
+
+            # Add the function template to the response
+            response += f"\n\nAnd here's your function template:\n\n```python{function_template}\n```"
+
             await message_handler.send_message_to_ui(response, self.conversation.id)
             return toml_string
         except ValidationError as e:
@@ -137,10 +166,29 @@ class DevTools(BasePlugin):
             response = f"Here's your tool configuration:\n\n```\n{toml_config}```"
 
             type_mapping = {"string": "str", "integer": "int", "boolean": "bool", "float": "float", "double": "float"}
-            function_signature = ", ".join([f"{param['name']}: {type_mapping.get(param['type'], param['type'])}" for param in parameters])
+            function_signature = ",\n".join([f"    {param['name']}: {type_mapping.get(param['type'], param['type'])}" for param in parameters])
 
-            # Add the function signature to the response
-            response += f"\n\nAnd here's your template function:\n\n```python\n@tool\nasync def {name}(self, {function_signature}):\n    \"\"\"\n    Execute your tool logic here\n    \"\"\"\n    output = \"...\"\n    \n    # Return tool output as a string\n    return output\n```"
+            # Prepare the function template 
+            function_template = f"""
+            @tool
+            async def {name}(self,
+            {function_signature}):
+                \"\"\"
+                {description}
+                \"\"\"
+
+                # Your tool logic here
+                output = \"...\""""
+
+            function_template += """
+
+                # Return tool output as a string
+                return output
+            """
+
+            # Add the function template to the response
+            response += f"\n\nAnd here's your function template:\n\n```python{function_template}\n```"
+
             await message_handler.send_message_to_ui(response, self.conversation.id)
             return response
         except ValidationError as e:

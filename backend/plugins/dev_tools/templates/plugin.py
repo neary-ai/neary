@@ -1,5 +1,3 @@
-from backend.config import settings
-from backend.services import UserProfileManager, MessageHandler, CredentialManager, FileManager
 from backend.plugins import BasePlugin, snippet, tool
 
 
@@ -14,4 +12,4 @@ class PluginClassName(BasePlugin):
     @tool
     async def example_tool(self, arg1: int, arg2: int = 0) -> int:
         tool_output = arg1 + arg2
-        return tool_output
+        return f"{arg1} + {arg2} is {tool_output}!"

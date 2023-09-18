@@ -97,18 +97,21 @@ const renderMarkdown = (markdownText) => {
 
     const md = new MarkdownIt({
         highlight: function (str, lang) {
+            let highlightedCode = str;
+            let langClass = '';
+
             if (lang && Prism.languages[lang]) {
                 try {
-                    const highlightedCode = Prism.highlight(str, Prism.languages[lang], lang);
-                    const langClass = `language-${lang}`;
-                    const tailwindClasses = 'p-4 rounded cursor-pointer relative';
-                    return `<pre class="${tailwindClasses}">${copyButton}<code class="${langClass}">${highlightedCode}</code></pre>`;
+                    highlightedCode = Prism.highlight(str, Prism.languages[lang], lang);
+                    langClass = `language-${lang}`;
                 } catch (error) {
                     console.error('Prism syntax highlighting error:', error);
                 }
             }
-            return '';
-        },
+
+            const tailwindClasses = 'p-4 rounded cursor-pointer relative';
+            return `<pre class="${tailwindClasses}">${copyButton}<code class="${langClass}">${highlightedCode}</code></pre>`;
+        }
     });
 
     let html = md.render(markdownText);
