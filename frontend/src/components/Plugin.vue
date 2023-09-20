@@ -114,31 +114,26 @@ const onBackButtonClick = () => {
 
 const settings = computed(() => {
     if (store.selectedConversation && store.selectedConversation.plugins) {
-        const pluginName = router.currentRoute.value.params.name
+        const pluginId = Number(router.currentRoute.value.params.id)
 
         // Find the parent plugin from selectedConversation
         const selectedPlugin = store.selectedConversation.plugins.find(
-            (plugin) => plugin.name === pluginName
+            (plugin) => plugin.id === pluginId
         );
 
         if (selectedPlugin) {
             const functions = [];
 
-            // Iterate over 'snippets' and 'tools'
-            ['snippets', 'tools'].forEach(functionType => {
-                for (const functionName in selectedPlugin.functions[functionType]) {
-                    // Get the function settings from the parent plugin
-                    const functionSettings = selectedPlugin.functions[functionType][functionName].settings;
-
-                    // Add the function settings, metadata, display name and description to the array
-                    functions.push({
-                        functionName,
-                        displayName: selectedPlugin.functions[functionType][functionName].display_name,
-                        description: selectedPlugin.functions[functionType][functionName].description,
-                        type: functionType == 'snippets' ? 'snippet' : 'tool',
-                        functionSettings: functionSettings,
-                    });
-                }
+            // Iterate over functions array
+            selectedPlugin.functions.forEach(functionItem => {
+                // Add the function name, metadata, display name, and description to the array
+                functions.push({
+                    functionName: functionItem.name,
+                    displayName: functionItem.metadata.display_name,
+                    description: functionItem.metadata.description,
+                    type: functionItem.type === 'snippet' ? 'snippet' : 'tool',
+                    functionSettings: functionItem.settings,
+                });
             });
 
             return {
@@ -148,7 +143,6 @@ const settings = computed(() => {
         }
     }
 });
-
 
 const saveSettings = async () => {
     const updatedSettings = {};
@@ -161,18 +155,18 @@ const saveSettings = async () => {
         }
     }
 
-    const pluginName = router.currentRoute.value.params.name
+    const pluginId = Number(router.currentRoute.value.params.id)
 
     try {
-        await api.updatePluginSettings(pluginName, store.selectedConversationId, updatedSettings);
+        await api.updatePluginSettings(pluginId, updatedSettings);
     } catch (error) {
         console.error('Failed to update plugin settings:', error);
     }
 };
 
 const clearPluginData = async () => {
-    const pluginName = router.currentRoute.value.params.name
-    await api.clearPluginData(pluginName, store.selectedConversationId);
+    const pluginId = Number(router.currentRoute.value.params.id);
+    await api.clearPluginData(pluginId);
     store.newNotification('Plugin data cleared');
 }
 

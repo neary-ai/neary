@@ -216,7 +216,7 @@ class Conversation:
                 continue
 
             plugin_name = plugin["name"]
-            plugin_info = plugin_manager.get_plugin(plugin_name)
+            plugin_info = plugin_manager.get_plugin(plugin_name) # plugin_info[functions][type][name] contains method and definition keys from plugin manager
 
             all_function_settings = {function_name: info.get('settings') for function_type in ['snippets', 'tools'] for function_name, info in plugin['functions'].get(function_type, {}).items() if function_name in plugin_info['functions'].get(function_type, {})}
 

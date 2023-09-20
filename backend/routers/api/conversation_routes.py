@@ -23,7 +23,6 @@ async def get_conversations(space_id: int = Body(...)):
 @router.post("")
 async def create_conversation(request: Request):
     """Create a conversation"""
-    # space_id: int = Body(...)) doesn't play nice with negatives
     data = await request.json()
     space_id = data['space_id']
 
@@ -38,8 +37,17 @@ async def create_conversation(request: Request):
         if plugin_registry:
             plugin_registry.is_enabled = True
             await plugin_registry.save()
-        await PluginInstanceModel.create(name=plugin["name"], plugin=plugin_registry, functions=plugin["functions"], conversation=conversation)
 
+            # Create plugin instance
+            plugin_instance = await PluginInstanceModel.create(name=plugin["name"], plugin=plugin_registry, settings_values=plugin.get("settings", None), conversation=conversation)
+            
+            # Create function instances
+            for function in plugin["functions"]:
+                function_name = function["name"]
+                function_details = await FunctionRegistryModel.get_or_none(name=function_name)
+                if function_details:
+                    await FunctionInstanceModel.create(name=function_name, function=function_details, plugin_instance=plugin_instance, settings_values=function.get('settings', None))
+    
     return await conversation.serialize()
 
 @router.get("/settings")
@@ -165,17 +173,48 @@ async def update_conversation(request: Request, conversation_id: int):
 
     # Now add, remove or update plugins from conversation model
     for plugin in new_plugin_data:
+        
         # See if instance already exists
         plugin_registry = await PluginRegistryModel.get_or_none(name=plugin["name"])
+
+        if plugin_registry is None:
+            print('Plugin not found: ', plugin["name"])
+            continue
+
         plugin_instance = await PluginInstanceModel.get_or_none(plugin=plugin_registry, conversation=conversation)
 
-        # Create or update instance
-        if plugin_instance:
-            plugin_instance.functions = plugin['functions']
-            await plugin_instance.save()
-        else:
-            await PluginInstanceModel.create(name=plugin["name"], functions=plugin["functions"], plugin=plugin_registry, conversation=conversation)
+        # Create or update plugin instance
+        if plugin_instance is None:
+            plugin_instance = await PluginInstanceModel.create(name=plugin["name"], plugin=plugin_registry, conversation=conversation, settings_values=plugin.get('settings', None))
     
+        # Create or update function instances
+        function_instances = await plugin_instance.function_instances
+
+        for function in plugin["functions"]:
+            function_name = function["name"]
+            settings = function.get('settings') or {}
+            settings_values = {key: value['value'] if isinstance(value, dict) and 'value' in value else value for key, value in settings.items()}
+            
+            existing_function_instance = None
+            for instance in function_instances:
+                if instance.name == function_name:
+                    existing_function_instance = instance
+
+            if existing_function_instance:
+                existing_function_instance.settings_values = settings_values
+                await existing_function_instance.save()
+            else:
+                function_registry = await FunctionRegistryModel.get_or_none(name=function_name)
+                if function_registry:
+                    await FunctionInstanceModel.create(name=function_name, function=function_registry, plugin_instance=plugin_instance, settings_values=settings_values)
+                else:
+                    print ('Function not found: ', function_name)
+
+        # Remove function instances that are not in the frontend data anymore
+        for instance in function_instances:
+            if not any(function["name"] == instance.name for function in plugin["functions"]):
+                await instance.delete()
+
         # Enable plugins if new preset
         if new_preset:
             plugin_registry.is_enabled = True

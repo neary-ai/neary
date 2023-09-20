@@ -3,16 +3,21 @@
         <div class="p-8 pt-[5.5rem] max-w-3xl">
             <div class="flex items-center justify-between">
                 <SectionHeading section-name="Add Snippets" @on-click="onBackButtonClick" />
-                <Button @buttonClick="router.push('/setup')" buttonSize="small" buttonType="btn-outline-light" class="flex items-center gap-1">
+                <Button @buttonClick="router.push('/setup')" buttonSize="small" buttonType="btn-outline-light"
+                    class="flex items-center gap-1">
                     Manage Plugins
                 </Button>
             </div>
+            <div class="font-bold text-nearylight-200 mt-12">
+                Available Snippets
+            </div>
             <div class="mt-6 space-y-4">
                 <template v-for="snippet in filteredSnippets" :key="snippet.name">
-                    <Card>
+                    <Card v-if="!snippet.unconnected_integrations.length > 0">
                         <template v-slot:icon>
                             <div class="flex items-center justify-center h-9 w-9 rounded shadow bg-neutral-100 mt-0.5">
-                                <Icon :icon="snippet.plugin_icon ? snippet.plugin_icon : 'mdi:note-text-outline'" class="text-nearycyan-300 w-5 h-5" />
+                                <Icon :icon="snippet.plugin_icon ? snippet.plugin_icon : 'mdi:note-text-outline'"
+                                    class="text-nearycyan-400 w-5 h-5" />
                             </div>
                         </template>
                         <div class="leading-7">
@@ -21,7 +26,31 @@
                         </div>
                         <template v-slot:button>
                             <Icon icon="heroicons:plus" @click="addSnippet(snippet.name)"
-                                class="cursor-pointer shrink-0 ml-4 mr-2 w-5 h-5" />
+                                class="cursor-pointer shrink-0 ml-4 mr-2 w-6 h-6" />
+                        </template>
+                    </Card>
+                </template>
+            </div>
+            <div class="font-bold text-nearylight-200 mt-12">
+                Disabled Snippets
+            </div>
+            <div class="mt-6 space-y-4">
+                <template v-for="snippet in filteredSnippets" :key="snippet.name">
+                    <Card v-if="snippet.unconnected_integrations.length > 0">
+                        <template v-slot:icon>
+                            <div class="flex items-center justify-center h-9 w-9 rounded shadow bg-neutral-100 mt-0.5">
+                                <Icon :icon="snippet.plugin_icon ? snippet.plugin_icon : 'mdi:note-text-outline'"
+                                    class="text-field-default-foreground w-5 h-5" />
+                            </div>
+                        </template>
+                        <div class="leading-7">
+                            <div class="text-field-default-foreground text-sm font-medium">{{ snippet.display_name }}</div>
+                            <div class="text-sm text-nearygray-400 font-normal">Requires <span @click="router.push('/setup')" class="cursor-pointer font-medium text-nearygray-300 underline">{{ snippet.unconnected_integrations.join(', ')
+                                    }}</span> integration</div>
+                        </div>
+                        <template v-slot:button>
+                            <Icon icon="heroicons:exclamation-circle"
+                                class="text-nearygray-300 shrink-0 ml-4 mr-2 w-6 h-6" />
                         </template>
                     </Card>
                 </template>
@@ -47,42 +76,61 @@ const filteredSnippets = computed(() => {
         let selectedSnippets = [];
 
         store.selectedConversation.plugins.forEach(plugin => {
-            if (plugin.functions.snippets) {
-                Object.entries(plugin.functions.snippets).forEach(([name, details]) => {
-                    selectedSnippets.push(name);
-                });
-            }
+            plugin.functions.forEach(func => {
+                if (func.type === 'snippet') {
+                    selectedSnippets.push(func.name);
+                }
+            });
         });
 
         let snippets = [];
 
         store.availablePlugins.forEach(plugin => {
-            if (plugin.is_enabled && plugin.functions.snippets) {
-                Object.entries(plugin.functions.snippets).forEach(([name, details]) => {
-                    if (!selectedSnippets.includes(name)) {
+            if (plugin.is_enabled) {
+                plugin.functions.forEach(func => {
+                    if (func.type === 'snippet' && !selectedSnippets.includes(func.name)) {
+                        let unconnected_integrations = [];
+                        // Iterate over the integrations array
+                        if (func.integrations) {
+                            func.integrations.forEach(integration => {
+                                // If connected is false, push the name to the unconnected_integrations array
+                                if (!integration.connected) {
+                                    unconnected_integrations.push(integration.name);
+                                }
+                            });
+                        }
+
                         snippets.push({
-                            name: name,
+                            name: func.name,
                             plugin_name: plugin.display_name,
                             plugin_icon: plugin.icon,
-                            display_name: details.display_name,
-                            description: details.description
+                            display_name: func.metadata.display_name,
+                            description: func.metadata.description,
+                            unconnected_integrations: unconnected_integrations
                         });
                     }
                 });
             }
         });
-
         return snippets;
     }
     return [];
 });
 
 const addSnippet = (snippetName) => {
-    const availablePlugin = store.availablePlugins.find(plugin => {
-        return plugin.functions.snippets && Object.keys(plugin.functions.snippets).includes(snippetName);
+    let availablePlugin;
+    let availableFunction;
+
+    store.availablePlugins.forEach(plugin => {
+        plugin.functions.forEach(func => {
+            if (func.type === 'snippet' && func.name === snippetName) {
+                availablePlugin = plugin;
+                availableFunction = func;
+            }
+        });
     });
 
-    if (availablePlugin) {
+    if (availablePlugin && availableFunction) {
         let pluginInstance = store.selectedConversation.plugins.find(plugin => plugin.name === availablePlugin.name);
 
         if (!pluginInstance) {
@@ -98,15 +146,18 @@ const addSnippet = (snippetName) => {
                 "version": availablePlugin.version,
                 "data": null,
                 "settings": availablePlugin.settings,
-                "functions": { "snippets": {} },
+                "functions": [],
                 "is_enabled": true
             };
             store.selectedConversation.plugins.push(pluginInstance);
         }
-        if (!pluginInstance.functions.snippets) {
-            pluginInstance.functions.snippets = {}
+
+        const functionExists = pluginInstance.functions.find(func => func.name === availableFunction.name);
+        
+        if (!functionExists) {
+            pluginInstance.functions.push(availableFunction);
         }
-        pluginInstance.functions['snippets'][snippetName] = availablePlugin.functions['snippets'][snippetName];
+
         store.updateConversation(store.selectedConversation);
     }
 }

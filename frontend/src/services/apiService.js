@@ -262,17 +262,17 @@ const api = {
             console.error('Error disabling plugin: ', error);
         }
     },
-    async updatePluginSettings(pluginName, conversationId, updatedSettings) {
+    async updatePluginSettings(pluginId, updatedSettings) {
         try {
-            const response = await axios.put(`${apiBaseUrl}/api/plugins/${pluginName}/${conversationId}`, updatedSettings, { withCredentials: true });
+            const response = await axios.put(`${apiBaseUrl}/api/plugins/${pluginId}`, updatedSettings, { withCredentials: true });
             return response.data;
         } catch (error) {
             console.error('Error updating plugin: ', error);
         }
     },
-    async clearPluginData(pluginName, conversationId) {
+    async clearPluginData(pluginId) {
         try {
-            const response = await axios.put(`${apiBaseUrl}/api/plugins/${pluginName}/${conversationId}/data`, {}, { withCredentials: true });
+            const response = await axios.put(`${apiBaseUrl}/api/plugins/${pluginId}/data`, {}, { withCredentials: true });
             return response.data;
         } catch (error) {
             console.error('Error clearing plugin data: ', error);

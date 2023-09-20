@@ -3,7 +3,7 @@
         Connected Integrations
     </div>
     <div class="mt-6 space-y-4">
-        <template v-for="integration in integrations" :key="integration.id">
+        <template v-for="integration in store.integrations" :key="integration.id">
         <Card v-if="integration.is_integrated">
             <template v-slot:icon>
                 <div class="flex items-center justify-center h-9 w-9 rounded shadow bg-neutral-100 mt-0.5">
@@ -33,7 +33,7 @@
         Available Integrations
     </div>
     <div class="mt-6 space-y-4">
-        <template v-for="integration in integrations" :key="integration.id">
+        <template v-for="integration in store.integrations" :key="integration.id">
         <Card v-if="!integration.is_integrated">
             <template v-slot:icon>
                 <div class="flex items-center justify-center h-9 w-9 rounded shadow bg-neutral-100 mt-0.5">
@@ -88,8 +88,6 @@ import { Icon } from '@iconify/vue';
 
 const store = useAppStore();
 
-const integrations = ref([])
-
 const connectIntegration = async (integration) => {
     if (integration.auth_method == 'oauth') {
         let oauth = await api.getOAuthURL(integration.id);
@@ -103,7 +101,7 @@ const connectIntegration = async (integration) => {
 };
 
 const disconnectIntegration = async (integration) => {
-    integrations.value = await api.disconnectIntegration(integration);
+    store.integrations = await api.disconnectIntegration(integration);
 };
 
 const isOpen = ref(false);
@@ -120,17 +118,12 @@ const save = async () => {
     openIntegration.value.api_key = apiKey;
     let updatedIntegrations = await api.saveIntegration(openIntegration.value);
     if (updatedIntegrations) {
-        integrations.value = updatedIntegrations;
+        store.integrations = updatedIntegrations;
     }
 };
 
 const close = () => {
     isOpen.value = false;
 };
-
-
-onMounted(async () => {
-    integrations.value = await api.getIntegrations();
-})
 
 </script>

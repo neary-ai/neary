@@ -1,10 +1,12 @@
 import os
+import json
 import importlib
 import inspect
 from toml import load
 from pydantic import ValidationError
+from tortoise.exceptions import DoesNotExist
 
-from backend.models import PluginRegistryModel
+from backend.models import PluginRegistryModel, IntegrationRegistryModel, FunctionRegistryModel, PresetModel
 from backend.plugins.schema import PluginConfig
 from backend.plugins import BasePlugin
 
@@ -67,6 +69,11 @@ class PluginManager(metaclass=Singleton):
             # Update registry with plugin info
             await self.update_registry(validated_config.dict(exclude_unset=True))
 
+            # Load plugin presets
+            presets_path = os.path.join('plugins', plugin_name, 'presets.json')
+            if os.path.exists(presets_path):
+                await self.load_presets(presets_path)
+
         except Exception as e:
             print(f'Error loading plugin {plugin_name}: {e}')
 
@@ -88,12 +95,42 @@ class PluginManager(metaclass=Singleton):
         plugin.author = metadata['author']
         plugin.url = metadata['url']
         plugin.version = metadata['version']
-
-        # Update tools and snippets
-        functions = {key: value for key, value in config.items() if key != 'metadata'}
-        plugin.functions = functions
+        plugin.settings_metadata = metadata.get('settings', None)
 
         await plugin.save()
+
+        # Update plugin functions
+        for key, value in config.items():
+            if key in ['snippets', 'tools']:
+                for function_name, function_details in value.items():
+                    function = await FunctionRegistryModel.get_or_none(name=function_name, plugin=plugin)
+
+                    if function is None:
+                        function = FunctionRegistryModel(name=function_name, plugin=plugin, type=key[:-1])
+
+                    function_metadata = {}
+                    integrations = []
+                    
+                    # Add settings, parameters and other metadata
+                    for details_key, details_value in function_details.items():
+                        if details_key == 'settings':
+                            function.settings_metadata = details_value
+                        elif details_key == 'parameters':
+                            function.parameters = details_value
+                        elif details_key == 'integrations':
+                            integrations = details_value
+                        else:
+                            function_metadata[details_key] = details_value
+                    
+                    function.metadata = function_metadata
+
+                    await function.save()
+                    
+                    # Add integrations
+                    for integration_name in integrations:
+                        integration = await IntegrationRegistryModel.get_or_none(name=integration_name)
+                        if integration:
+                            await function.integrations.add(integration)
 
     def register_decorated_methods(self, cls, plugin_name, config):
         # Get all methods of the plugin class
@@ -122,16 +159,27 @@ class PluginManager(metaclass=Singleton):
                 print(f"Warning: Function `{name}` in plugin `{plugin_name}` conflicts with an existing function in plugin `{plugin['metadata']['name']}`")
                 return
 
-        # Create a copy of function's config
+        # Create callable reference with function definition
         function_config = config[name].copy()
-        function_settings = function_config.pop('settings', {})
         self.plugins[plugin_name]['functions'].setdefault(function_type, {})[name] = {
             'method': method,
             'definition': self.get_function_definition(name, function_config),
-            'settings': function_settings
         }
-        # Add the function metadata
-        self.plugins[plugin_name]['functions'][function_type][name].update(function_config)
+
+    async def load_presets(self, path):
+        with open(path, 'r') as f:
+            presets = json.load(f)
+        
+        for preset in presets:
+            try:
+                existing_preset = await PresetModel.get(name=preset["name"])
+            except DoesNotExist:
+                await PresetModel.create(**preset)
+            else:
+                if not existing_preset.is_custom:
+                    for key, value in preset.items():
+                        setattr(existing_preset, key, value)
+                    await existing_preset.save()
 
     def parse_parameter(self, param_data):
         if param_data['type'] == 'array' and 'items' in param_data:

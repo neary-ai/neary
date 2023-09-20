@@ -111,6 +111,7 @@ class PresetModel(Model):
             "is_custom": self.is_custom
         }
 
+
 class PluginRegistryModel(Model):
     id = fields.IntField(pk=True)
     name = fields.CharField(max_length=255)
@@ -120,10 +121,11 @@ class PluginRegistryModel(Model):
     author = fields.CharField(null=True, max_length=255)
     url = fields.CharField(null=True, max_length=255)
     version = fields.CharField(null=True, max_length=255)
-    settings = fields.JSONField(null=True)
-    functions = fields.JSONField(null=True)
+    settings_metadata = fields.JSONField(null=True)
     is_enabled = fields.BooleanField(default=False)
     
+    functions: fields.ReverseRelation["FunctionRegistryModel"]
+
     async def serialize(self):
         return {
             "id": self.id,
@@ -134,45 +136,33 @@ class PluginRegistryModel(Model):
             "author": self.author,
             "url": self.url,
             "version": self.version,
-            "functions": self.functions,
+            "settings_metadata": self.settings_metadata,
+            "functions": [await function.serialize() for function in await self.functions.all()],
             "is_enabled": self.is_enabled
         }
+
 
 class PluginInstanceModel(Model):
     id = fields.IntField(pk=True)
     name = fields.CharField(max_length=255)
     plugin = fields.ForeignKeyField("models.PluginRegistryModel", related_name="instances")
     conversation = fields.ForeignKeyField("models.ConversationModel", related_name="plugins")
-    settings = fields.JSONField(null=True)
+    settings_values = fields.JSONField(null=True)
     data = fields.JSONField(null=True)
-    functions = fields.JSONField(null=True)
 
-    def merge_settings(self, instance, registry):
-        if registry:
-            for key in registry.keys():
-                if instance is not None and key in instance and instance[key] is not None and 'value' in instance[key]:
-                    registry[key]['value'] = instance[key]['value']
+    function_instances: fields.ReverseRelation["FunctionInstanceModel"]
+        
+    def merge_settings(self, metadata, values):
+        if metadata:
+            for key, meta in metadata.items():
+                if values and key in values:
+                    meta['value'] = values[key]
+            return metadata
 
-            return registry
-
-    def merge_functions(self, instance, registry):
-        if registry:
-            registry_keys = list(registry.keys())
-            for category in registry_keys:
-                if category in instance:
-                    function_keys = list(registry[category].keys())
-                    for key in function_keys:
-                        if key in instance[category]:
-                            if 'settings' in registry[category][key] and 'settings' in instance[category][key]:
-                                registry[category][key]['settings'] = self.merge_settings(instance[category][key]['settings'], registry[category][key]['settings'])
-                        else:
-                            del registry[category][key]
-                else:
-                    del registry[category]
-        return registry
-    
     async def serialize(self):
         plugin = await self.plugin
+        function_instances = await self.function_instances.all()
+
         return {
             "id": self.id,
             "plugin_id": plugin.id,
@@ -184,9 +174,59 @@ class PluginInstanceModel(Model):
             "author": plugin.author,
             "url": plugin.url,
             "version": plugin.version,
-            "data": self.data,
-            "functions": self.merge_functions(self.functions, plugin.functions),
+            "settings": self.merge_settings(plugin.settings_metadata, self.settings_values),
+            "functions": [await function.serialize() for function in function_instances],
             "is_enabled": plugin.is_enabled
+        }
+
+
+class FunctionRegistryModel(Model):
+    id = fields.IntField(pk=True)
+    name = fields.CharField(max_length=255)
+    type = fields.CharField(max_length=255)
+    plugin = fields.ForeignKeyField("models.PluginRegistryModel", related_name="functions")
+    settings_metadata = fields.JSONField(null=True)
+    parameters = fields.JSONField(null=True)
+    integrations = fields.ManyToManyField('models.IntegrationRegistryModel', related_name='functions')
+    metadata = fields.JSONField(null=True)
+
+    async def serialize(self):
+        integrations = await self.integrations.all()
+        serialized_integrations = [await integration.serialize() for integration in integrations]
+        return {
+            'name': self.name,
+            'type': self.type,
+            'settings_metadata': self.settings_metadata,
+            'parameters': self.parameters,
+            'integrations': [{'name': integration['display_name'], 'connected': integration['is_integrated']} for integration in serialized_integrations],
+            'metadata': self.metadata
+        }
+
+
+class FunctionInstanceModel(Model):
+    id = fields.IntField(pk=True)
+    name = fields.CharField(max_length=255)
+    function = fields.ForeignKeyField("models.FunctionRegistryModel", related_name="instances")
+    plugin_instance = fields.ForeignKeyField("models.PluginInstanceModel", related_name="function_instances")
+    settings_values = fields.JSONField(null=True)
+
+    def merge_settings(self, metadata, values):
+        if metadata:
+            for key, meta in metadata.items():
+                if values and key in values:
+                    meta['value'] = values[key]
+            return metadata
+
+    async def serialize(self):
+        function = await self.function
+        serialized_function = await function.serialize()
+
+        return {
+            'name' : self.name,
+            'type': function.type,
+            'settings': self.merge_settings(function.settings_metadata, self.settings_values),
+            'integrations': serialized_function['integrations'],
+            'metadata': function.metadata
         }
 
 

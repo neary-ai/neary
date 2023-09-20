@@ -23,6 +23,7 @@ editable = true
 [snippets.insert_local_weather]
 display_name = "Insert Local Weather"
 description = "Inserts the current weather at your location."
+integrations = ["openweathermap"]
 
 [snippets.insert_local_weather.settings.location]
 description = "City or zip code to use for weather data"

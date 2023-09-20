@@ -5,6 +5,8 @@ from .models import (
     MessageModel,
     PluginInstanceModel,
     PluginRegistryModel,
+    FunctionInstanceModel,
+    FunctionRegistryModel,
     PresetModel,
     DocumentModel,
     IntegrationInstanceModel,

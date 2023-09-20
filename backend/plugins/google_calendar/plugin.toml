@@ -2,7 +2,6 @@
 display_name = "Google Calendar"
 description = "Have Neary manage your schedule by answering questions about your calendar and scheduling events on your behalf."
 icon = "fluent:calendar-date-28-regular"
-integrations = ["google_calendar"]
 author = "Neary"
 version = "0.1.0"
 url = "https://github.com/neary-ai/neary"
@@ -13,6 +12,7 @@ url = "https://github.com/neary-ai/neary"
 display_name = "Create Calendar Event"
 description = "Schedules an event on your behalf."
 llm_description = "Creates an event on the user's calendar."
+integrations = ["google_calendar"]
 
 [tools.create_calendar_event.parameters.event_title]
 type = "string"
@@ -58,6 +58,7 @@ editable = false
 display_name = "Get Calendar Events"
 description = "Retrieves calendar events for a period of time."
 llm_description = "Retrieves the user's upcoming calendar events."
+integrations = ["google_calendar"]
 
 [tools.get_calendar_events.parameters.days]
 type = "integer"
@@ -93,6 +94,7 @@ editable = false
 [snippets.insert_calendar_events]
 display_name = "Insert Calendar Events"
 description = "Insert upcoming calendar events into context."
+integrations = ["google_calendar"]
 
 [snippets.insert_calendar_events.settings.days]
 description = "How many days of events to insert"

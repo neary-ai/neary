@@ -98,10 +98,22 @@ async def get_initial_data(request: Request):
             if plugin_registry:
                 plugin_registry.is_enabled = True
                 await plugin_registry.save()
-                await PluginInstanceModel.create(name=plugin["name"], plugin=plugin_registry, functions=plugin["functions"], settings=plugin.get("settings", None), conversation=conversation)
+
+                # Create plugin instance
+                plugin_instance = await PluginInstanceModel.create(name=plugin["name"], plugin=plugin_registry, settings=plugin.get("settings", None), conversation=conversation)
+
+                for function in plugin["functions"]:
+                    function_name = function["name"]
+                    function_details = await FunctionRegistryModel.get_or_none(name=function_name)
+                    if function_details:
+                        await FunctionInstanceModel.create(
+                            name=function_name,
+                            plugin_instance=plugin_instance,
+                            function=function_details,
+                            settings_values=function.get('settings', None)
+                        )
             else:
-                print('Registry information not found for plugin: ',
-                      plugin["name"])
+                print('Registry information not found for plugin: ', plugin["name"])
 
         serialized_conversations.append(await conversation.serialize())
 
@@ -113,13 +125,18 @@ async def get_initial_data(request: Request):
     plugins = await PluginRegistryModel.all()
     plugins = [await plugin.serialize() for plugin in plugins]
 
+    # Get integrations
+    integrations = await IntegrationRegistryModel.filter()
+    integrations = [await integration.serialize() for integration in integrations]
+
     initial_data = {
         'app_state': app_state,
         'user_profile': user_profile,
         'spaces': serialized_spaces,
         'conversations': serialized_conversations,
         'plugins': plugins,
-        'presets': presets
+        'presets': presets,
+        'integrations': integrations
     }
 
     return initial_data

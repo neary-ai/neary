@@ -38,7 +38,7 @@ async def run_setup(app):
 
     await load_presets()
     await load_integrations()
-
+    
     await PluginManager().load_plugins()
 
 async def apply_migrations():
@@ -70,23 +70,14 @@ async def apply_migrations():
 
 async def load_presets():
     """
-    Updates core presets to match presets file
+    Updates core presets
     """
     with open(os.path.join(current_dir, "presets.json"), 'r') as f:
         presets = json.load(f)
 
-    preset_ids = set(preset["id"] for preset in presets)
-
-    db_presets = await PresetModel.all()
-
-    for db_preset in db_presets:
-        # If a database preset is not in the JSON file and is not custom, delete it
-        if db_preset.id not in preset_ids and not db_preset.is_custom:
-            await db_preset.delete()
-
     for preset in presets:
         try:
-            existing_preset = await PresetModel.get(id=preset["id"])
+            existing_preset = await PresetModel.get(name=preset["name"])
         except DoesNotExist:
             await PresetModel.create(**preset)
         else:

@@ -12,6 +12,7 @@ url = "https://github.com/neary-ai/neary"
 display_name = "Get Repos"
 description = "Retrieves your GitHub repositories."
 llm_description = "Retrieves the user's GitHub repositories."
+integrations = ["github"]
 
 [tools.get_repos.settings.requires_approval]
 description = "Require user approval before running tool"
@@ -31,6 +32,7 @@ editable = false
 display_name = "Set Active Repo"
 description = "Sets the active repository"
 llm_description = "Sets the active repository"
+integrations = ["github"]
 
 [tools.set_active_repo.parameters.repo_name]
 type = "string"
@@ -60,6 +62,7 @@ editable = false
 [snippets.insert_active_repo]
 display_name = "Insert Active Repo"
 description = "Inserts the active repo into context"
+integrations = ["github"]
 
 # Tool: Get Project Tree
 
@@ -67,6 +70,7 @@ description = "Inserts the active repo into context"
 display_name = "Get Project Tree"
 description = "Retrieves the project tree for a respository"
 llm_description = "Retrieves the project tree for a repository"
+integrations = ["github"]
 
 [tools.get_project_tree.parameters.repo_name]
 type = "string"
@@ -91,6 +95,7 @@ editable = false
 display_name = "List Files In Directory"
 description = "Retrieves a list of files at a given path in the respository"
 llm_description = "Retrieves a list of files at a given path in the respository."
+integrations = ["github"]
 
 [tools.get_files_in_directory.parameters.repo_name]
 type = "string"
@@ -120,6 +125,7 @@ editable = false
 display_name = "Get File In Repo"
 description = "Retrieves a file at a given path in the respository"
 llm_description = "Retrieves a file at a given path in the respository."
+integrations = ["github"]
 
 [tools.get_file.parameters.repo_name]
 type = "string"

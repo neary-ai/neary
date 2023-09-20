@@ -9,8 +9,7 @@
                         <div class="col-span-full sm:col-span-3 pr-12">
                             <div class="flex flex-col mb-6 sm:mb-0">
                                 <div class="text-slate-300 font-semibold mb-2">Preset</div>
-                                <div class="text-sm text-nearygray-400">Start your stack with a ready-made conversation
-                                    recipe
+                                <div class="text-sm text-nearygray-400">Start your stack with a ready-made conversation recipe
                                 </div>
                             </div>
                         </div>
@@ -79,13 +78,13 @@
                                                     <PopoverPanel v-slot="{ close }"
                                                         class="absolute w-32 bottom-8 -right-0 origin-top-right ring-1 ring-nearygray-500  bg-nearygray-200 text-nearyblue-300 rounded-md focus:outline-none">
                                                         <ul class="divide-y divide-nearygray-500">
-                                                            <li @click.stop="router.push(`/plugins/${snippet.plugin}`)"
+                                                            <li @click.stop="router.push(`/plugins/${snippet.plugin_id}`)"
                                                                 class="cursor-pointer flex items-center rounded-t gap-2 px-3 py-2 text-sm hover:bg-nearygray-300">
                                                                 <Icon icon="heroicons:adjustments-horizontal"
                                                                     class="w-5 h-5" />
                                                                 <div>Settings</div>
                                                             </li>
-                                                            <li @click.stop="removeFunction(snippet.name, 'snippets', close)"
+                                                            <li @click.stop="removeFunction(snippet.name, close)"
                                                                 class="cursor-pointer flex items-center rounded-b gap-2 px-3 py-2 text-sm hover:bg-nearygray-300">
                                                                 <Icon icon="heroicons:x-mark" class="w-5 h-5" />
                                                                 <div>Remove</div>
@@ -138,13 +137,13 @@
                                                     <PopoverPanel v-slot="{ close }"
                                                         class="absolute w-32 bottom-8 -right-0 origin-top-right ring-1 ring-nearygray-500  bg-nearygray-200 text-nearyblue-300 rounded-md focus:outline-none">
                                                         <ul class="divide-y divide-nearygray-500">
-                                                            <li @click.stop="router.push(`/plugins/${tool.plugin}`)"
+                                                            <li @click.stop="router.push(`/plugins/${tool.plugin_id}`)"
                                                                 class="cursor-pointer flex items-center rounded-t gap-2 px-3 py-2 text-sm hover:bg-nearygray-300">
                                                                 <Icon icon="heroicons:adjustments-horizontal"
                                                                     class="w-5 h-5" />
                                                                 <div>Settings</div>
                                                             </li>
-                                                            <li @click.stop="removeFunction(tool.name, 'tools', close)"
+                                                            <li @click.stop="removeFunction(tool.name, close)"
                                                                 class="cursor-pointer flex items-center rounded-b gap-2 px-3 py-2 text-sm hover:bg-nearygray-300">
                                                                 <Icon icon="heroicons:x-mark" class="w-5 h-5" />
                                                                 <div>Remove</div>
@@ -229,20 +228,22 @@ const router = useRouter();
 
 function getEnabledFunctions(functionType) {
     return computed(() => {
+        console.log(store.selectedConversation.plugins)
         const selectedPlugins = store.selectedConversation.plugins;
         let functions = [];
 
         selectedPlugins.forEach(plugin => {
-            if (plugin.is_enabled && plugin['functions'][functionType]) {
-                Object.entries(plugin['functions'][functionType]).forEach(([name, details]) => {
-                    functions.push({
-                        name: name,
-                        display_name: details.display_name,
-                        description: details.description,
-                        plugin: plugin.name,
-                        plugin_icon: plugin.icon,
-                        plugin_display_name: plugin.display_name,
-                    });
+            if (plugin.is_enabled) {
+                plugin.functions.forEach(func => {
+                    if (func.type === functionType) {
+                        functions.push({
+                            name: func.name,
+                            display_name: func.metadata.display_name,
+                            description: func.metadata.description,
+                            plugin_id: plugin.id,
+                            plugin_icon: plugin.icon,
+                        });
+                    }
                 });
             }
         });
@@ -250,30 +251,44 @@ function getEnabledFunctions(functionType) {
     });
 }
 
-const enabledSnippets = getEnabledFunctions('snippets');
-const enabledTools = getEnabledFunctions('tools');
+const enabledSnippets = getEnabledFunctions('snippet');
+const enabledTools = getEnabledFunctions('tool');
 
-const removeFunction = (functionName, functionType, close) => {
+const removeFunction = (functionName, close) => {
     close();
-    if (store.selectedConversation && store.selectedConversation.plugins) {
-        store.selectedConversation.plugins.forEach(plugin => {
-            if (plugin.functions[functionType] && plugin.functions[functionType][functionName]) {
-                delete plugin.functions[functionType][functionName];
 
-                // If there are no functions left in the plugin, remove the plugin
-                if (Object.keys(plugin.functions[functionType]).length === 0) {
-                    delete plugin.functions[functionType];
+    let availablePlugin;
+    let availableFunction;
 
-                    if (Object.keys(plugin.functions).length === 0) {
-                        const index = store.selectedConversation.plugins.indexOf(plugin);
-                        if (index > -1) {
-                            store.selectedConversation.plugins.splice(index, 1);
-                        }
-                    }
-                }
+    store.availablePlugins.forEach(plugin => {
+        plugin.functions.forEach(func => {
+            if (func.name === functionName) {
+                availablePlugin = plugin;
+                availableFunction = func;
             }
         });
-        store.updateConversation(store.selectedConversation);
+    });
+
+    if (availablePlugin && availableFunction) {
+        let pluginInstance = store.selectedConversation.plugins.find(plugin => plugin.name === availablePlugin.name);
+
+        if (pluginInstance) {
+            const functionIndex = pluginInstance.functions.findIndex(func => func.name === availableFunction.name);
+
+            if (functionIndex > -1) {
+                pluginInstance.functions.splice(functionIndex, 1);
+            }
+
+            // If there are no functions left in the plugin, remove the plugin
+            if (pluginInstance.functions.length === 0) {
+                const pluginIndex = store.selectedConversation.plugins.findIndex(plugin => plugin.name === availablePlugin.name);
+                if (pluginIndex > -1) {
+                    store.selectedConversation.plugins.splice(pluginIndex, 1);
+                }
+            }
+
+            store.updateConversation(store.selectedConversation);
+        }
     }
 };
 

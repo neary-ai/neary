@@ -29,7 +29,7 @@ class Parameter(BaseModel):
 
 class Setting(BaseModel):
     description: str
-    value: Any
+    value: Optional[Any] = None
     type: str
     editable: bool
 
@@ -37,6 +37,7 @@ class Snippet(BaseModel):
     display_name: str
     description: str
     settings: Dict[str, Setting] = {}
+    integrations: List[str] = []
 
 class Tool(BaseModel):
     display_name: str
@@ -44,6 +45,7 @@ class Tool(BaseModel):
     llm_description: str
     parameters: Dict[str, Parameter] = {}
     settings: Dict[str, Setting]
+    integrations: List[str] = []
 
 class PluginConfig(BaseModel):
     metadata: Metadata

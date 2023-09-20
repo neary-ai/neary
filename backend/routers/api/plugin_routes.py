@@ -32,40 +32,36 @@ async def disable_plugin(plugin_id: int):
         await plugin.save()
 
 
-@router.put("/{plugin_name}/{conversation_id}")
-async def update_plugin_instance(plugin_name: str, conversation_id: int, settings: dict = Body(...)):
-    plugin = await PluginInstanceModel.get_or_none(name=plugin_name, conversation_id=conversation_id)
+@router.put("/{plugin_id}")
+async def update_plugin_instance(plugin_id: int, settings: dict = Body(...)):
+    plugin = await PluginInstanceModel.get_or_none(id=plugin_id)
 
     if plugin is None:
         raise HTTPException(status_code=404, detail="Plugin not found")
 
-    for function_type in ['snippets', 'tools']:
-        for function_name, function_settings in settings.items():
-            if function_type in plugin.functions and function_name in plugin.functions[function_type]:
-                # Wrap each setting value in an object with a 'value' property
-                function_settings = {key: {"value": value}
-                                     for key, value in function_settings.items()}
+    await plugin.fetch_related('function_instances')
+    
+    for function_name, function_settings in settings.items():
+        # Find the function in the plugin's functions array
+        function = next((f for f in plugin.function_instances if f.name == function_name), None)
 
-                if 'settings' in plugin.functions[function_type][function_name]:
-                    if plugin.functions[function_type][function_name]['settings'] is None:
-                        # If the current settings are None, replace them with the new settings
-                        plugin.functions[function_type][function_name]['settings'] = function_settings
-                    else:
-                        # If the current settings are not None, update them with the new settings
-                        plugin.functions[function_type][function_name]['settings'].update(
-                            function_settings)
-                else:
-                    # If the 'settings' field does not exist, create it and set it to the new settings
-                    plugin.functions[function_type][function_name]['settings'] = function_settings
+        if function:
+            if function.settings_values is None:
+                # If the current settings are None, replace them with the new settings
+                function.settings_values = function_settings
+            else:
+                # If the current settings are not None, update them with the new settings
+                function.settings_values.update(function_settings)
+                
+            await function.save()
 
     await plugin.save()
 
     return {"detail": "success"}
 
-
-@router.put("/{plugin_name}/{conversation_id}/data")
-async def clear_plugin_data(plugin_name: str, conversation_id: int):
-    plugin = await PluginInstanceModel.get_or_none(name=plugin_name, conversation_id=conversation_id)
+@router.put("/{plugin_id}/data")
+async def clear_plugin_data(plugin_id: int):
+    plugin = await PluginInstanceModel.get_or_none(id=plugin_id)
 
     if plugin is None:
         raise HTTPException(status_code=404, detail="Plugin not found")

@@ -1,0 +1,56 @@
+[
+    {
+        "name": "Calendar Chat",
+        "icon": "heroicons:calendar-days-solid",
+        "description": "Manage your own schedule? Nah.",
+        "settings": {
+            "llm": {
+                "api_type": "openai",
+                "model": "gpt-4",
+                "system_message": "Your job is to act as a personal assistant for the user, getting and scheduling events with their calendar as needed. Important: You should never 'guess' when scheduling events. If you are unsure of a detail, such as an invitees email address, ask the user before scheduling the event.",
+                "temperature": 0.7,
+                "max_tokens": 0
+            },
+            "max_input_tokens": 3000
+        },
+        "plugins": [
+            {
+                "name": "google_calendar",
+                "data": null,
+                "functions": [
+                    {
+                        "name": "create_calendar_event",
+                        "settings": null,
+                        "type": "tool"
+                    },
+                    {
+                        "name": "get_calendar_events",
+                        "settings": null,
+                        "type": "tool"
+                    }
+                ]
+            },
+            {
+                "name": "essentials",
+                "data": null,
+                "functions": [
+                    {
+                        "name": "insert_date_time",
+                        "settings": null,
+                        "type": "snippet"
+                    },
+                    {
+                        "name": "insert_user_profile",
+                        "settings": null,
+                        "type": "snippet"
+                    },
+                    {
+                        "name": "update_user_profile",
+                        "settings": null,
+                        "type": "tool"
+                    }
+                ]
+            }
+        ]
+    }
+]

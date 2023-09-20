@@ -1,0 +1,35 @@
+[
+    {
+        "name": "Document Chat",
+        "icon": "heroicons:document-magnifying-glass-solid",
+        "description": "Ask questions about your documents.",
+        "settings": {
+            "llm": {
+                "api_type": "openai",
+                "model": "gpt-4",
+                "system_message": "Your job is to assist the user with document search and analysis. When provided with documents to load via a URL, you should use the `load_urls` tool. When asked a question, you should do your best to provide an answer from the provided document snippets. If there are no snippets loaded that answer the user's question, simply let them know.",
+                "temperature": 0.7,
+                "max_tokens": 0
+            },
+            "max_input_tokens": 3000
+        },
+        "plugins": [
+            {
+                "name": "document_search",
+                "data": null,
+                "functions": [
+                    {
+                        "name": "insert_similar_documents",
+                        "settings": null,
+                        "type": "snippet"
+                    },
+                    {
+                        "name": "load_url",
+                        "settings": null,
+                        "type": "tool"
+                    }
+                ]
+            }
+        ]
+    }
+]

@@ -35,6 +35,7 @@ export const useAppStore = defineStore('appstore', {
         isWebSocketActive: false,
         availablePresets: null,
         availablePlugins: null,
+        integrations: null,
         bufferedMessages: [],
     }),
     getters: {
@@ -107,6 +108,9 @@ export const useAppStore = defineStore('appstore', {
 
             // Set plugins
             this.availablePlugins = initial_data.plugins;
+
+            // Set integrations
+            this.integrations = initial_data.integrations;
 
             // Load conversation or space if none
             if (initialConversationId) {

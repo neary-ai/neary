@@ -40,25 +40,48 @@ async def upgrade(db: BaseDBAsyncClient) -> str:
     );
     CREATE TABLE IF NOT EXISTS "pluginregistrymodel" (
         "id" INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-        "name" VARCHAR(255) NOT NULL,
-        "display_name" VARCHAR(255) NOT NULL,
+        "name" VARCHAR(255),
+        "display_name" VARCHAR(255),
         "icon" TEXT,
         "description" TEXT,
         "author" VARCHAR(255),
         "url" VARCHAR(255),
         "version" VARCHAR(255),
-        "settings" JSON,
-        "functions" JSON,
-        "is_enabled" BOOLEAN DEFAULT FALSE
+        "settings_metadata" JSON,
+        "is_enabled" INTEGER NOT NULL DEFAULT 0
     );
     CREATE TABLE IF NOT EXISTS "plugininstancemodel" (
         "id" INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-        "name" TEXT NOT NULL,
-        "plugin_id" INT NOT NULL REFERENCES "pluginregistrymodel" ("id") ON DELETE CASCADE,
-        "conversation_id" INT NOT NULL REFERENCES "conversationmodel" ("id") ON DELETE CASCADE,
-        "settings" JSON,
+        "name" VARCHAR(255),
+        "plugin_id" INTEGER,
+        "conversation_id" INTEGER,
+        "settings_values" JSON,
         "data" JSON,
-        "functions" JSON
+        FOREIGN KEY("plugin_id") REFERENCES "pluginregistrymodel"("id") ON DELETE CASCADE,
+        FOREIGN KEY("conversation_id") REFERENCES "conversationmodel"("id") ON DELETE CASCADE
+    );
+    CREATE TABLE IF NOT EXISTS "functionregistrymodel" (
+        "id" INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+        "name" VARCHAR(255),
+        "type" VARCHAR(255),
+        "plugin_id" INTEGER,
+        "settings_metadata" JSON,
+        "parameters" JSON,
+        "metadata" JSON,
+        FOREIGN KEY("plugin_id") REFERENCES "pluginregistrymodel"("id")
+    );
+    CREATE TABLE IF NOT EXISTS "functionregistrymodel_integrationregistrymodel" (
+        "functionregistrymodel_id" INT NOT NULL REFERENCES "functionregistrymodel" ("id") ON DELETE CASCADE,
+        "integrationregistrymodel_id" INT NOT NULL REFERENCES "integrationregistrymodel" ("id") ON DELETE CASCADE
+    );
+    CREATE TABLE IF NOT EXISTS "functioninstancemodel" (
+        "id" INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+        "name" VARCHAR(255),
+        "function_id" INTEGER,
+        "plugin_instance_id" INTEGER,
+        "settings_values" JSON,
+        FOREIGN KEY("function_id") REFERENCES "functionregistrymodel"("id") ON DELETE CASCADE,
+        FOREIGN KEY("plugin_instance_id") REFERENCES "plugininstancemodel"("id") ON DELETE CASCADE
     );
     CREATE TABLE IF NOT EXISTS "integrationregistrymodel" (
         "id" INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,

@@ -1,13 +1,12 @@
 from fastapi import HTTPException, APIRouter, Body
 
-from backend.models import IntegrationRegistryModel, IntegrationInstanceModel
+from backend.models import IntegrationRegistryModel, IntegrationInstanceModel, FunctionInstanceModel, FunctionRegistryModel
 
 router = APIRouter()
 
 
 @router.get("")
 async def get_integrations():
-    print('getting integrations!')
     integrations = await IntegrationRegistryModel.filter()
     serialized = [await integration.serialize() for integration in integrations]
     return serialized
@@ -45,10 +44,17 @@ async def new_integration(integration: dict = Body(...)):
 
 @router.put("/{integration_id}")
 async def disconnect_integration(integration_id: int):
-    # Delete the instance
-    integration_instance = await IntegrationInstanceModel.get_or_none(integration_id=integration_id)
-    await integration_instance.delete()
+    # Get the instance with related objects
+    integration_instance = await IntegrationInstanceModel.get_or_none(integration_id=integration_id).prefetch_related("integration__functions__instances")
 
+    if integration_instance:
+        for function in integration_instance.integration.functions:
+            # Delete function instances that require integration
+            for instance in function.instances:
+                await instance.delete()
+        
+        await integration_instance.delete()
+    
     # Serialize all entries in the integration registry
     all_integrations = await IntegrationRegistryModel.all()
     serialized_integrations = [await integration.serialize() for integration in all_integrations]

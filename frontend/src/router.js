@@ -83,7 +83,7 @@ const routes = [
 
       },
       {
-        path: 'plugins/:name',
+        path: 'plugins/:id',
         name: 'Plugin',
         component: Plugin
       },

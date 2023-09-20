@@ -1,0 +1,40 @@
+[
+    {
+        "name": "Plugin Assistant",
+        "icon": "material-symbols:logo-dev",
+        "description": "A Neary plugin programming assistant",
+        "settings": {
+            "llm": {
+                "api_type": "openai",
+                "model": "gpt-4",
+                "system_message": "Your job is to assist the user in developing plugins for the Neary platform. You should use the tools where appropriate, give general dev advice where necessary, and be succinct unless instructed otherwise.",
+                "temperature": 0.7,
+                "max_tokens": 0
+            },
+            "max_input_tokens": 3000
+        },
+        "plugins": [
+            {
+                "name": "dev_tools",
+                "data": null,
+                "functions": [
+                    {
+                        "name": "generate_plugin_files",
+                        "settings": null,
+                        "type": "tool"
+                    },
+                    {
+                        "name": "generate_tool",
+                        "settings": null,
+                        "type": "tool"
+                    },
+                    {
+                        "name": "generate_snippet",
+                        "settings": null,
+                        "type": "tool"
+                    }
+                ]
+            }
+        ]
+    }
+]
