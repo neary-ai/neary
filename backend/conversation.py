@@ -216,30 +216,39 @@ class Conversation:
                 continue
 
             plugin_name = plugin["name"]
-            plugin_info = plugin_manager.get_plugin(plugin_name) # plugin_info[functions][type][name] contains method and definition keys from plugin manager
+            plugin_info = plugin_manager.get_plugin(plugin_name)
 
-            all_function_settings = {function_name: info.get('settings') for function_type in ['snippets', 'tools'] for function_name, info in plugin['functions'].get(function_type, {}).items() if function_name in plugin_info['functions'].get(function_type, {})}
+            all_function_settings = {
+                function['name']: function.get('settings')
+                for function in plugin['functions'] 
+                if function['name'] in plugin_info['functions'].get(function['type'], {})
+            }
 
-            for function_type in ['snippets', 'tools']:
-                for function_name, function_info in plugin['functions'].get(function_type, {}).items():
-                    if function_name in plugin_info['functions'].get(function_type, {}):
-                        function_method = plugin_info['functions'][function_type][function_name]['method']
+            # Iterate over each function in the plugin['functions'] list
+            for function in plugin['functions']:
+                function_name = function['name']
+                function_type = function['type']
 
-                        # Create an instance of the plugin class
-                        plugin_instance = plugin_info['class'](plugin["id"], self, all_function_settings, plugin["data"])
+                # Check if the function name exists in the plugin_info
+                if function_name in plugin_info['functions'].get(function_type, {}):
+                    function_method = plugin_info['functions'][function_type][function_name]['method']
 
-                        # Store the function method and its instance
-                        function_data = {
-                            'name': function_name,
-                            'instance': plugin_instance,
-                            'method': function_method,
-                            'metadata': plugin_info['functions'][function_type][function_name]
-                        }
+                    # Create an instance of the plugin class
+                    plugin_instance = plugin_info['class'](plugin["id"], self, all_function_settings, plugin["data"])
 
-                        if function_type == 'tools':
-                            self.tools.append(function_data)
-                        elif function_type == 'snippets':
-                            self.snippets.append(function_data)
+                    # Store the function method and its instance
+                    function_data = {
+                        'name': function_name,
+                        'instance': plugin_instance,
+                        'method': function_method,
+                        'metadata': plugin_info['functions'][function_type][function_name]
+                    }
+
+                    # Append the function data to the appropriate list
+                    if function_type == 'tools':
+                        self.tools.append(function_data)
+                    elif function_type == 'snippets':
+                        self.snippets.append(function_data)
 
     async def get_user_profile(self):
         user = await UserModel.first()
