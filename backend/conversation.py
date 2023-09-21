@@ -36,7 +36,7 @@ class Conversation:
                                    user_message=user_message, function_output=function_output, conversation_id=self.id)
 
             # Add tool function definitions
-            functions = [tool['metadata']['definition'] for tool in self.tools]
+            functions = [tool['definition'] for tool in self.tools]
 
             # Add context from snippets
             for snippet in self.snippets:
@@ -81,7 +81,7 @@ class Conversation:
             for tool in self.tools:
                 if tool['name'] == tool_name:
                     # Request approval if required, or process
-                    if tool['metadata']['settings']['requires_approval']['value']:
+                    if tool['settings']['requires_approval']['value']:
                         await self.request_approval(tool, tool_args)
                     else:
                         await self.message_handler.send_alert_to_ui(tool['metadata']['display_name'], self.id, "tool_start")
@@ -89,7 +89,7 @@ class Conversation:
                             result = await tool['method'](tool['instance'], **tool_args)
                             function_output = {"name": tool_name, "output": result}
                             await self.message_handler.send_alert_to_ui(tool['metadata']['display_name'], self.id, "tool_success")
-                            return function_output, tool['metadata']['settings']['follow_up_on_output']['value']
+                            return function_output, tool['settings']['follow_up_on_output']['value']
                         except Exception as e:
                             await self.message_handler.send_alert_to_ui(tool['metadata']['display_name'], self.id, "tool_error")
                             print(f"An error occurred while using tool `{tool_name}`: {e}")
@@ -193,7 +193,7 @@ class Conversation:
                 await self.message_handler.send_alert_to_ui(tool['metadata']['display_name'], self.id, "tool_success")
 
                 # Call handle message if tool wants to follow-up
-                if tool['metadata']['settings']['follow_up_on_output']:
+                if tool['settings']['follow_up_on_output']:
                     await self.handle_message(function_output=function_output)
 
     async def handle_action(self, name, data, message_id):
@@ -216,32 +216,37 @@ class Conversation:
                 continue
 
             plugin_name = plugin["name"]
+
+            # Get the plugin's functions class and method references, plus definition
             plugin_info = plugin_manager.get_plugin(plugin_name)
 
+            # Add settings for each function, if it's loaded into memory
             all_function_settings = {
-                function['name']: function.get('settings')
+                function['name']: function['settings'] 
                 for function in plugin['functions'] 
-                if function['name'] in plugin_info['functions'].get(function['type'], {})
+                if function['name'] in plugin_info['functions'].get(function['type']+'s', {})
             }
 
-            # Iterate over each function in the plugin['functions'] list
             for function in plugin['functions']:
                 function_name = function['name']
-                function_type = function['type']
+                function_type = function['type'] + 's'
 
                 # Check if the function name exists in the plugin_info
                 if function_name in plugin_info['functions'].get(function_type, {}):
                     function_method = plugin_info['functions'][function_type][function_name]['method']
+                    function_definition = plugin_info['functions'][function_type][function_name].get('definition', None)
 
                     # Create an instance of the plugin class
-                    plugin_instance = plugin_info['class'](plugin["id"], self, all_function_settings, plugin["data"])
+                    plugin_instance = plugin_info['class'](plugin["id"], self, all_function_settings, plugin.get("data", None))
 
                     # Store the function method and its instance
                     function_data = {
                         'name': function_name,
                         'instance': plugin_instance,
                         'method': function_method,
-                        'metadata': plugin_info['functions'][function_type][function_name]
+                        'definition': function_definition,
+                        'settings': function['settings'],
+                        'metadata': function['metadata']
                     }
 
                     # Append the function data to the appropriate list

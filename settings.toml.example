@@ -14,7 +14,6 @@ azure_openai_api_version = "2023-05-15"
 # Docker users may need to replace `localhost` with `host.docker.internal`
 custom_endpoint = "http://localhost:8080/v1"
 
-
 [application]
 
 # These defaults are setup for running on localhost

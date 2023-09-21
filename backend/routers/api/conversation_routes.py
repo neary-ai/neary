@@ -205,10 +205,15 @@ async def update_conversation(request: Request, conversation_id: int):
                 await existing_function_instance.save()
             else:
                 function_registry = await FunctionRegistryModel.get_or_none(name=function_name)
-                if function_registry:
-                    await FunctionInstanceModel.create(name=function_name, function=function_registry, plugin_instance=plugin_instance, settings_values=settings_values)
-                else:
+                if function_registry is None:
                     print ('Function not found: ', function_name)
+                else:
+                    integrations = await function_registry.integrations.all()
+                    integration_status = [await integration.active_instance() for integration in integrations]
+                    if not all(integration_status):
+                        print('Function has disconnected integrations')
+                    else:
+                        await FunctionInstanceModel.create(name=function_name, function=function_registry, plugin_instance=plugin_instance, settings_values=settings_values)
 
         # Remove function instances that are not in the frontend data anymore
         for instance in function_instances:
