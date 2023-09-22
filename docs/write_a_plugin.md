@@ -468,7 +468,7 @@ Now let's implement our tool function:
 
 ```python
     @tool
-    async def create_calorie_log_entry(self,
+    async def log_calories(self,
         food: str,
         calories: int,
         time: Optional[str] = None):
@@ -560,6 +560,28 @@ Now let's add these to their respective files and implement the function:
 
 And that's it! All we need to do is change the `live` flag to `true` to in our `plugin.toml` file. Then we can enable the plugin and add our new tools and snippet to our Chat Stack to begin using our Calorie Tracking Assistant (or whatever we want to call it!)
 
+### Bonus: Create a Preset
+
+<div style="float: right;">
+  &nbsp;&nbsp;&nbsp;&nbsp;
+  <img src="images/enable-plugin.png" style="width: 150px;">
+  <br/>&nbsp;&nbsp;&nbsp;
+  &nbsp;<img src="images/save-preset.png" style="width: 150px">
+  <br/>&nbsp;&nbsp;&nbsp;
+  &nbsp;<img src="images/export-preset.png" style="width: 150px">
+</div>
+
+Users who enable your plugin will be free to integrate your tools and snippets into their Chat Stack however they please, but if you'd like your plugin to ship with a preset that combines your plugin's functions and other AI settings, you can do that! Here are the steps:
+
+1. After you've set your plugin live, you'll it under `Available Plugins` on the Plugins page. Enable it.
+2. Create a new conversation and add your desired tools, snippets, custom instructions and other AI settings.
+3. At the bottom of the Chat Stack screen, you'll find a `Save New Preset` button. Do that!
+4. Your pre-configured preset will now appear on your presets screen, just export it and save it in your plugin's directory as `presets.json`.
+
+That's it! Now, as long as your plugin is live in the plugins directory, your preset will be available as well.
+
+### Next Up: Using The Services API
+
 In the next section, we'll improve on our plugin by exploring the Services API, which will include:
 
 - Sending messages and alerts directly to the UI
@@ -567,4 +589,4 @@ In the next section, we'll improve on our plugin by exploring the Services API, 
 - Accessing credentials for third-party integrations
 - Working with files
 
-That section is coming soon. Stay tuned!
+That section is coming soon. Until then, feel free to checkout the [Plugin Services API docs](plugin_api.md).
