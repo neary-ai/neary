@@ -4,13 +4,19 @@ import inspect
 from abc import ABC
 
 from backend.models import PluginInstanceModel
-
+from backend.services import (
+    UserProfileManager,
+    CredentialManager,
+    MessageHandler,
+    FileManager
+)
 
 class BasePlugin(ABC):
     
     def __init__(self, id, conversation, settings=None, data=None):
         self.id = id
         self.conversation = conversation
+        self.services = PluginServices(self)
         self.settings, self.metadata = self.load_config()
 
         # Simplify settings
@@ -49,16 +55,22 @@ class BasePlugin(ABC):
     async def save_state(self):
         plugin_instance = await PluginInstanceModel.get(id=self.id)
         plugin_instance.data = self.data
-
-        # Convert simplified settings back to database format
-        for category in ['snippets', 'tools']:
-            if category in plugin_instance.functions:
-                for function_name in plugin_instance.functions[category]:
-                    if function_name in self.settings:
-                        for setting_key in self.settings[function_name]:
-                            plugin_instance.functions[category][function_name]['settings'][setting_key]['value'] = self.settings[function_name][setting_key]
         
+        function_instances = await plugin_instance.function_instances
+
+        for function in function_instances:
+            if function.name in self.settings:
+                for setting_key in self.settings[function.name]:
+                     function.settings_values[setting_key] = self.settings[function.name][setting_key]
+                await function.save()
+
         await plugin_instance.save()
+
+class PluginServices(FileManager, UserProfileManager, CredentialManager, MessageHandler):
+    def __init__(self, plugin):
+        FileManager.__init__(self, plugin)
+        CredentialManager.__init__(self)
+        MessageHandler.__init__(self)
 
 def snippet(func):
     func.is_snippet = True

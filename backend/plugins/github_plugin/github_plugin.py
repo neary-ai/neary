@@ -1,17 +1,15 @@
 from github import Github
 from backend.plugins import BasePlugin, tool, snippet
-from backend.services.credential_manager import CredentialManager
 
 class GithubPlugin(BasePlugin):
     def __init__(self, id, conversation, settings=None, data=None):
         super().__init__(id, conversation, settings, data)
 
         self.active_repo = self.settings.get('set_active_repo', {}).get('repo_name', None)
-    
+        
     @tool
     async def get_repos(self):
-        credential_manager = await CredentialManager.create('github')
-        credentials = await credential_manager.get_credentials()
+        credentials = await self.services.get_credentials('github')
         g = Github(credentials["access_token"])
 
         repos = ""
@@ -40,8 +38,7 @@ class GithubPlugin(BasePlugin):
             else:
                 return "No active repository is set; a repo_name is required."
 
-        credential_manager = await CredentialManager.create('github')
-        credentials = await credential_manager.get_credentials()
+        credentials = await self.services.get_credentials('github')
         g = Github(credentials["access_token"])
 
         repo = g.get_user().get_repo(repo_name)
@@ -69,8 +66,7 @@ class GithubPlugin(BasePlugin):
             else:
                 return "No active repository is set; a repo_name is required."
         
-        credential_manager = await CredentialManager.create('github')
-        credentials = await credential_manager.get_credentials()
+        credentials = await self.services.get_credentials('github')
         g = Github(credentials["access_token"])
 
         repo = g.get_user().get_repo(repo_name)
@@ -89,8 +85,7 @@ class GithubPlugin(BasePlugin):
             else:
                 return "No active repository is set; a repo_name is required."
         
-        credential_manager = await CredentialManager.create('github')
-        credentials = await credential_manager.get_credentials()
+        credentials = await self.services.get_credentials('github')
         g = Github(credentials["access_token"])
 
         repo = g.get_user().get_repo(repo_name)

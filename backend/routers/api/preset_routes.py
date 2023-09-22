@@ -119,7 +119,7 @@ async def export_preset(preset_id: int):
     del preset_data['is_default']
     del preset_data['id']
 
-    return preset_data
+    return [preset_data]
 
 
 @router.post("/import")

@@ -34,7 +34,7 @@ class FileManager:
         return {
             'filepath': filepath,
             'filename': filename,
-            "filesize": self.format_size(file_size),
+            "filesize": self._format_size(file_size),
             'url': self.get_file_url_path(filename)
         }
 
@@ -51,7 +51,7 @@ class FileManager:
         filepath = self.get_file(filename)
         os.remove(filepath)
 
-    def format_size(self, size):
+    def _format_size(self, size):
         """Take a size in bytes and return it in a human-readable format."""
         # Convert size in bytes to kilobytes
         size /= 1024.0

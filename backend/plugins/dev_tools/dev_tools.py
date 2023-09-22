@@ -2,7 +2,6 @@ from pathlib import Path
 from pydantic import ValidationError
 import toml
 
-from backend.services import MessageHandler
 from backend.plugins import BasePlugin, tool
 from backend.plugins.schema import *
 
@@ -63,7 +62,6 @@ class DevTools(BasePlugin):
 
     @tool
     async def generate_snippet(self, name, display_name, description, settings=None):
-        message_handler = MessageHandler()
         try:
             # Prepare the data
             data = {
@@ -112,16 +110,15 @@ class DevTools(BasePlugin):
             # Add the function template to the response
             response += f"\n\nAnd here's your function template:\n\n```python{function_template}\n```"
 
-            await message_handler.send_message_to_ui(response, self.conversation.id)
+            await self.services.send_message_to_ui(response, self.conversation.id)
             return toml_string
         except ValidationError as e:
-            await message_handler.send_message_to_ui(e, self.conversation.id)
+            await self.services.send_message_to_ui(e, self.conversation.id)
             return f"Error creating new snippet: {e}"
 
 
     @tool
     async def generate_tool(self, name, display_name, description, llm_description, parameters, settings=None):
-        message_handler = MessageHandler()
         try:
             # Prepare the data
             data = {
@@ -189,8 +186,8 @@ class DevTools(BasePlugin):
             # Add the function template to the response
             response += f"\n\nAnd here's your function template:\n\n```python{function_template}\n```"
 
-            await message_handler.send_message_to_ui(response, self.conversation.id)
+            await self.services.send_message_to_ui(response, self.conversation.id)
             return response
         except ValidationError as e:
-            await message_handler.send_message_to_ui(e, self.conversation.id)
+            await self.services.send_message_to_ui(e, self.conversation.id)
             return f"Error creating new tool: {e}"

@@ -1,5 +1,4 @@
 from backend.plugins import BasePlugin, tool, snippet
-from backend.services import MessageHandler
 from .lib.google_service import GoogleService
 
 
@@ -19,16 +18,14 @@ class GoogleCalendar(BasePlugin):
             await self.google_service.authenticate()
         except Exception as e:
             print('Error: ', e)
-            message_handler = MessageHandler()
-            await message_handler.send_alert_to_ui("Invalid Google Calendar credentials", self.conversation.id)
+            await self.services.send_alert_to_ui("Invalid Google Calendar credentials", self.conversation.id)
             return
 
         try:
             events = await self.google_service.get_calendar_events(days=days, filter_recurring=filter_recurring)
         except Exception as e:
             print('Error: ', e)
-            message_handler = MessageHandler()
-            await message_handler.send_alert_to_ui("Unable to retrieve events. Check your Google Calendar integration.", self.conversation.id)
+            await self.services.send_alert_to_ui("Unable to retrieve events. Check your Google Calendar integration.", self.conversation.id)
             return
         
         if events:
@@ -47,8 +44,7 @@ class GoogleCalendar(BasePlugin):
             await self.google_service.authenticate()        
         except Exception as e:
             print(e)
-            message_handler = MessageHandler()
-            await message_handler.send_alert_to_ui("Invalid Google Calendar credentials", self.conversation.id)
+            await self.services.send_alert_to_ui("Invalid Google Calendar credentials", self.conversation.id)
             return "Unable to create calendar event. Invalid Google Calendar credentials. The user should ensure their Google Calendar integration is setup correctly."
         
         res = self.google_service.create_calendar_event(event_title, event_description, start_time, end_time, attendees)
@@ -66,8 +62,7 @@ class GoogleCalendar(BasePlugin):
             await self.google_service.authenticate()        
         except Exception as e:
             print(e)
-            message_handler = MessageHandler()
-            await message_handler.send_alert_to_ui("Invalid Google Calendar credentials", self.conversation.id)
+            await self.services.send_alert_to_ui("Invalid Google Calendar credentials", self.conversation.id)
             return "Unable to retrieve calendar events. Invalid Google Calendar credentials. The user should ensure their Google Calendar integration is setup correctly."
 
         events = await self.google_service.get_calendar_events(days=days, filter_recurring=filter_recurring)

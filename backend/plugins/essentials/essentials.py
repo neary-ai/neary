@@ -4,8 +4,6 @@ import pytz
 
 from pyowm import OWM
 
-from backend.config import settings
-from backend.services import UserProfileManager, MessageHandler, CredentialManager, FileManager
 from backend.plugins import BasePlugin, snippet, tool
 
 
@@ -18,8 +16,7 @@ class Essentials(BasePlugin):
 
     @snippet
     async def insert_date_time(self, context):
-        profile_manager = UserProfileManager()
-        profile_tz = await profile_manager.get_field('timezone')
+        profile_tz = await self.services.get_profile_field('timezone')
         settings_tz = self.settings['insert_date_time']['timezone']
 
         timezone = settings_tz if settings_tz else profile_tz
@@ -27,30 +24,27 @@ class Essentials(BasePlugin):
         if timezone:
             local_tz = pytz.timezone(timezone)
             local_time = datetime.datetime.now(local_tz)
-            local_time_str = local_time.strftime('%Y-%m-%d %I:%M%p')
+            local_time_str = local_time.isoformat()
             day = local_time.strftime('%A')
 
             context.add_snippet(f"It is {day}. The local date and time in {timezone} is: {local_time_str}.")
         else:
             utc_time = datetime.datetime.now(pytz.timezone('UTC'))
-            utc_time_str = utc_time.strftime('%Y-%m-%d %H:%M:%S %Z%z')
+            utc_time_str = utc_time.isoformat()
             day = utc_time.strftime('%A')
 
             context.add_snippet(f"Important! The user's timezone is not currently set. You should offer to set the `timezone` field in tz database format for them using the `update_profile_tool` (if available). The current date and time in UTC is: {utc_time_str}.")
-
+    
     @snippet
     async def insert_local_weather(self, context):
-        message_handler = MessageHandler()
-        profile_manager = UserProfileManager()
-        credential_manager = await CredentialManager.create("openweathermap")
         
-        credentials = await credential_manager.get_credentials()
+        credentials = await self.services.get_credentials("openweathermap")
 
         if credentials is None:
-             await message_handler.send_alert_to_ui("OpenWeatherMap integration is required", self.conversation.id)
+             await self.services.send_alert_to_ui("OpenWeatherMap integration is required", self.conversation.id)
 
         # First try to get a location from plugin settings, then from profile
-        profile_location = await profile_manager.get_field('location')
+        profile_location = await self.services.get_profile_field('location')
         plugin_location =  self.settings['insert_local_weather']['location']
         location = plugin_location if plugin_location else profile_location
         
@@ -68,10 +62,9 @@ class Essentials(BasePlugin):
                 context.add_snippet(f"It's {round(temp['temp'])} degrees Fahrenheit and {status} in {location}.")
             except Exception as e:
                 print(e)
-                await message_handler.send_alert_to_ui("Weather error! Check location and API key.", self.conversation.id)
+                await self.services.send_alert_to_ui("Weather error! Check location and API key.", self.conversation.id)
         else:
-            message_handler = MessageHandler()
-            await message_handler.send_alert_to_ui("The Local Weather snippet requires a location!", self.conversation.id)
+            await self.services.send_alert_to_ui("The Local Weather snippet requires a location!", self.conversation.id)
 
     """
     Make & insert custom notes
@@ -109,8 +102,7 @@ class Essentials(BasePlugin):
 
     @snippet
     async def insert_user_profile(self, context):
-        profile_manager = UserProfileManager()
-        user_profile = await profile_manager.get_profile()
+        user_profile = await self.services.get_profile()
 
         # Check if there's a user profile and if default values are not blank
         if user_profile and any(user_profile.values()):
@@ -124,8 +116,7 @@ class Essentials(BasePlugin):
 
     @tool
     async def update_user_profile(self, **kwargs):
-        profile_manager = UserProfileManager()
-        existing_profile = await profile_manager.get_profile()
+        existing_profile = await self.services.get_profile()
 
         # Check if the 'fields' key is present in kwargs, since function calling is inconsistent
         if 'fields' in kwargs:
@@ -134,20 +125,18 @@ class Essentials(BasePlugin):
             profile_fields = kwargs
 
         if existing_profile:
-            await profile_manager.set_profile({**existing_profile, **profile_fields})
+            await self.services.set_profile({**existing_profile, **profile_fields})
         else:
-            await profile_manager.set_profile(profile_fields)
+            await self.services.set_profile(profile_fields)
 
         return "The user's profile was updated!"
 
     @tool
     async def create_text_file(self, text, filename=None, extension="txt"):
-        message_handler = MessageHandler()
-        file_manager = FileManager(self)
         # Create a file_obj from the text
         file_obj = BytesIO(text.encode())
         # Save the file and get the file info
-        file_info = file_manager.save_file(file_obj, filename, extension)
+        file_info = self.services.save_file(file_obj, filename, extension)
         # Return the file info
-        await message_handler.send_file_to_ui(file_info['filename'], file_info['filesize'], file_info['url'], self.conversation.id)
+        await self.services.send_file_to_ui(file_info['filename'], file_info['filesize'], file_info['url'], self.conversation.id)
         return file_info

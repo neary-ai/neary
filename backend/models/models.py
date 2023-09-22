@@ -175,6 +175,7 @@ class PluginInstanceModel(Model):
             "url": plugin.url,
             "version": plugin.version,
             "settings": self.merge_settings(plugin.settings_metadata, self.settings_values),
+            "data": self.data,
             "functions": [await function.serialize() for function in function_instances],
             "is_enabled": plugin.is_enabled
         }

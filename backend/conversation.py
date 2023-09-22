@@ -54,15 +54,19 @@ class Conversation:
 
             # Construct metadata
             metadata = context.get_metadata()
-            if ai_response['function_call']:
-                metadata.append(
-                    {'function_call': ai_response['function_call']})
-
+            
             await self.save_message(role=role, content=message, conversation_id=self.id, metadata=metadata)
-            await self.save_message(role="assistant", content=ai_response['content'], conversation_id=self.id, metadata=metadata)
 
-            # Handle requested tool, if any
-            function_output, follow_up_requested = await self.handle_tool_requests(ai_response)
+            follow_up_requested = False
+
+            if ai_response:
+                if ai_response['function_call']:
+                    metadata.append({'function_call': ai_response['function_call']})
+
+                await self.save_message(role="assistant", content=ai_response['content'], conversation_id=self.id, metadata=metadata)
+
+                # Handle requested tool, if any
+                function_output, follow_up_requested = await self.handle_tool_requests(ai_response)
 
             if follow_up_requested:
                 # Set user_message to none to process new tool output
@@ -189,6 +193,7 @@ class Conversation:
             if tool['name'] == tool_name:
                 await self.message_handler.send_alert_to_ui(tool['metadata']['display_name'], self.id, "tool_start")
                 result = await tool['method'](tool['instance'], **tool_args)
+                print(result)
                 function_output = {"name": tool_name, "output": result}
                 await self.message_handler.send_alert_to_ui(tool['metadata']['display_name'], self.id, "tool_success")
 
@@ -254,6 +259,8 @@ class Conversation:
                         self.tools.append(function_data)
                     elif function_type == 'snippets':
                         self.snippets.append(function_data)
+                else:
+                    print (f"No matching function loaded for config entry: {function_name}")
 
     async def get_user_profile(self):
         user = await UserModel.first()
