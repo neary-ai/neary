@@ -3,12 +3,13 @@ import toml
 import inspect
 from abc import ABC
 
-from backend.models import PluginInstanceModel
+from backend.database import SessionLocal
 from backend.services import (
     UserProfileManager,
     CredentialManager,
     MessageHandler,
-    FileManager
+    FileManager,
+    plugin_service
 )
 
 class BasePlugin(ABC):
@@ -52,19 +53,12 @@ class BasePlugin(ABC):
 
         return settings, metadata
 
-    async def save_state(self):
-        plugin_instance = await PluginInstanceModel.get(id=self.id)
-        plugin_instance.data = self.data
-        
-        function_instances = await plugin_instance.function_instances
-
-        for function in function_instances:
-            if function.name in self.settings:
-                for setting_key in self.settings[function.name]:
-                     function.settings_values[setting_key] = self.settings[function.name][setting_key]
-                await function.save()
-
-        await plugin_instance.save()
+    def save_state(self):
+        db = SessionLocal()
+        try:
+            plugin_service.save_plugin_instance_state(db, self.plugin_instance, self.data, self.settings)
+        finally:
+            db.close()
 
 class PluginServices(FileManager, UserProfileManager, CredentialManager, MessageHandler):
     def __init__(self, plugin):

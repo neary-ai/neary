@@ -2,12 +2,11 @@ import hashlib
 
 import numpy as np
 import faiss
-from tortoise.exceptions import IntegrityError
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.docstore.document import Document
-from fastapi import HTTPException
 
-from backend.models import DocumentModel, ConversationModel
+from backend.database import SessionLocal
+from backend.services import conversation_service, document_service
 from ..llm_connector import get_embeddings
 from .loaders import *
 
@@ -16,7 +15,7 @@ class DocumentManager:
 
     def __init__(self, conversation_id):
         self.conversation_id = conversation_id
-
+        self.db = SessionLocal()
         self.faiss_path = None
         self.faiss_index = None
         self.load_faiss_index()
@@ -97,26 +96,12 @@ class DocumentManager:
         self.save_index_to_disk()
 
         for i, metadata in enumerate(metadatas):
-            print(metadata)
-            try:
-                doc_chunk = await DocumentModel.create(
-                    chunk_hash_id=metadata["id"],
-                    faiss_index=self.faiss_index.ntotal - len(metadatas) + i,
-                    type=metadata["type"],
-                    collection=metadata["collection"],
-                    title=metadata["title"],
-                    content=metadata["content"],
-                    source=metadata["source"],
-                    document_key=metadata["document_key"]
-                )
+            doc_chunk = document_service.create_document(self.db, metadata, self.faiss_index.ntotal - len(metadatas) + i)
 
-                # Associate the document with the conversation
-                conversation = await ConversationModel.get_or_none(id=metadata["conversation_id"])
-                if conversation:
-                    await conversation.documents.add(doc_chunk)
-            except IntegrityError:
-                print(
-                    f'Document with chunk_hash_id {metadata["id"]} already exists. Skipping.')
+            # Associate the document with the conversation
+            conversation = conversation_service.get_conversation_by_id(self.db, id=metadata["conversation_id"])
+            if conversation:
+                conversation_service.add_document_to_conversation(self.db, conversation, doc_chunk)
 
     """
     Loader methods
@@ -150,55 +135,47 @@ class DocumentManager:
     Search & document discovery
     """
 
-    async def similar_search(self, text, results=10, recent=False, conversation_filter=True):
-        embeddings = await get_embeddings(text)
+    def similar_search(self, text, results=10, recent=False, conversation_filter=True):
+        embeddings = get_embeddings(text)
         search_vector = np.array([embeddings], dtype=np.float32)
 
         # Query the Faiss index to find the most similar embeddings, and get distances
         distances, index_positions = self.faiss_index.search(
             search_vector, results)
 
-        # Create a base query for DocumentModel
-        base_query = DocumentModel.filter(faiss_index__in=index_positions[0])
-
-        # Filter by conversation_id if provided
-        if conversation_filter:
-            base_query = base_query.filter(
-                conversations__id=self.conversation_id)
-
         # Retrieve the associated metadata for the most similar embeddings from the database
-        found_documents = await base_query
+        found_documents = document_service.get_documents_by_faiss_indices(self.db, index_positions[0], self.conversation_id if conversation_filter else None)
 
         if recent:
             found_documents.sort(key=lambda x: x.timestamp, reverse=True)
 
         # Serialize the results and add similarity scores
         results = [
-            {**await doc.serialize(), "similarity_score": 1 / (1 + float(dist))}
+            {**doc.serialize(), "similarity_score": 1 / (1 + float(dist))}
             for doc, dist in zip(found_documents, distances[0])
         ]
 
         return results
 
-    async def get_documents(self, conversation_only=False):
+    def get_documents(self, conversation_only=False):
         """
         Get a list of available documents for management on frontend
         """
         if conversation_only:
-            conversation = await ConversationModel.get_or_none(id=self.conversation_id)
+            conversation = conversation_service.get_conversation_by_id(self.db, conversation_id=self.conversation_id)
             if conversation:
-                document_chunks = await conversation.documents.all()
+                document_chunks = conversation.documents
             else:
                 document_chunks = []
         else:
-            document_chunks = await DocumentModel.all()
+            document_chunks = document_service.get_all_documents(self.db)
 
         output = []
         seen_document_keys = set()
 
         for doc in document_chunks:
             # Fetch the associated conversation IDs
-            conversation_ids = [c.id async for c in doc.conversations]
+            conversation_ids = [c.id for c in doc.conversations]
 
             document_data = {
                 "id": doc.id,
@@ -219,29 +196,29 @@ class DocumentManager:
     Utility methods
     """
 
-    async def add_conversation_id(self, document_key, conversation_id):
-        documents = await DocumentModel.filter(document_key=document_key)
+    def add_conversation_id(self, document_key, conversation_id):
+        documents = document_service.get_documents_by_key(self.db, document_key=document_key)
 
         if documents:
-            conversation = await ConversationModel.get_or_none(id=conversation_id)
+            conversation = conversation_service.get_conversation_by_id(self.db, conversation_id=conversation_id)
 
             if conversation:
                 for document in documents:
-                    await conversation.documents.add(document)
+                    conversation_service.add_document_to_conversation(self.db, conversation, document)
 
-    async def remove_conversation_id(self, document_key, conversation_id):
-        documents = await DocumentModel.filter(document_key=document_key)
+    def remove_conversation_id(self, document_key, conversation_id):
+        documents = document_service.get_documents_by_key(self.db, document_key=document_key)
 
         if documents:
-            conversation = await ConversationModel.get_or_none(id=conversation_id)
+            conversation = conversation_service.get_conversation_by_id(self.db, conversation_id=conversation_id)
 
             if conversation:
                 for document in documents:
-                    await conversation.documents.remove(document)
+                    conversation_service.remove_document_from_conversation(self.db, conversation, document)
 
-    async def delete_documents(self, document_key):
+    def delete_documents(self, document_key):
         # Get all documents with the given document key
-        documents_to_delete = await DocumentModel.filter(document_key=document_key)
+        documents_to_delete = document_service.get_documents_by_key(self.db, document_key=document_key)
 
         # Remove the corresponding documents from the Faiss index
         faiss_indexes_to_remove = [
@@ -250,4 +227,4 @@ class DocumentManager:
             np.array(faiss_indexes_to_remove, dtype=np.int64))
 
         # Delete the filtered documents from database
-        await DocumentModel.filter(document_key=document_key).delete()
+        document_service.delete_documents_by_key(self.db, document_key=document_key)

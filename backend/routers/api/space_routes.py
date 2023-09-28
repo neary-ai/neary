@@ -1,61 +1,45 @@
-from fastapi import HTTPException, status, Request, APIRouter, Body
+from sqlalchemy.orm import Session
+from fastapi import HTTPException, status, Request, APIRouter, Body, Depends
 from fastapi.responses import JSONResponse
 
-from backend.models import *
+from backend.database import get_db
+from backend.services import space_service, conversation_service
 
 router = APIRouter()
 
 @router.post("")
-async def create_space(name: str = Body(...)):
+async def create_space(name: str = Body(..., embed=True), db: Session = Depends(get_db)):
     """Create a new space"""
-    space = await SpaceModel.create(name=name)
-
-    return await space.serialize()
-
-
-@router.get("")
-async def get_spaces(request: Request):
-    """Get spaces"""
-    spaces = await SpaceModel.filter(is_archived=False)
-
-    serialized_spaces = []
-
-    for space in spaces:
-        serialized_space = await space.serialize()
-        serialized_spaces.append(serialized_space)
-
-    return serialized_spaces
+    space = space_service.create_space(db, name)
+    return space.serialize()
 
 
 @router.put("/{space_id}")
-async def update_space(space_id: int, name: str = Body(...)):
+async def update_space(space_id: int, name: str = Body(..., embed=True), db: Session = Depends(get_db)):
     """Update a space"""
-    space = await SpaceModel.get(id=space_id)
+    space = space_service.get_space_by_id(db, space_id)
 
     if not space:
         return JSONResponse(status_code=404, content={"detail": "Space not found."})
 
-    space.name = name
-    await space.save()
+    space = space_service.update_space_name(db, space, name)
 
-    return JSONResponse(status_code=200, content={"detail": "Space name updated"})
+    return space.serialize()
 
 
 @router.patch("/{space_id}")
-async def archive_space(space_id: int):
+async def archive_space(space_id: int, db: Session = Depends(get_db)):
     """Archive a space"""
-    space = await SpaceModel.get_or_none(id=space_id)
+    space = space_service.get_space_by_id(db, space_id)
     if not space:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Space not found")
 
-    space.is_archived = True
-    await space.save()
+    space = space_service.archive_space(db, space)
 
-    conversations = await ConversationModel.filter(space_id=space_id)
+    conversations = conversation_service.get_conversations_by_space(db, space_id)
     
     for conversation in conversations:
-        conversation.space_id = None
-        await conversation.save()
-
-    return {"detail": "Space archived"}
+        conversation_service.update_conversation_space(db, conversation, space_id=None)
+    
+    return space.serialize()

@@ -1,30 +1,21 @@
-from backend.models import UserModel
+from backend.database import SessionLocal
+from backend.services import user_service
 
 class UserProfileManager:
-
+    def __init__(self):
+        self.db = SessionLocal()
+    
     async def get_profile(self):
-        user = await UserModel.first()
-        return user.profile
+        return user_service.get_profile(self.db)
 
     async def set_profile(self, profile_data):
-        user = await UserModel.first()
-        user.profile = profile_data
-        await user.save()
-        return user.profile
+        return user_service.set_profile(self.db, profile_data)
 
     async def get_profile_field(self, key):
-        user = await UserModel.first()
-        return user.profile.get(key)
+        return user_service.get_profile_field(self.db, key)
 
     async def set_profile_field(self, key, value):
-        user = await UserModel.first()
-        user.profile[key] = value
-        await user.save()
-        return user.profile
+        return user_service.set_profile_field(self.db, key, value)
 
     async def delete_profile_field(self, key):
-        user = await UserModel.first()
-        if key in user.profile:
-            del user.profile[key]
-            await user.save()
-        return user.profile
+        return user_service.delete_profile_field(self.db, key)

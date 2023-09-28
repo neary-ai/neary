@@ -3,20 +3,19 @@ import uuid
 
 from .messages.message_chain import MessageChain
 from .services.context_manager import ContextManager
-from .services.message_handler import MessageHandler
-from .models.models import UserModel, MessageModel, ConversationModel, SpaceModel, ApprovalRequestModel
+from .services import approval_request_service, message_service, user_service, space_service, conversation_service
 from .services.documents.document_manager import DocumentManager
-from .services.plugin_manager import PluginManager
-
+from .database import SessionLocal
 
 class Conversation:
-    def __init__(self, id, title, settings, plugins=None, message_handler=None):
+    def __init__(self, id, title, settings, message_handler, plugins=None, db=None):
         self.id = id
+        self.db = db if db else SessionLocal()
         self.title = title
         self.settings = settings
         self.plugins = plugins
         self.user_message = None
-        self.message_handler = message_handler if message_handler else MessageHandler()
+        self.message_handler = message_handler
         self.document_manager = DocumentManager(id)
         self.context_manager = ContextManager(self)
 
@@ -43,7 +42,7 @@ class Conversation:
                 await snippet['method'](snippet['instance'], context)
 
             # Complete context with past messages
-            await self.context_manager.generate_context(context)
+            self.context_manager.generate_context(context)
 
             # Send complete context to the LLM for a response
             ai_response = await self.message_handler.get_ai_response(self, context, functions)
@@ -55,7 +54,7 @@ class Conversation:
             # Construct metadata
             metadata = context.get_metadata()
             
-            await self.save_message(role=role, content=message, conversation_id=self.id, metadata=metadata)
+            self.save_message(role=role, content=message, conversation_id=self.id, metadata=metadata)
 
             follow_up_requested = False
 
@@ -63,16 +62,15 @@ class Conversation:
                 if ai_response['function_call']:
                     metadata.append({'function_call': ai_response['function_call']})
 
-                await self.save_message(role="assistant", content=ai_response['content'], conversation_id=self.id, metadata=metadata)
+                self.save_message(role="assistant", content=ai_response['content'], conversation_id=self.id, metadata=metadata)
 
                 # Handle requested tool, if any
                 function_output, follow_up_requested = await self.handle_tool_requests(ai_response)
 
             if follow_up_requested:
-                # Set user_message to none to process new tool output
                 user_message = None
             else:
-                continue_conversation = False
+                return ai_response, context
 
     async def handle_tool_requests(self, ai_response):
         """
@@ -106,10 +104,7 @@ class Conversation:
         """
         Issues an approval request and sends it to the frontend
         """
-        # First save the request to db
-        pending_request = ApprovalRequestModel(
-            conversation_id=self.id, tool_name=tool['name'], tool_args=tool_args)
-        await pending_request.save()
+        pending_request = approval_request_service.create_approval_request(self.db, self.id, tool['name'], tool_args)
 
         # Then send notification to ui
         actions = [
@@ -140,7 +135,7 @@ class Conversation:
 
         await self.message_handler.send_notification_to_ui(message=notification, conversation_id=self.id, actions=actions, save_to_db=True)
 
-    async def handle_approval_response(self, data, message_id):
+    def handle_approval_response(self, data, message_id):
         request_id = data.get("request_id")
         response = data.get("response")
 
@@ -152,28 +147,26 @@ class Conversation:
         if response.lower() not in ["approve", "reject"]:
             print("Invalid action. Use 'approve' or 'reject'")
 
-        approval_request = await ApprovalRequestModel.get_or_none(id=request_id, status="pending")
+        approval_request = approval_request_service.get_approval_request(self.db, request_id, "pending")
 
         if not approval_request:
             print("Approval request not found.")
 
         if response.lower() == "approve":
-            approval_request.status = "approved"
-            await self.message_handler.send_status_to_ui(message={"approval_response_processed": message_id}, conversation_id=self.id)
+            approval_request = approval_request_service.update_approval_request_status(self.db, approval_request, "approved")
+            self.message_handler.send_status_to_ui(message={"approval_response_processed": message_id}, conversation_id=self.id)
         elif response.lower() == "reject":
-            await self.message_handler.send_status_to_ui(message={"approval_response_processed": message_id}, conversation_id=self.id)
-            approval_request.status = "rejected"
+            self.message_handler.send_status_to_ui(message={"approval_response_processed": message_id}, conversation_id=self.id)
+            approval_request = approval_request_service.update_approval_request_status(self.db, approval_request, "rejected")
 
-        await self.process_approval(approval_request.serialize())
+        self.process_approval(approval_request.serialize())
 
-        message = await MessageModel.get_or_none(id=message_id)
+        message = message_service.get_message_by_id(self.db, message_id)
 
         if not message:
             print("Couldn't retrieve a message with ID: ", message_id)
         else:
-            await message.delete()
-
-        await approval_request.save()
+            message_service.delete_message(self.db, message)
 
         return f"Request {approval_request.status}"
 
@@ -193,7 +186,7 @@ class Conversation:
             if tool['name'] == tool_name:
                 await self.message_handler.send_alert_to_ui(tool['metadata']['display_name'], self.id, "tool_start")
                 result = await tool['method'](tool['instance'], **tool_args)
-                print(result)
+
                 function_output = {"name": tool_name, "output": result}
                 await self.message_handler.send_alert_to_ui(tool['metadata']['display_name'], self.id, "tool_success")
 
@@ -210,7 +203,8 @@ class Conversation:
             print(f'Unrecognized action: {name}')
             raise Exception("Unrecognized action: {name}")
 
-    async def load_plugins(self):
+    def load_plugins(self):
+        from .services.plugin_manager import PluginManager
         plugin_manager = PluginManager()
 
         self.snippets = []
@@ -262,33 +256,32 @@ class Conversation:
                 else:
                     print (f"No matching function loaded for config entry: {function_name}")
 
-    async def get_user_profile(self):
-        user = await UserModel.first()
+    def get_user_profile(self):
+        user = user_service.get_user_by_id(self.db, 1)
         return user.profile
 
-    async def get_space_options(self):
-        spaces = await SpaceModel.filter(is_archived=False)
-        space_options = [{"option": space.name, "value": space.id}
-                         for space in spaces]
+    def get_space_options(self):
+        spaces = space_service.get_active_spaces(self.db)
+        space_options = [{"option": space.name, "value": space.id} for space in spaces]
 
-        conversation_model = await ConversationModel.get(id=self.id)
-        current_space_id = conversation_model.space_id
+        conversation_model = conversation_service.get_conversation_by_id(self.db, self.id)
+        current_space_id = conversation_model.space_id if conversation_model else None
 
         return current_space_id, space_options
 
-    async def save_message(self, role, content, conversation_id, actions=None, metadata=None):
+    def save_message(self, role, content, conversation_id, actions=None, metadata=None):
         if role == 'function':
             metadata.append({'function_name': content['name']})
-            message = await MessageModel.create(role="function", content=content['output'], conversation_id=conversation_id, actions=actions, metadata=metadata)
+            message = message_service.create_message(self.db, "function", content['output'], 
+                                                    conversation_id, actions, metadata)
         elif (content and type(content) == str) or len(metadata) > 0:
-            message = await MessageModel.create(role=role, content=content, conversation_id=conversation_id, actions=actions, metadata=metadata)
-            conversation = await ConversationModel.get(id=conversation_id)
-            conversation.updated_at = datetime.utcnow()
-            await conversation.save()
-
+            message = message_service.create_message(self.db, role, content, 
+                                                    conversation_id, actions, metadata)
+            conversation = conversation_service.get_conversation_by_id(self.db, conversation_id)
+            conversation_service.update_conversation_timestamp(self.db, conversation)
             return message
 
-    async def save_state(self):
-        conversation_model = await ConversationModel.get(id=self.id)
-        conversation_model.settings = self.settings
-        await conversation_model.save()
+    def save_state(self):
+        conversation_model = conversation_service.get_conversation_by_id(self.db, self.id)
+        if conversation_model:
+            conversation_service.update_conversation_settings(self.db, conversation_model, self.settings)

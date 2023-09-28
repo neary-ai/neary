@@ -1,54 +1,34 @@
 from typing import Optional
 
-from fastapi import HTTPException, status, Request, APIRouter, Body
+from sqlalchemy.orm import Session
+from fastapi import HTTPException, status, Request, APIRouter, Body, Depends
 from fastapi.responses import JSONResponse,  FileResponse
 
 from backend.models import *
+from backend.database import get_db
+from backend.services import conversation_service, message_service
 from backend.utils.utils import export_conversation
 
 router = APIRouter()
 
 @router.get("")
-async def get_conversations(space_id: int = Body(...)):
+async def get_conversations(space_id: int = Body(...), db: Session = Depends(get_db)):
     """Get conversations"""
-    if space_id == -1:
-        conversations = await ConversationModel.filter(is_archived=False).order_by("-updated_at")
-    else:
-        conversations = await ConversationModel.filter(is_archived=False, space_id=space_id).order_by("-updated_at")
-    
-    serialized_conversations = [await conversation.serialize() for conversation in conversations]
+    conversations = conversation_service.get_conversations(db, space_id)
+    serialized_conversations = [conversation.serialize() for conversation in conversations]
 
     return serialized_conversations
 
 @router.post("")
-async def create_conversation(request: Request):
+async def create_conversation(request: Request, db: Session = Depends(get_db)):
     """Create a conversation"""
     data = await request.json()
     space_id = data['space_id']
+    plugins = data.get('plugins', [])
 
-    space = await SpaceModel.get_or_none(id=space_id)
+    conversation = conversation_service.create_conversation_and_plugins(db, space_id, plugins)
 
-    preset = await PresetModel.filter(is_default=True).first()
-
-    conversation = await ConversationModel.create(title="New Conversation", space=space, preset=preset, settings=preset.settings)
-
-    for plugin in preset.plugins:
-        plugin_registry = await PluginRegistryModel.get_or_none(name=plugin["name"])
-        if plugin_registry:
-            plugin_registry.is_enabled = True
-            await plugin_registry.save()
-
-            # Create plugin instance
-            plugin_instance = await PluginInstanceModel.create(name=plugin["name"], plugin=plugin_registry, settings_values=plugin.get("settings", None), conversation=conversation)
-            
-            # Create function instances
-            for function in plugin["functions"]:
-                function_name = function["name"]
-                function_details = await FunctionRegistryModel.get_or_none(name=function_name)
-                if function_details:
-                    await FunctionInstanceModel.create(name=function_name, function=function_details, plugin_instance=plugin_instance, settings_values=function.get('settings', None))
-    
-    return await conversation.serialize()
+    return conversation.serialize()
 
 @router.get("/settings")
 async def get_settings_options():
@@ -85,163 +65,61 @@ async def get_settings_options():
     return options
 
 @router.get("/{conversation_id}")
-async def get_conversation(conversation_id: int = None):
+async def get_conversation(conversation_id: int = None, db: Session = Depends(get_db)):
     """Get a single conversation"""
-    conversation = await ConversationModel.get_or_none(id=conversation_id, is_archived=False)
+    conversation = conversation_service.get_conversation_by_id(db, conversation_id)
     if conversation:
-        return await conversation.serialize()
+        return conversation.serialize()
     else:
         print('Conversation not found!')
 
 
 @router.patch("/{conversation_id}")
-async def archive_conversation(conversation_id: int):
+async def archive_conversation(conversation_id: int, db: Session = Depends(get_db)):
     """Archive a conversation"""
 
-    conversation = await ConversationModel.get_or_none(id=conversation_id)
+    conversation = conversation_service.get_conversation_by_id(db, conversation_id)
     if not conversation:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail="Conversation not found")
 
-    conversation.is_archived = True
-    await conversation.save()
+    conversation_service.archive_conversation(conversation)
+    
     return {"detail": "Conversation archived"}
 
 
 @router.put("/{conversation_id}")
-async def update_conversation(request: Request, conversation_id: int):
+async def update_conversation(request: Request, conversation_id: int, db: Session = Depends(get_db)):
     """Update a conversation's settings"""
     conversation_data = await request.json()
 
-    conversation = await ConversationModel.get_or_none(id=conversation_id)
+    conversation = conversation_service.get_conversation_by_id(db, conversation_id)
     if not conversation:
         raise HTTPException(status_code=404, detail="Conversation not found")
 
-    # Fetch related plugins
-    await conversation.fetch_related('plugins')
+    conversation_service.update_conversation(db, conversation, conversation_data)
 
-    # Update fields
-    conversation.title = conversation_data.get('title', conversation.title)
-    conversation.settings = conversation_data.get(
-        'settings', conversation.settings)
-
-    # Update space
     space_id = conversation_data.get('space_id')
-    if space_id:
-        space = await SpaceModel.get_or_none(id=space_id)
-        conversation.space = space
-
-    # Update preset
-    new_preset = False
-    new_plugin_data = None
-
+    conversation_service.update_conversation_space(db, conversation, space_id)
+ 
     preset_data = conversation_data.get('preset')
-    if preset_data:
-        preset_id = preset_data.get('id')
+    conversation_service.update_conversation_preset(db, conversation, preset_data)
 
-        if preset_id != conversation.preset_id:
-            new_preset = True
-            preset = await PresetModel.get_or_none(id=preset_id)
-            if not preset:
-                raise HTTPException(status_code=404, detail="Preset not found")
+    new_plugin_data = conversation_data.get('plugins', [])
+    conversation_service.update_conversation_plugins(db, conversation, new_plugin_data)
 
-            conversation.preset = preset
-            conversation.settings = preset.settings
-            
-            # Update conversation settings with preset settings
-            new_plugin_data = preset.plugins
-
-    # If no new plugins from preset, get from settings
-    if new_plugin_data is None:
-        new_plugin_data = conversation_data.get('plugins', None)
-
-    # Existing plugin names
-    existing_plugin_names = [plugin.name for plugin in conversation.plugins]
-
-    # New plugin names
-    new_plugin_names = [plugin["name"] for plugin in new_plugin_data]
-
-    # Plugin names to remove
-    plugins_to_remove = set(existing_plugin_names) - set(new_plugin_names)
-
-    # Remove plugins that are not included in the new data
-    for plugin_name in plugins_to_remove:
-        plugin_registry = await PluginRegistryModel.get_or_none(name=plugin_name)
-        plugin_instance = await PluginInstanceModel.get_or_none(plugin=plugin_registry, conversation=conversation)
-        if plugin_instance:
-            await plugin_instance.delete()
-
-    # Now add, remove or update plugins from conversation model
-    for plugin in new_plugin_data:
-        
-        # See if instance already exists
-        plugin_registry = await PluginRegistryModel.get_or_none(name=plugin["name"])
-
-        if plugin_registry is None:
-            print('Plugin not found: ', plugin["name"])
-            continue
-
-        plugin_instance = await PluginInstanceModel.get_or_none(plugin=plugin_registry, conversation=conversation)
-
-        # Create or update plugin instance
-        if plugin_instance is None:
-            plugin_instance = await PluginInstanceModel.create(name=plugin["name"], plugin=plugin_registry, conversation=conversation, settings_values=plugin.get('settings', None))
-    
-        # Create or update function instances
-        function_instances = await plugin_instance.function_instances
-
-        for function in plugin["functions"]:
-            function_name = function["name"]
-            settings = function.get('settings') or {}
-            settings_values = {key: value['value'] if isinstance(value, dict) and 'value' in value else value for key, value in settings.items()}
-            
-            existing_function_instance = None
-            for instance in function_instances:
-                if instance.name == function_name:
-                    existing_function_instance = instance
-
-            if existing_function_instance:
-                existing_function_instance.settings_values = settings_values
-                await existing_function_instance.save()
-            else:
-                function_registry = await FunctionRegistryModel.get_or_none(name=function_name)
-                if function_registry is None:
-                    print ('Function not found: ', function_name)
-                else:
-                    integrations = await function_registry.integrations.all()
-                    integration_status = [await integration.active_instance() for integration in integrations]
-                    if not all(integration_status):
-                        print('Function has disconnected integrations')
-                    else:
-                        await FunctionInstanceModel.create(name=function_name, function=function_registry, plugin_instance=plugin_instance, settings_values=settings_values)
-
-        # Remove function instances that are not in the frontend data anymore
-        for instance in function_instances:
-            if not any(function["name"] == instance.name for function in plugin["functions"]):
-                await instance.delete()
-
-        # Enable plugins if new preset
-        if new_preset:
-            plugin_registry.is_enabled = True
-            await plugin_registry.save()
-
-    await conversation.save()
-
-    output = await conversation.serialize()
-
-    return output
+    return conversation.serialize()
 
 
 @router.get("/{conversation_id}/messages")
-async def get_conversation_messages(conversation_id: int, archived: Optional[bool] = False):
+async def get_conversation_messages(conversation_id: int, archived: Optional[bool] = False, db: Session = Depends(get_db)):
     """Get a conversation's messages"""
-    conversation = await ConversationModel.get_or_none(id=conversation_id)
+    conversation = conversation_service.get_conversation_by_id(db, conversation_id)
     if conversation:
         if archived:
-            messages = await conversation.messages.all()
+            messages = conversation.messages
         else:
-            messages = await conversation.messages.filter(is_archived=False).all()
-
+            messages = [message for message in conversation.messages if not message.is_archived]
         serialized_messages = [message.serialize() for message in messages]
         return {"messages": serialized_messages}
     else:
@@ -249,28 +127,21 @@ async def get_conversation_messages(conversation_id: int, archived: Optional[boo
 
 
 @router.post("/{conversation_id}/messages/archive")
-async def archive_conversation_messages(conversation_id: int):
+async def archive_conversation_messages(conversation_id: int, db: Session = Depends(get_db)):
     """Archive a conversation's messages"""
-    conversation = await ConversationModel.get_or_none(id=conversation_id)
+    conversation = conversation_service.get_conversation_by_id(db, conversation_id)
     if conversation:
-        messages = await conversation.messages.all()
-        for message in messages:
-            message.is_archived = True
-            await message.save()
+        for message in conversation.messages:
+            message_service.archive_message(db, message)
         return JSONResponse(content={"status": "success"})
     else:
         raise HTTPException(status_code=404, detail="Conversation not found")
 
 
 @router.get("/{conversation_id}/export")
-async def export_conversation_data(conversation_id: int, export_format: str = 'txt'):
+async def export_conversation_data(conversation_id: int, 
+                                   export_format: str = 'txt', 
+                                   db: Session = Depends(get_db)):
     """Export a conversation's messages in plain text or JSON format"""
-    exported_data = await export_conversation(conversation_id, export_format)
-
-    file_name = f"conversation_{conversation_id}"
-    file_name += ".txt" if export_format == "txt" else ".json"
-
-    with open(file_name, "w") as f:
-        f.write(exported_data)
-
+    file_name = export_conversation(db, conversation_id, export_format)
     return FileResponse(file_name, media_type="application/octet-stream", filename=file_name)

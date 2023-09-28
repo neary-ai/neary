@@ -1,14 +1,17 @@
 import json
 from pathlib import Path
 
-from fastapi import HTTPException, status, Request, APIRouter
+from sqlalchemy.orm import Session
+from fastapi import HTTPException, status, Request, APIRouter, Depends
 from fastapi.responses import JSONResponse, RedirectResponse, FileResponse
 
+from backend.database import get_db
 from backend.auth import get_current_user
 from backend.config import settings
 from backend.models import *
 from backend.conversation import Conversation
 from backend.services.oauth_handler import OAuthHandler
+from backend.services import user_service, space_service, conversation_service, preset_service, plugin_service, integration_service
 
 router = APIRouter()
 
@@ -53,12 +56,11 @@ async def get_state(request: Request):
 
 
 @router.post("/state")
-async def save_state(request: Request):
+async def save_state(request: Request, db: Session = Depends(get_db)):
     """Save app state"""
-    current_user = await get_current_user(request)
-    state_data = await request.json()
-    current_user.app_state = state_data
-    await current_user.save()
+    current_user = get_current_user(request, db)
+    user_data = {'app_state': await request.json()}
+    user_service.update_user(db, current_user, user_data)
 
     return JSONResponse(status_code=200, content={"detail": "success"})
 
@@ -68,66 +70,42 @@ Misc. routes
 
 
 @router.get("/initialize")
-async def get_initial_data(request: Request):
-    current_user = await get_current_user(request)
+async def get_initial_data(request: Request, db: Session = Depends(get_db)):
+    current_user = get_current_user(request, db)
 
     # Get user data
     app_state = current_user.app_state
     user_profile = current_user.profile
 
     # Get spaces
-    spaces = await SpaceModel.filter(is_archived=False)
+    spaces = space_service.get_active_spaces(db)
     serialized_spaces = []
     for space in spaces:
-        serialized_spaces.append(await space.serialize())
+        serialized_spaces.append(space.serialize())
 
     # Get conversations
-    conversations = await ConversationModel.filter(is_archived=False)
+    conversations = conversation_service.get_active_conversations(db)
     serialized_conversations = []
     for conversation in conversations:
-        serialized_conversations.append(await conversation.serialize())
+        serialized_conversations.append(conversation.serialize())
 
     # Setup welcome conversation if first run
     if not app_state and not serialized_spaces and not serialized_conversations:
+        conversation = conversation_service.create_conversation(db, space_id=None, title="New Conversation")
 
-        preset = await PresetModel.filter(is_default=True).first()
-        conversation = await ConversationModel.create(title="New Conversation", space=None, preset=preset, settings=preset.settings)
-
-        for plugin in preset.plugins:
-            plugin_registry = await PluginRegistryModel.get_or_none(name=plugin["name"])
-            if plugin_registry:
-                plugin_registry.is_enabled = True
-                await plugin_registry.save()
-
-                # Create plugin instance
-                plugin_instance = await PluginInstanceModel.create(name=plugin["name"], plugin=plugin_registry, settings=plugin.get("settings", None), conversation=conversation)
-
-                for function in plugin["functions"]:
-                    function_name = function["name"]
-                    function_details = await FunctionRegistryModel.get_or_none(name=function_name)
-                    if function_details:
-                        await FunctionInstanceModel.create(
-                            name=function_name,
-                            plugin_instance=plugin_instance,
-                            function=function_details,
-                            settings_values=function.get('settings', None)
-                        )
-            else:
-                print('Registry information not found for plugin: ', plugin["name"])
-
-        serialized_conversations.append(await conversation.serialize())
+        serialized_conversations.append(conversation.serialize())
 
     # Get presets
-    presets = await PresetModel.filter(is_active=True)
+    presets = preset_service.get_active_presets(db)
     presets = [preset.serialize() for preset in presets]
 
     # Get plugins
-    plugins = await PluginRegistryModel.all()
-    plugins = [await plugin.serialize() for plugin in plugins]
+    plugins = plugin_service.get_active_plugins(db)
+    plugins = [plugin.serialize() for plugin in plugins]
 
     # Get integrations
-    integrations = await IntegrationRegistryModel.filter()
-    integrations = [await integration.serialize() for integration in integrations]
+    integrations = integration_service.get_integrations(db)
+    integrations = [integration.serialize() for integration in integrations]
 
     initial_data = {
         'app_state': app_state,

@@ -1,6 +1,7 @@
 import tiktoken
 
-from backend.models.models import ConversationModel
+from backend.database import SessionLocal
+from backend.services import conversation_service
 
 
 class ContextManager:
@@ -8,9 +9,9 @@ class ContextManager:
         self.conversation = conversation
         self.max_input_tokens = conversation.settings['max_input_tokens']
 
-    async def generate_context(self, messages):
-        conversation_model = await ConversationModel.get_or_none(id=self.conversation.id)
-        conversation_messages = await conversation_model.messages
+    def generate_context(self, messages):
+        conversation_model = conversation_service.get_conversation_by_id(SessionLocal(), self.conversation.id)
+        conversation_messages = conversation_model.messages
 
         conversation_history = [message.serialize(
         ) for message in conversation_messages if not message.is_archived]

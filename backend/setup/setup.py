@@ -1,95 +1,80 @@
 import os
 import re
 import json
-import importlib.util
-
-from tortoise import Tortoise
-from tortoise.exceptions import DoesNotExist, OperationalError
-from tortoise.contrib.fastapi import register_tortoise
-
-from backend.config import settings
-from backend.models import PresetModel, IntegrationRegistryModel, Migration
-from backend.services import PluginManager
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-db_path = os.path.join(base_dir, "data/db.sqlite3")
-db_url = f"sqlite:///{db_path}"
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy_utils import database_exists, create_database
+from alembic.config import Config
+from alembic import command
 
-async def run_setup(app):
-    # Initialize ORM
-    await Tortoise.init(
-        db_url=db_url,
-        modules={"models": ["backend.models.models"]}
-    )
+from backend.config import settings
+from backend.models import PresetModel, IntegrationRegistryModel
+from backend.services import PluginManager
 
-    # Apply migrations, if necessary
-    await apply_migrations()
+def run_setup(db_url: str):
+    try:
+        # Create an engine that knows how to connect to the database
+        engine = create_engine(db_url)
 
-    # Register ORM with FastAPI
-    register_tortoise(
-        app,
-        db_url=db_url,
-        modules={"models": ["backend.models.models"]},
-        generate_schemas=False,
-        add_exception_handlers=True,
-    )
+        #Create the database if it doesn't exist
+        if not database_exists(engine.url):
+            create_database(engine.url)
 
-    await load_presets()
-    await load_integrations()
-    
-    await PluginManager().load_plugins()
+        # Create a new Sessionmaker bound to the engine
+        SessionLocal = sessionmaker(bind=engine)
 
-async def apply_migrations():
-    """
-    Apply necessary migrations to bring DB up-to-date
-    """
-    migration_files = sorted(os.listdir(
-        os.path.join(base_dir, "models/migrations")))
-    for migration_file in migration_files:
-        if migration_file.endswith('.py'):
-            # Import the migration module
-            spec = importlib.util.spec_from_file_location(
-                "migration", os.path.join(base_dir, "models/migrations", migration_file))
-            migration = importlib.util.module_from_spec(spec)
-            spec.loader.exec_module(migration)
+        # Create a Alembic configuration object
+        alembic_cfg = Config(os.path.join(base_dir, "alembic.ini"))
 
-            try:
-                # Check if the migration has been applied
-                await Migration.get(name=migration_file)
-            except (DoesNotExist, OperationalError):
-                # If not, apply the migration
-                sql_script = await migration.upgrade(Tortoise.get_connection('default'))
-                await Tortoise.get_connection('default').execute_script(sql_script)
+        # Set the SQLAlchemy URL to the one used for testing
+        alembic_cfg.set_main_option("sqlalchemy.url", db_url)
 
-                await Migration.create(name=migration_file)
+        # Upgrade to the latest version
+        command.upgrade(alembic_cfg, "head")
 
-                print(f"Migration applied: {migration_file}")
+        load_presets(SessionLocal)
+        load_integrations(SessionLocal)
+        PluginManager(SessionLocal).load_plugins()
+    except Exception as e:
+        print(f"An error occurred: {e}")
 
 
-async def load_presets():
+def load_presets(SessionLocal):
     """
     Updates core presets
     """
+    # Create a new session
+    session = SessionLocal()
+
     with open(os.path.join(current_dir, "presets.json"), 'r') as f:
         presets = json.load(f)
 
     for preset in presets:
-        try:
-            existing_preset = await PresetModel.get(name=preset["name"])
-        except DoesNotExist:
-            await PresetModel.create(**preset)
+        existing_preset = session.query(
+            PresetModel).filter_by(name=preset["name"]).first()
+        if existing_preset is None:
+            new_preset = PresetModel(**preset)
+            session.add(new_preset)
         else:
             if not existing_preset.is_custom:
                 for key, value in preset.items():
                     setattr(existing_preset, key, value)
-                await existing_preset.save()
 
-async def load_integrations():
+    # Commit the changes
+    session.commit()
+
+
+def load_integrations(SessionLocal):
     """
     Updates available integrations to match config file
     """
+    # Create a new session
+    session = SessionLocal()
+
     with open(os.path.join(current_dir, "integrations.json"), 'r') as f:
         integrations = json.load(f)
 
@@ -97,23 +82,27 @@ async def load_integrations():
     for integration in integrations:
         for key, value in integration["data"].items():
             if isinstance(value, str):
-                integration["data"][key] = re.sub(r'\{(.+?)\}', lambda m: settings.get(m.group(1), m.group(0)), value)
+                integration["data"][key] = re.sub(
+                    r'\{(.+?)\}', lambda m: settings.get(m.group(1), m.group(0)), value)
 
     integration_names = set(integration["name"]
                             for integration in integrations)
 
-    db_integrations = await IntegrationRegistryModel.all()
+    db_integrations = session.query(IntegrationRegistryModel).all()
 
     for db_integration in db_integrations:
         if db_integration.name not in integration_names:
-            await db_integration.delete()
+            session.delete(db_integration)
 
     for integration in integrations:
-        try:
-            existing_integration = await IntegrationRegistryModel.get(name=integration["name"])
-        except DoesNotExist:
-            await IntegrationRegistryModel.create(**integration)
+        existing_integration = session.query(
+            IntegrationRegistryModel).filter_by(name=integration["name"]).first()
+        if existing_integration is None:
+            new_integration = IntegrationRegistryModel(**integration)
+            session.add(new_integration)
         else:
             for key, value in integration.items():
                 setattr(existing_integration, key, value)
-            await existing_integration.save()
+
+    # Commit the changes
+    session.commit()

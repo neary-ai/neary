@@ -3,11 +3,13 @@ import jwt
 from datetime import datetime, timedelta
 from passlib.hash import bcrypt
 
-from fastapi import HTTPException, Request, Form, APIRouter
+from sqlalchemy.orm import Session
+from fastapi import HTTPException, Request, Form, APIRouter, Depends
 from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordBearer
 
-from backend.models import UserModel
+from backend.database import get_db
+from backend.services import user_service
 from backend.config import settings
 from backend.auth import get_current_user
 
@@ -24,27 +26,31 @@ Primary authentication routes
 """
 
 @router.post("/register")
-async def register(request: Request):
+async def register(request: Request, db: Session = Depends(get_db)):
     """
     Since this is a single user application, we register the user if none exists
     or update the existing user if no email is set.
     """
     data = await request.json()
 
-    user = await UserModel.first()
+    user = user_service.get_user_by_id(1)
+
     if user and user.email:
         raise HTTPException(status_code=400, detail="Account already created!")
 
     try:
         if user:
-            user.email = data['email']
-            user.password_hash = bcrypt.hash(data['password'])
-            await user.save()
+            user_data = {
+                'email': data['email'], 
+                'password_hash': bcrypt.hash(data['password'])
+            }
+            user_service.update_user(db, user, user_data)
         else:
-            user = await UserModel.create(
-                email=data['email'],
-                password_hash=bcrypt.hash(data['password'])
-            )
+            user_data = {
+                'email': data['email'],
+                'password_hash': bcrypt.hash(data['password'])
+            }
+            user_service.create_user(db, user_data)
 
         access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
         access_token = jwt.encode(
@@ -82,10 +88,11 @@ async def logout(request: Request) -> JSONResponse:
 async def login(
     request: Request,
     email: str = Form(...),
-    password: str = Form(...)
+    password: str = Form(...),
+    db: Session = Depends(get_db)
 ) -> JSONResponse:
 
-    user = await UserModel.get_or_none(email=email)
+    user = user_service.get_user_by_email(db, email)
 
     if not user or not bcrypt.verify(password, user.password_hash):
         raise HTTPException(status_code=400, detail="Incorrect email or password!")
@@ -113,13 +120,14 @@ async def login(
     return response
 
 @router.post("/password")
-async def change_password(request: Request):
-    current_user = await get_current_user(request)
+async def change_password(request: Request, db: Session = Depends(get_db)):
+    current_user = get_current_user(db, request)
     data = await request.json()
     new_password = data.get('new_password')
-    
-    new_password_hash = bcrypt.hash(new_password)
-    current_user.password_hash = new_password_hash
-    await current_user.save()
+
+    user_data = {
+        'password_hash': bcrypt.hash(new_password)
+    }
+    user_service.update_user(db, current_user, user_data)
 
     return JSONResponse(content={"message": "Password updated successfully"})

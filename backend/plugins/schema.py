@@ -25,7 +25,7 @@ class Parameter(BaseModel):
     type: str
     description: str
     required: bool
-    items: Optional[Item]
+    items: Optional[Item] = None
 
 class Setting(BaseModel):
     description: str

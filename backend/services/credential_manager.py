@@ -1,21 +1,22 @@
 import time
-from tortoise.exceptions import DoesNotExist
 
-from backend.models import IntegrationInstanceModel, IntegrationRegistryModel
+from backend.services import integration_service
 from backend.services.oauth_handler import OAuthHandler
+from backend.database import SessionLocal
 
 class CredentialManager:
     def __init__(self):
         self.integration = None
         self.oauth_handler = None
+        self.db = SessionLocal()
 
     async def get_credentials(self, integration_name):
         try:
-            self.integration = await IntegrationRegistryModel.get(name=integration_name)
-        except DoesNotExist:
+            self.integration = integration_service.get_integration_by_name(self.db, name=integration_name)
+        except:
             raise ValueError(f"Integration with name '{integration_name}' does not exist.")
         
-        instance = await IntegrationInstanceModel.get_or_none(integration=self.integration)
+        instance = integration_service.get_integration_instance(self.db, integration=self.integration)
         
         if instance is None:
             return None
@@ -31,8 +32,7 @@ class CredentialManager:
                     new_credentials = self.oauth_handler.refresh_access_token(credentials)
 
                     # Update the credentials in the database
-                    instance.credentials = new_credentials
-                    await instance.save()
+                    integration_service.update_integration_credentials(self.db, instance, new_credentials)
 
                     # Return the new access token
                     return new_credentials

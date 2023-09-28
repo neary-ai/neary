@@ -5,9 +5,11 @@ from fastapi import HTTPException, status, Request
 from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordBearer
 from starlette.middleware.base import BaseHTTPMiddleware
+from sqlalchemy.orm import Session
 
 from backend.config import settings
-from backend.models import UserModel
+from backend.database import SessionLocal
+from backend.services import user_service
 
 ENABLE_AUTH = settings.application.get("ENABLE_AUTH", False)
 JWT_SECRET = settings.application.get("JWT_SECRET", "your-secret-key")
@@ -17,7 +19,7 @@ ALGORITHM = "HS256"
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 
-async def get_current_user(request: Request):
+def get_current_user(request: Request, db: Session):
     token = request.cookies.get("access_token")
     if token:
         try:
@@ -27,7 +29,7 @@ async def get_current_user(request: Request):
                 raise HTTPException(
                     status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
     elif ENABLE_AUTH:
-        user = await UserModel.first()
+        user = user_service.get_user_by_id(db, 1)
         if user is None or user.email is None:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED, detail="initial_start")
@@ -35,10 +37,11 @@ async def get_current_user(request: Request):
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated")
 
-    user = await UserModel.first()
+    user = user_service.get_user_by_id(db, 1)
     
     if user is None and not ENABLE_AUTH:
-        user = await UserModel.create()
+        user_data = {}
+        user = user_service.create_user(db, user_data)
 
     return user
 
@@ -52,10 +55,13 @@ class AuthMiddleware(BaseHTTPMiddleware):
         unprotected_routes = ["/api/oauth2/callback"]
 
         if ENABLE_AUTH and (request.url.path in protected_routes or (request.url.path.startswith("/api") and request.url.path not in unprotected_routes)):
+            db = SessionLocal()
             try:
-                await get_current_user(request)
+                get_current_user(request, db)
             except HTTPException as e:
                 return JSONResponse(status_code=e.status_code, content={"message": e.detail})
+            finally:
+                db.close()
 
         response = await call_next(request)
         return response

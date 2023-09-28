@@ -36,7 +36,7 @@ required = true
 
 [tools.create_calendar_event.parameters.attendees]
 type = "array"
-items = { type = "string" }
+items.type = "string"
 description = "Email addresses of any other attendees"
 required = false
 

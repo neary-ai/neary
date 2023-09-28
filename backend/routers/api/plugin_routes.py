@@ -4,8 +4,6 @@ from backend.models import *
 from backend.services import PluginManager
 
 router = APIRouter()
-plugin_manager = PluginManager()
-
 
 @router.get("/{plugin_id}")
 async def get_plugin_instance(plugin_id: int):
