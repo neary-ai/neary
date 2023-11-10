@@ -94,7 +94,7 @@ const selectedOptionId = ref(null);
 const spaceConversations = computed(() => {
   let convs;
   if (store.selectedSpace) {
-    convs = store.selectedSpace.conversations.map(id => store.conversations[id]);
+    convs = store.selectedSpace.conversation_ids.map(id => store.conversations[id]);
   } else {
     convs = [];
   }
@@ -106,7 +106,7 @@ const nonSpaceConversations = computed(() => {
   let convs;
   if (store.selectedSpace) {
     convs = Object.values(store.conversations)
-      .filter(conversation => !store.selectedSpace.conversations.includes(conversation.id));
+      .filter(conversation => !store.selectedSpace.conversation_ids.includes(conversation.id));
   } else {
     convs = Object.values(store.conversations);
   }

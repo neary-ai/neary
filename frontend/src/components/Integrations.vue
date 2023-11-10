@@ -4,7 +4,7 @@
     </div>
     <div class="mt-6 space-y-4">
         <template v-for="integration in store.integrations" :key="integration.id">
-        <Card v-if="integration.is_integrated">
+        <Card v-if="is_integrated(integration)">
             <template v-slot:icon>
                 <div class="flex items-center justify-center h-9 w-9 rounded shadow bg-neutral-100 mt-0.5">
                     <Icon icon="mdi:transit-connection-variant" class="text-nearylight-100 w-5 h-5" />
@@ -16,14 +16,10 @@
                 <div class="text-sm text-nearygray-400"></div>
             </div>
             <template v-slot:button>
-                <Button v-if="integration.is_integrated" @click="disconnectIntegration(integration)"
+                <Button @click="disconnectIntegration(integration)"
                     button-type="btn-outline-light"
                     :class="['bg-nearyblue-50 text-nearygray-200 w-full sm:w-24 shrink-0 px-3 py-2 text-sm rounded']">
                     Disconnect
-                </Button>
-                <Button v-else @click="connectIntegration(integration)" button-type="btn-light"
-                    :class="['w-full sm:w-24 shrink-0 px-3 py-2 text-sm rounded']">
-                    Connect
                 </Button>
             </template>
         </Card>
@@ -34,7 +30,7 @@
     </div>
     <div class="mt-6 space-y-4">
         <template v-for="integration in store.integrations" :key="integration.id">
-        <Card v-if="!integration.is_integrated">
+        <Card v-if="!is_integrated(integration)">
             <template v-slot:icon>
                 <div class="flex items-center justify-center h-9 w-9 rounded shadow bg-neutral-100 mt-0.5">
                     <Icon icon="mdi:transit-connection-variant" class="text-nearylight-100 w-5 h-5" />
@@ -46,12 +42,7 @@
                 <div class="text-sm text-nearygray-400"></div>
             </div>
             <template v-slot:button>
-                <Button v-if="integration.is_integrated" @click="disconnectIntegration(integration)"
-                    button-type="btn-outline-light"
-                    :class="['bg-nearyblue-50 text-nearygray-200 w-full sm:w-24 shrink-0 px-3 py-2 text-sm rounded']">
-                    Disconnect
-                </Button>
-                <Button v-else @click="connectIntegration(integration)" button-type="btn-light"
+                <Button @click="connectIntegration(integration)" button-type="btn-light"
                     :class="['w-full sm:w-24 shrink-0 px-3 py-2 text-sm rounded']">
                     Connect
                 </Button>
@@ -88,6 +79,10 @@ import { Icon } from '@iconify/vue';
 
 const store = useAppStore();
 
+const is_integrated = (integration) => {
+    return integration.instances.length > 0
+}
+
 const connectIntegration = async (integration) => {
     if (integration.auth_method == 'oauth') {
         let oauth = await api.getOAuthURL(integration.id);
@@ -102,6 +97,7 @@ const connectIntegration = async (integration) => {
 
 const disconnectIntegration = async (integration) => {
     store.integrations = await api.disconnectIntegration(integration);
+    store.availablePlugins = await api.getAvailablePlugins();
 };
 
 const isOpen = ref(false);
@@ -113,12 +109,12 @@ const openModal = () => {
 };
 
 const save = async () => {
-
     isOpen.value = false;
     openIntegration.value.api_key = apiKey;
     let updatedIntegrations = await api.saveIntegration(openIntegration.value);
     if (updatedIntegrations) {
         store.integrations = updatedIntegrations;
+        store.availablePlugins = await api.getAvailablePlugins();
     }
 };
 

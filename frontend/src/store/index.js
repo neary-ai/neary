@@ -56,6 +56,29 @@ export const useAppStore = defineStore('appstore', {
         },
         selectedConversation(state) {
             return state.conversations[state.selectedConversationId];
+        },
+        conversationPreset: (state) => (conversation) => {
+            return state.availablePresets.find(preset => preset.id === conversation.preset_id);
+        },
+        getEnabledFunctions: (state) => (functionType) => {
+            let functions = [];
+            state.selectedConversation.plugins.forEach(plugin_instance => {
+                if (plugin_instance.plugin.is_enabled) {
+                    plugin_instance.function_instances.forEach(func => {
+                        let function_info = func.function
+                        if (function_info.type === functionType) {
+                            functions.push({
+                                name: function_info.name,
+                                display_name: function_info.display_name,
+                                description: function_info.description,
+                                plugin_id: plugin_instance.plugin_id,
+                                plugin_icon: plugin_instance.plugin.icon,
+                            });
+                        }
+                    });
+                }
+            });
+            return functions;
         }
     },
     actions: {
@@ -79,7 +102,7 @@ export const useAppStore = defineStore('appstore', {
             }
 
             // Append 'None' space option
-            this.spaces[-1] = { 'id': -1, 'name': 'None', 'description': null, 'conversations': [] }
+            this.spaces[-1] = { 'id': -1, 'name': 'None', 'description': null, 'conversation_ids': [] }
 
             // Set conversations
             for (let conversation of initial_data.conversations) {
@@ -166,18 +189,20 @@ export const useAppStore = defineStore('appstore', {
                 scrollToBottom(this.highlighting, true);
             }
         },
-        async getMessages(conversationId, archived = true) {
-            if (this.conversations[conversationId].messages && this.conversations[conversationId].messages.length > 0 
-                && this.messages[this.conversations[conversationId].messages[0]]) {
+        async getMessages(conversationId) {
+            let conversation = this.conversations[conversationId]
+            if (conversation.message_ids && conversation.message_ids.length > 0
+                && this.messages[conversation.message_ids[0]]) {
                 return;
             }
             this.messagesLoading = true;
-            const messagesData = await api.getMessages(conversationId, archived);
+            const messagesData = await api.getMessages(conversationId, conversation.showArchivedMessages);
+
             messagesData.sort((a, b) => a.id - b.id);
             for (let message of messagesData) {
                 this.messages[message.id] = message;
-                if (!this.conversations[conversationId].messages.includes(message.id)) {
-                    this.conversations[conversationId].messages.push(message.id);
+                if (!this.conversations[conversationId].message_ids.includes(message.id)) {
+                    this.conversations[conversationId].message_ids.push(message.id);
                 }
             }
             this.messagesLoading = false;
@@ -190,7 +215,7 @@ export const useAppStore = defineStore('appstore', {
         async archiveMessages(conversationId) {
             await api.archiveMessages(conversationId)
             const conversation = this.conversations[conversationId]
-            conversation.messages.forEach((id) => {
+            conversation.message_ids.forEach((id) => {
                 this.messages[id].is_archived = true;
             });
         },
@@ -250,7 +275,8 @@ export const useAppStore = defineStore('appstore', {
         async updateSpace(spaceId, spaceName) {
             const space = this.spaces[spaceId];
             space.name = spaceName;
-            await api.updateSpace(spaceId, spaceName);
+            let spaceData = { "name": spaceName }
+            await api.updateSpace(spaceId, spaceData);
         },
         async deleteSpace(spaceId) {
             try {
@@ -262,7 +288,7 @@ export const useAppStore = defineStore('appstore', {
                         this.conversations[id].space_id = -1;
                     }
                 }
-                
+
                 delete this.spaces[spaceId];
                 this.newNotification("Space deleted")
             } catch (error) {
@@ -294,7 +320,7 @@ export const useAppStore = defineStore('appstore', {
             const newConversation = await api.createConversation(spaceId);
             this.conversations[newConversation.id] = this.initConversation(newConversation);
             if (spaceId) {
-                this.spaces[spaceId].conversations.push(newConversation.id);
+                this.spaces[spaceId].conversation_ids.push(newConversation.id);
             }
             this.loadConversation(newConversation.id);
         },
@@ -304,10 +330,10 @@ export const useAppStore = defineStore('appstore', {
             const conversationSpace = this.conversations[conversationId].space_id
 
             if (conversationSpace && conversationSpace > -1) {
-                const index = this.spaces[conversationSpace].conversations.indexOf(conversationId);
+                const index = this.spaces[conversationSpace].conversation_ids.indexOf(conversationId);
 
                 if (index !== -1) {
-                    this.spaces[conversationSpace].conversations.splice(index, 1);
+                    this.spaces[conversationSpace].conversation_ids.splice(index, 1);
                 }
             }
 
@@ -328,20 +354,52 @@ export const useAppStore = defineStore('appstore', {
                 console.log(error);
             }
         },
+        async updateConversationPreset(conversation, preset) {
+            try {
+                let response = await api.updateConversationPreset(conversation, preset);
+                this.conversations[conversation.id] = this.initConversation(response.data);
+            }
+            catch (error) {
+                console.log(error);
+            }
+        },
         async updateConversationSpace(conversation) {
             for (let spaceId in this.spaces) {
-                let index = this.spaces[spaceId].conversations.indexOf(conversation.id);
+                console.log(this.spaces[spaceId]);
+                let index = this.spaces[spaceId].conversation_ids.indexOf(conversation.id);
 
                 if (index != -1 && spaceId != conversation.space_id) {
-                    this.spaces[spaceId].conversations.splice(index, 1);
+                    this.spaces[spaceId].conversation_ids.splice(index, 1);
                 }
             }
 
             if (conversation.space_id && conversation.space_id !== -1) {
-                if (!this.spaces[conversation.space_id].conversations.includes(conversation.id)) {
-                    this.spaces[conversation.space_id].conversations.push(conversation.id);
+                if (!this.spaces[conversation.space_id].conversation_ids.includes(conversation.id)) {
+                    this.spaces[conversation.space_id].conversation_ids.push(conversation.id);
                 }
             }
+        },
+        async addConversationFunction(functionData, conversationId) {
+            try {
+                let response = await api.addConversationFunction(functionData, conversationId)
+                this.conversations[conversationId] = this.initConversation(response.data);
+            }
+            catch (error) {
+                console.log(error);
+            }
+        },
+        async removeConversationFunction(functionData, conversationId) {
+            try {
+                let response = await api.removeConversationFunction(functionData, conversationId)
+                let updatedConvo = this.initConversation(response.data)
+                this.conversations[conversationId] = updatedConvo;
+            }
+            catch (error) {
+                console.log(error);
+            }
+        },
+        async updateConversationPlugin(conversation, plugin) {
+
         },
         // Messages
         addMessage(message, conversationId) {
@@ -350,14 +408,14 @@ export const useAppStore = defineStore('appstore', {
                 message.id = message.tempId;
             }
             this.messages[message.id] = message;
-            this.conversations[conversationId].messages.push(message.id);
+            this.conversations[conversationId].message_ids.push(message.id);
             this.conversations[conversationId].excerpt = message.content
         },
         removeMessage(messageId, conversationId) {
             delete this.messages[messageId];
-            const index = this.conversations[conversationId].messages.indexOf(messageId);
+            const index = this.conversations[conversationId].message_ids.indexOf(messageId);
             if (index !== -1) {
-                this.conversations[conversationId].messages.splice(index, 1);
+                this.conversations[conversationId].message_ids.splice(index, 1);
             }
         },
         updateLastMessage(message, messageId) {

@@ -16,7 +16,9 @@
             <img :src="loadingIcon" class="w-4 h-4">
           </div>
           <div v-else class="ml-2">
-            <Icon :icon="element.preset.icon ? element.preset.icon : 'heroicons:user-solid'" class="text-slate-400/80 h-[1.1rem] w-[1.1rem]" />
+            <Icon
+              :icon="store.conversationPreset(element).icon ? store.conversationPreset(element).icon : 'heroicons:user-solid'"
+              class="text-slate-400/80 h-[1.1rem] w-[1.1rem]" />
           </div>
         </div>
         <div class="flex-grow min-w-0 truncate text-clip ml-2">
@@ -62,7 +64,8 @@
             class="group flex cursor-pointer select-none items-center pl-2 pr-4 py-2.5 hover:bg-field-active hover:text-field-active-foreground"
             @click="store.loadConversation(conversation.id, close)">
             <div>
-              <Icon :icon="conversation.preset.icon ? conversation.preset.icon : 'heroicons:user-solid'" class="h-5 w-5 mr-3 ml-2 opacity-70" />
+              <Icon :icon="store.conversationPreset(conversation).icon ? store.conversationPreset(conversation).icon : 'heroicons:user-solid'"
+                class="h-5 w-5 mr-3 ml-2 opacity-70" />
             </div>
             <div class="flex flex-col items-start w-80 pr-2">
               <div class="font-medium truncate w-full pb-0.5">{{
@@ -79,7 +82,8 @@
           <li v-for="conversation in filteredConversations.nonSpaceConversations" :key="conversation.id"
             class="group flex cursor-pointer select-none items-start pl-2 pr-4 py-2.5 hover:bg-field-active hover:text-field-active-foreground"
             @click="store.loadConversation(conversation.id, close)">
-            <Icon :icon="conversation.preset.icon ? conversation.preset.icon : 'heroicons:user-solid'" class="mt-0.5 h-5 w-5 mr-2 opacity-70" />
+            <Icon :icon="store.conversationPreset(conversation).icon ? store.conversationPreset(conversation).icon : 'heroicons:user-solid'"
+              class="mt-0.5 h-5 w-5 mr-2 opacity-70" />
             <div class="flex flex-col items-start w-80 pr-2">
               <div class="font-medium truncate w-full pb-0.5">{{
                 conversation.title
@@ -122,7 +126,7 @@ const openTabConversations = computed(() => {
   if (store.openTabs) {
     if (store.selectedSpaceId) {
       return store.openTabs
-        .filter(id => store.selectedSpace.conversations.includes(id))
+        .filter(id => store.selectedSpace.conversation_ids.includes(id))
         .map(id => store.conversations[id])
         .filter(Boolean);
     }
@@ -144,7 +148,7 @@ const query = ref('')
 
 const spaceConversations = computed(() => {
   if (store.selectedSpace) {
-    return store.selectedSpace.conversations.map(id => store.conversations[id]);
+    return store.selectedSpace.conversation_ids.map(id => store.conversations[id]);
   }
   return [];
 });
@@ -152,7 +156,7 @@ const spaceConversations = computed(() => {
 const nonSpaceConversations = computed(() => {
   if (store.selectedSpace) {
     return Object.values(store.conversations)
-      .filter(conversation => !store.selectedSpace.conversations.includes(conversation.id));
+      .filter(conversation => !store.selectedSpace.conversation_ids.includes(conversation.id));
   }
   return Object.values(store.conversations);
 });

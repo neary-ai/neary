@@ -14,7 +14,7 @@ engine = create_engine(
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 @pytest.fixture(scope="function")
-def db_session():
+def db_session(test_app):
     # Create a new database session for a test
     session = TestingSessionLocal()
     try:
@@ -25,8 +25,9 @@ def db_session():
 
 @pytest.fixture(scope="module")
 def test_app(request):
+    print('Running setup.')
     run_setup(SQLALCHEMY_DATABASE_URL)  # setup the database
-
+    print('Setup complete.')
     # Override dependencies
     def _get_db_override():
         db = TestingSessionLocal()

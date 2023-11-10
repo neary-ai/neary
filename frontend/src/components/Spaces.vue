@@ -17,7 +17,7 @@
             <span class="truncate">{{ space.name }}</span>
             <span
               class="shrink-0 ml-auto w-8 min-w-max whitespace-nowrap rounded-full px-2 py-0.5 text-center text-xs font-medium leading-5 bg-nearygray-50/10"
-              aria-hidden="true">{{ space.conversations.length }}</span>
+              aria-hidden="true">{{ space.conversation_ids.length }}</span>
           </div>
         </li>
       </template>

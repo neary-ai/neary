@@ -41,7 +41,7 @@ const swipeToConversation = (event) => {
 
   if (isMobile) {
     let direction = event;
-    const conversations = store.selectedSpace.conversations;
+    const conversations = store.selectedSpace.conversation_ids;
     const currentIndex = conversations.findIndex(id => id === store.selectedConversationId);
 
     if (direction === 'left' && currentIndex > 0) {
@@ -60,7 +60,7 @@ const showArchivedMessages = computed(() => {
 
 const messages = computed(() => {
   if (store.selectedConversation && Object.keys(store.messages).length > 0) {
-    return store.selectedConversation.messages.map(id => store.messages[id]).filter(Boolean);
+    return store.selectedConversation.message_ids.map(id => store.messages[id]).filter(Boolean);
   }
   return [];
 });

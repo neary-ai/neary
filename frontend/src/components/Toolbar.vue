@@ -86,6 +86,7 @@ const toggleArchivedMessages = () => {
         store.selectedConversation.showArchivedMessages = true;
         store.newNotification('Showing archived messages');
     }
+    store.getMessages(store.selectedConversationId)
 }
 const toggleGrowMode = (close) => {
     close();

@@ -15,7 +15,7 @@
           <li v-if="space.id != -1" :key="space.id" class="flex items-center justify-between px-6 py-4">
             <div @click="store.loadSpace(space.id)" class="leading-7 cursor-pointer">
               <div class="font-semibold text-nearygray-50">{{ space.name }}</div>
-              <div class="text-nearygray-50/70 text-sm">{{ space.conversations.length }} conversations</div>
+              <div class="text-nearygray-50/70 text-sm">{{ space.conversation_ids.length }} conversations</div>
             </div>
             <div class="cursor-pointer text-nearygray-50 flex items-center gap-3">
               <PencilSquareIcon @click="editSpace(space.id)" class="w-6 h-6" />
@@ -102,7 +102,8 @@ const save = async () => {
   isOpen.value = false;
   try {
     if (!space.value) {
-      const newSpace = await api.createSpace(spaceName.value);
+      let spaceData = {"name": spaceName.value}
+      const newSpace = await api.createSpace(spaceData);
       store.spaces[newSpace.id] = newSpace
       store.loadSpace(newSpace.id);
     } else {

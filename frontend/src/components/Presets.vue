@@ -87,12 +87,11 @@ const store = useAppStore();
 const router = useRouter();
 
 const isSelected = (preset) => computed(() => {
-  return store.selectedConversation.preset && store.selectedConversation.preset.id === preset.id;
+  return store.selectedConversation.preset_id === preset.id;
 })
 
 const updatePreset = async (preset) => {
-  store.selectedConversation.preset = preset
-  await store.updateConversation(store.selectedConversation);
+  await store.updateConversationPreset(store.selectedConversation, preset);
 }
 
 const exportPreset = async (preset, close) => {

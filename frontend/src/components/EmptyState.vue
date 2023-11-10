@@ -20,12 +20,12 @@
           <template v-slot:icon>
             <div class="flex items-center justify-center">
               <Icon
-                :icon="store.selectedConversation.preset.icon ? store.selectedConversation.preset.icon : 'heroicons:user-solid'"
+                :icon="store.conversationPreset(store.selectedConversation).icon ? store.conversationPreset(store.selectedConversation).icon : 'heroicons:user-solid'"
                 class="text-nearygray-300 w-6 h-6" />
             </div>
           </template>
           <div class="font-medium text-sm py-0.5 -ml-1 text-field-default-foreground">
-            {{ store.selectedConversation.preset.name }}</div>
+            {{ store.conversationPreset(store.selectedConversation).name }}</div>
           <template v-slot:button>
             <ChevronRightIcon class="w-5 h-5 shrink-0"></ChevronRightIcon>
           </template>

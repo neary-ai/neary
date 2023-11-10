@@ -18,12 +18,12 @@
                                 <template v-slot:icon>
                                     <div class="flex items-center justify-center">
                                         <Icon
-                                            :icon="store.selectedConversation.preset.icon ? store.selectedConversation.preset.icon : 'heroicons:user-solid'"
+                                            :icon="store.conversationPreset(store.selectedConversation).icon ? store.conversationPreset(store.selectedConversation).icon : 'heroicons:user-solid'"
                                             class="text-nearygray-300 w-6 h-6" />
                                     </div>
                                 </template>
                                 <div class="font-medium text-sm py-0.5 -ml-1 text-field-default-foreground">
-                                    {{ store.selectedConversation.preset.name }}</div>
+                                    {{ store.conversationPreset(store.selectedConversation).name }}</div>
                                 <template v-slot:button>
                                     <ChevronRightIcon class="w-5 h-5 shrink-0"></ChevronRightIcon>
                                 </template>
@@ -55,7 +55,7 @@
                         </div>
                         <div class="col-span-full sm:col-span-4 flex flex-col text-slate-400">
                             <div class="flex flex-col gap-3 items-start">
-                                <template v-for="snippet in enabledSnippets" :key="snippet.name">
+                                <template v-for="snippet in store.getEnabledFunctions('snippet')" :key="snippet.name">
                                     <Card>
                                         <template v-slot:icon>
                                             <div
@@ -84,7 +84,7 @@
                                                                     class="w-5 h-5" />
                                                                 <div>Settings</div>
                                                             </li>
-                                                            <li @click.stop="removeFunction(snippet.name, close)"
+                                                            <li @click.stop="removeFunction(snippet, close)"
                                                                 class="cursor-pointer flex items-center rounded-b gap-2 px-3 py-2 text-sm hover:bg-nearygray-300">
                                                                 <Icon icon="heroicons:x-mark" class="w-5 h-5" />
                                                                 <div>Remove</div>
@@ -114,7 +114,7 @@
                         </div>
                         <div class="col-span-1 sm:col-span-4 flex flex-col text-slate-400">
                             <div class="flex flex-col gap-3 items-start">
-                                <template v-for="tool in enabledTools" :key="tool.name">
+                                <template v-for="tool in store.getEnabledFunctions('tool')" :key="tool.name">
                                     <Card>
                                         <template v-slot:icon>
                                             <div
@@ -143,7 +143,7 @@
                                                                     class="w-5 h-5" />
                                                                 <div>Settings</div>
                                                             </li>
-                                                            <li @click.stop="removeFunction(tool.name, close)"
+                                                            <li @click.stop="removeFunction(tool, close)"
                                                                 class="cursor-pointer flex items-center rounded-b gap-2 px-3 py-2 text-sm hover:bg-nearygray-300">
                                                                 <Icon icon="heroicons:x-mark" class="w-5 h-5" />
                                                                 <div>Remove</div>
@@ -208,7 +208,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, watchEffect } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAppStore } from '@/store/index.js';
 import api from '@/services/apiService';
@@ -225,71 +225,12 @@ import { ChevronRightIcon } from '@heroicons/vue/20/solid';
 const store = useAppStore();
 const router = useRouter();
 
-
-function getEnabledFunctions(functionType) {
-    return computed(() => {
-        console.log(store.selectedConversation.plugins)
-        const selectedPlugins = store.selectedConversation.plugins;
-        let functions = [];
-
-        selectedPlugins.forEach(plugin => {
-            if (plugin.is_enabled) {
-                plugin.functions.forEach(func => {
-                    if (func.type === functionType) {
-                        functions.push({
-                            name: func.name,
-                            display_name: func.metadata.display_name,
-                            description: func.metadata.description,
-                            plugin_id: plugin.id,
-                            plugin_icon: plugin.icon,
-                        });
-                    }
-                });
-            }
-        });
-        return functions;
-    });
-}
-
-const enabledSnippets = getEnabledFunctions('snippet');
-const enabledTools = getEnabledFunctions('tool');
-
-const removeFunction = (functionName, close) => {
+const removeFunction = (func, close) => {
     close();
-
-    let availablePlugin;
-    let availableFunction;
-
-    store.availablePlugins.forEach(plugin => {
-        plugin.functions.forEach(func => {
-            if (func.name === functionName) {
-                availablePlugin = plugin;
-                availableFunction = func;
-            }
-        });
-    });
-
-    if (availablePlugin && availableFunction) {
-        let pluginInstance = store.selectedConversation.plugins.find(plugin => plugin.name === availablePlugin.name);
-
-        if (pluginInstance) {
-            const functionIndex = pluginInstance.functions.findIndex(func => func.name === availableFunction.name);
-
-            if (functionIndex > -1) {
-                pluginInstance.functions.splice(functionIndex, 1);
-            }
-
-            // If there are no functions left in the plugin, remove the plugin
-            if (pluginInstance.functions.length === 0) {
-                const pluginIndex = store.selectedConversation.plugins.findIndex(plugin => plugin.name === availablePlugin.name);
-                if (pluginIndex > -1) {
-                    store.selectedConversation.plugins.splice(pluginIndex, 1);
-                }
-            }
-
-            store.updateConversation(store.selectedConversation);
-        }
+    let functionData = {
+        "function_name": func.name
     }
+    store.removeConversationFunction(functionData, store.selectedConversationId)
 };
 
 // Create new preset

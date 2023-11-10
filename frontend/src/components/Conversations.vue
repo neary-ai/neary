@@ -11,7 +11,7 @@
         <li @click="store.loadConversation(conversation.id)" v-for="conversation in conversations" :key="conversation.id"
           class="flex-grow group w-full cursor-pointer text-nearygray-300 flex items-center justify-start py-5 pr-4">
           <div class="flex flex-col items-center justify-center mr-3 flex-grow h-full">
-            <div class="flex items-center justify-center w-9 h-9 bg-neutral-500 rounded-full text-xs font-bold text-nearygray-400">{{ conversation.messages.length }}</div>
+            <div class="flex items-center justify-center w-9 h-9 bg-neutral-500 rounded-full text-xs font-bold text-nearygray-400">{{ conversation.message_ids.length }}</div>
           </div>
           <div class="w-full truncate">
             <div class="flex font-bold text-sm text-nearygray-100 mb-0.5">
@@ -57,7 +57,7 @@ const router = useRouter();
 const conversations = computed(() => {
   let convs;
   if (store.selectedSpace) {
-    convs = store.selectedSpace.conversations.map(id => store.conversations[id]);
+    convs = store.selectedSpace.conversation_ids.map(id => store.conversations[id]);
   } else {
     convs = Object.values(store.conversations);
   }

@@ -25,7 +25,7 @@
                             <div class="text-sm text-nearygray-400">{{ snippet.description }}</div>
                         </div>
                         <template v-slot:button>
-                            <Icon icon="heroicons:plus" @click="addSnippet(snippet.name)"
+                            <Icon icon="heroicons:plus" @click="addSnippet(snippet)"
                                 class="cursor-pointer shrink-0 ml-4 mr-2 w-6 h-6" />
                         </template>
                     </Card>
@@ -73,15 +73,7 @@ const router = useRouter();
 
 const filteredSnippets = computed(() => {
     if (store.selectedConversation && store.selectedConversation.plugins && store.availablePlugins) {
-        let selectedSnippets = [];
-
-        store.selectedConversation.plugins.forEach(plugin => {
-            plugin.functions.forEach(func => {
-                if (func.type === 'snippet') {
-                    selectedSnippets.push(func.name);
-                }
-            });
-        });
+        let selectedSnippets = store.getEnabledFunctions('snippet').map(func => func.name)
 
         let snippets = [];
 
@@ -90,22 +82,21 @@ const filteredSnippets = computed(() => {
                 plugin.functions.forEach(func => {
                     if (func.type === 'snippet' && !selectedSnippets.includes(func.name)) {
                         let unconnected_integrations = [];
-                        // Iterate over the integrations array
                         if (func.integrations) {
                             func.integrations.forEach(integration => {
-                                // If connected is false, push the name to the unconnected_integrations array
-                                if (!integration.connected) {
-                                    unconnected_integrations.push(integration.name);
+                                if (integration.instances.length == 0) {
+                                    unconnected_integrations.push(integration.display_name);
                                 }
                             });
                         }
 
                         snippets.push({
                             name: func.name,
-                            plugin_name: plugin.display_name,
+                            display_name: func.display_name,
+                            description: func.description,
+                            plugin_name: plugin.name,
+                            plugin_display_name: plugin.display_name,
                             plugin_icon: plugin.icon,
-                            display_name: func.metadata.display_name,
-                            description: func.metadata.description,
                             unconnected_integrations: unconnected_integrations
                         });
                     }
@@ -117,49 +108,12 @@ const filteredSnippets = computed(() => {
     return [];
 });
 
-const addSnippet = (snippetName) => {
-    let availablePlugin;
-    let availableFunction;
-
-    store.availablePlugins.forEach(plugin => {
-        plugin.functions.forEach(func => {
-            if (func.type === 'snippet' && func.name === snippetName) {
-                availablePlugin = plugin;
-                availableFunction = func;
-            }
-        });
-    });
-
-    if (availablePlugin && availableFunction) {
-        let pluginInstance = store.selectedConversation.plugins.find(plugin => plugin.name === availablePlugin.name);
-
-        if (!pluginInstance) {
-            pluginInstance = {
-                "plugin_id": availablePlugin.id,
-                "conversation_id": store.selectedConversation.id,
-                "name": availablePlugin.name,
-                "display_name": availablePlugin.display_name,
-                "description": availablePlugin.description,
-                "icon": availablePlugin.icon,
-                "author": availablePlugin.author,
-                "url": availablePlugin.url,
-                "version": availablePlugin.version,
-                "data": null,
-                "settings": availablePlugin.settings,
-                "functions": [],
-                "is_enabled": true
-            };
-            store.selectedConversation.plugins.push(pluginInstance);
-        }
-
-        const functionExists = pluginInstance.functions.find(func => func.name === availableFunction.name);
-        
-        if (!functionExists) {
-            pluginInstance.functions.push(availableFunction);
-        }
-
-        store.updateConversation(store.selectedConversation);
+const addSnippet = (snippet) => {
+    let functionData = {
+        "function_name": snippet.name,
+        "plugin_name": snippet.plugin_name
     }
+    store.addConversationFunction(functionData, store.selectedConversation.id);
 }
 
 const onBackButtonClick = () => {

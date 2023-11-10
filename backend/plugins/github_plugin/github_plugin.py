@@ -1,15 +1,18 @@
 from github import Github
 from backend.plugins import BasePlugin, tool, snippet
 
-class GithubPlugin(BasePlugin):
-    def __init__(self, id, conversation, settings=None, data=None):
-        super().__init__(id, conversation, settings, data)
 
-        self.active_repo = self.settings.get('set_active_repo', {}).get('repo_name', None)
-        
+class GithubPlugin(BasePlugin):
+    def __init__(self, id, conversation_id, services, settings=None, data=None):
+        super().__init__(id, conversation_id, services, settings, data)
+
+        self.active_repo = self.settings.get("set_active_repo", {}).get(
+            "repo_name", None
+        )
+
     @tool
     async def get_repos(self):
-        credentials = await self.services.get_credentials('github')
+        credentials = await self.services.get_credentials("github")
         g = Github(credentials["access_token"])
 
         repos = ""
@@ -19,7 +22,7 @@ class GithubPlugin(BasePlugin):
 
     @tool
     async def set_active_repo(self, repo_name):
-        self.settings['set_active_repo']['repo_name'] = repo_name
+        self.settings["set_active_repo"]["repo_name"] = repo_name
         await self.save_state()
         return f"Active repository set to `{repo_name}`."
 
@@ -38,7 +41,7 @@ class GithubPlugin(BasePlugin):
             else:
                 return "No active repository is set; a repo_name is required."
 
-        credentials = await self.services.get_credentials('github')
+        credentials = await self.services.get_credentials("github")
         g = Github(credentials["access_token"])
 
         repo = g.get_user().get_repo(repo_name)
@@ -47,12 +50,14 @@ class GithubPlugin(BasePlugin):
         contents = repo.get_contents("")
 
         # Recursive function to fetch file structure
-        def get_directory_structure(contents, indent = ""):
+        def get_directory_structure(contents, indent=""):
             result = ""
             for content in contents:
                 if content.type == "dir":
                     result += indent + content.name + "\n"
-                    result += get_directory_structure(repo.get_contents(content.path), indent + "  ")
+                    result += get_directory_structure(
+                        repo.get_contents(content.path), indent + "  "
+                    )
             return result
 
         # Get the directory structure
@@ -65,15 +70,17 @@ class GithubPlugin(BasePlugin):
                 repo_name = self.active_repo
             else:
                 return "No active repository is set; a repo_name is required."
-        
-        credentials = await self.services.get_credentials('github')
+
+        credentials = await self.services.get_credentials("github")
         g = Github(credentials["access_token"])
 
         repo = g.get_user().get_repo(repo_name)
         directory_contents = repo.get_contents(directory_path)
 
         # Get names of all files in the directory
-        file_names = [content.name for content in directory_contents if content.type == "file"]
+        file_names = [
+            content.name for content in directory_contents if content.type == "file"
+        ]
 
         return ", ".join(file_names)
 
@@ -84,8 +91,8 @@ class GithubPlugin(BasePlugin):
                 repo_name = self.active_repo
             else:
                 return "No active repository is set; a repo_name is required."
-        
-        credentials = await self.services.get_credentials('github')
+
+        credentials = await self.services.get_credentials("github")
         g = Github(credentials["access_token"])
 
         repo = g.get_user().get_repo(repo_name)

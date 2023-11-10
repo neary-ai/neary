@@ -115,7 +115,7 @@ const api = {
     },
     async deleteSpace(spaceId) {
         try {
-            const response = await axios.patch(`${apiBaseUrl}/api/spaces/${spaceId}`, {}, { withCredentials: true });
+            const response = await axios.delete(`${apiBaseUrl}/api/spaces/${spaceId}`, {}, { withCredentials: true });
             return response;
         } catch (error) {
             throw (error);
@@ -126,9 +126,8 @@ const api = {
             spaceId = -1;
         }
         try {
-            console.log('creating in space: ', spaceId)
             const url = `${apiBaseUrl}/api/conversations`;
-            const response = await axios.post(url, {space_id: spaceId}, { withCredentials: true });
+            const response = await axios.post(url, { space_id: spaceId }, { withCredentials: true });
             return response.data;
         } catch (error) {
             console.error('Error creating conversation:', error);
@@ -142,6 +141,14 @@ const api = {
         );
         return response;
     },
+    async updateConversationPreset(conversation, preset) {
+        const response = await axios.post(
+            `${apiBaseUrl}/api/conversations/${conversation.id}/preset`,
+            preset.id,
+            { withCredentials: true }
+        );
+        return response;
+    },
     async deleteConversation(conversationId) {
         try {
             const response = await axios.patch(`${apiBaseUrl}/api/conversations/${conversationId}`, {}, { withCredentials: true });
@@ -149,6 +156,24 @@ const api = {
         } catch (error) {
             console.error('Error deleting conversation:', error);
         }
+    },
+    async addConversationFunction(functionData, conversationId) {
+        const response = await axios.post(
+            `${apiBaseUrl}/api/conversations/${conversationId}/function`,
+            functionData,
+            { withCredentials: true }
+        );
+        return response;
+    },
+    async removeConversationFunction(functionData, conversationId) {
+        const response = await axios.delete(
+            `${apiBaseUrl}/api/conversations/${conversationId}/function`,
+            {
+                params: functionData,
+                withCredentials: true
+            }
+        );
+        return response;
     },
     async archiveMessage(messageId) {
         try {
@@ -236,6 +261,14 @@ const api = {
             return response.data;
         } catch (error) {
             console.error('Error getting tools:', error);
+        }
+    },
+    async getAvailablePlugins() {
+        try {
+            const response = await axios.get(`${apiBaseUrl}/api/plugins`, { withCredentials: true });
+            return response.data;
+        } catch (error) {
+            console.error('Error getting plugins:', error);
         }
     },
     async getPlugin(pluginId) {

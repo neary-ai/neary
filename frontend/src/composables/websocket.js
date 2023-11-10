@@ -14,7 +14,6 @@ export default function useWebSocket() {
 
     const initWebSocket = async () => {
         if (!store.ws || store.ws.readyState === WebSocket.CLOSED) {
-            console.log('connecting to websocket..')
             try {
                 const ws = new WebSocket(getWebSocketUrl());
 
@@ -87,8 +86,8 @@ export default function useWebSocket() {
                 conversation.isLoading = false;
             }
 
-            if (conversation.messages.length > 0) {
-                let lastMessageId = conversation.messages[conversation.messages.length - 1]
+            if (conversation.message_ids.length > 0) {
+                let lastMessageId = conversation.message_ids[conversation.message_ids.length - 1]
                 let lastMessage = store.messages[lastMessageId];
 
                 if (lastMessage && lastMessage.role === 'assistant' && lastMessage.status == 'incomplete') {
