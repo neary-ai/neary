@@ -44,13 +44,13 @@ async def register(request: Request, db: Session = Depends(get_db)):
                 "email": data["email"],
                 "password_hash": bcrypt.hash(data["password"]),
             }
-            user_service.update_user(db, user, user_data)
+            user_service.update_user(user, user_data)
         else:
             user_data = {
                 "email": data["email"],
                 "password_hash": bcrypt.hash(data["password"]),
             }
-            user_service.create_user(db, user_data)
+            user = user_service.create_user(user_data)
 
         access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
         access_token = jwt.encode(
@@ -73,7 +73,8 @@ async def register(request: Request, db: Session = Depends(get_db)):
         response.set_cookie(**cookie_attrs)
 
         return response
-    except:
+    except Exception as e:
+        print(e)
         raise HTTPException(
             status_code=400, detail="Error creating or updating user account."
         )
@@ -124,11 +125,11 @@ async def login(
 @router.post("/password")
 async def change_password(request: Request, db: Session = Depends(get_db)):
     user_service = UserService(db)
-    current_user = user_service.get_current_user(db, request)
+    current_user = user_service.get_current_user(request)
     data = await request.json()
     new_password = data.get("new_password")
 
     user_data = {"password_hash": bcrypt.hash(new_password)}
-    user_service.update_user(db, current_user, user_data)
+    user_service.update_user(current_user, user_data)
 
     return JSONResponse(content={"message": "Password updated successfully"})

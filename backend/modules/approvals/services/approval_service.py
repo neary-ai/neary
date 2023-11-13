@@ -1,6 +1,3 @@
-import uuid
-from typing import TYPE_CHECKING
-
 from sqlalchemy.orm import Session
 from sqlalchemy import cast, String
 

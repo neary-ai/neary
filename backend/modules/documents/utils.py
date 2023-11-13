@@ -60,6 +60,7 @@ async def url_loader(urls):
     for doc in docs:
         doc.metadata["document_type"] = "webpage"
         doc.metadata["document_key"] = document_key
+
     return docs
 
 

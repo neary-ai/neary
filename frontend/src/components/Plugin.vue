@@ -120,24 +120,25 @@ const settings = computed(() => {
         const selectedPlugin = store.selectedConversation.plugins.find(
             (plugin) => plugin.id === pluginId
         );
-
+        
         if (selectedPlugin) {
             const functions = [];
 
             // Iterate over functions array
-            selectedPlugin.functions.forEach(functionItem => {
+            selectedPlugin.function_instances.forEach(instance => {
                 // Add the function name, metadata, display name, and description to the array
                 functions.push({
-                    functionName: functionItem.name,
-                    displayName: functionItem.metadata.display_name,
-                    description: functionItem.metadata.description,
-                    type: functionItem.type === 'snippet' ? 'snippet' : 'tool',
-                    functionSettings: functionItem.settings,
+                    functionName: instance.function.name,
+                    displayName: instance.function.display_name,
+                    description: instance.function.description,
+                    type: instance.function.type,
+                    functionSettings: instance.settings_values,
+                    functionInstanceId: instance.id
                 });
             });
 
             return {
-                plugin: selectedPlugin,
+                plugin: selectedPlugin.plugin,
                 functions,
             };
         }
@@ -148,10 +149,14 @@ const saveSettings = async () => {
     const updatedSettings = {};
 
     for (const functionSettings of settings.value.functions) {
-        // Gather the updated settings values
-        updatedSettings[functionSettings.functionName] = {};
+        const functionName = functionSettings.functionName;
+        updatedSettings[functionName] = {id: functionSettings.functionInstanceId};
+
         for (const key in functionSettings.functionSettings) {
-            updatedSettings[functionSettings.functionName][key] = functionSettings.functionSettings[key].value;
+            if (!updatedSettings[functionName][key]) {
+                updatedSettings[functionName][key] = {};
+            }
+            updatedSettings[functionSettings.functionName][key]["value"] = functionSettings.functionSettings[key].value;
         }
     }
 

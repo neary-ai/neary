@@ -78,7 +78,7 @@
                                                     <PopoverPanel v-slot="{ close }"
                                                         class="absolute w-32 bottom-8 -right-0 origin-top-right ring-1 ring-nearygray-500  bg-nearygray-200 text-nearyblue-300 rounded-md focus:outline-none">
                                                         <ul class="divide-y divide-nearygray-500">
-                                                            <li @click.stop="router.push(`/plugins/${snippet.plugin_id}`)"
+                                                            <li @click.stop="router.push(`/plugins/${snippet.plugin_instance_id}`)"
                                                                 class="cursor-pointer flex items-center rounded-t gap-2 px-3 py-2 text-sm hover:bg-nearygray-300">
                                                                 <Icon icon="heroicons:adjustments-horizontal"
                                                                     class="w-5 h-5" />
@@ -137,7 +137,7 @@
                                                     <PopoverPanel v-slot="{ close }"
                                                         class="absolute w-32 bottom-8 -right-0 origin-top-right ring-1 ring-nearygray-500  bg-nearygray-200 text-nearyblue-300 rounded-md focus:outline-none">
                                                         <ul class="divide-y divide-nearygray-500">
-                                                            <li @click.stop="router.push(`/plugins/${tool.plugin_id}`)"
+                                                            <li @click.stop="router.push(`/plugins/${tool.plugin_instance_id}`)"
                                                                 class="cursor-pointer flex items-center rounded-t gap-2 px-3 py-2 text-sm hover:bg-nearygray-300">
                                                                 <Icon icon="heroicons:adjustments-horizontal"
                                                                     class="w-5 h-5" />
@@ -274,6 +274,7 @@ const onBackButtonClick = () => {
 watch(() => store.selectedConversationId, async (newId) => {
     if (newId) {
         store.settingsOptions = await api.getAvailableSettings();
+        console.log('PLUGINS: ', store.selectedConversation.plugins)
     }
 }, { immediate: true });
 

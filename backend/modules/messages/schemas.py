@@ -1,4 +1,4 @@
-from typing import Optional, Any
+from typing import Optional
 from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, Field

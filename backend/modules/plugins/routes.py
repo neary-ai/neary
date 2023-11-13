@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Body, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from .models import *
@@ -65,29 +65,15 @@ async def clear_plugin_instance_data(plugin_id: int, db: Session = Depends(get_d
     return {"detail": "Plugin data cleared"}
 
 
-# @router.put("/{plugin_id}")
-# async def update_plugin_instance(plugin_id: int, settings: dict = Body(...)):
-#     plugin = await PluginInstanceModel.get_or_none(id=plugin_id)
+@router.put("/plugins/{plugin_id}")
+async def update_plugin_instance(
+    plugin_id: int, settings: dict = Body(...), db: Session = Depends(get_db)
+):
+    service = PluginService(db)
 
-#     if plugin is None:
-#         raise HTTPException(status_code=404, detail="Plugin not found")
+    try:
+        result = service.update_plugin_instance(plugin_id, settings)
+    except Exception as e:
+        raise HTTPException(status_code=404, detail=str(e))
 
-#     await plugin.fetch_related('function_instances')
-
-#     for function_name, function_settings in settings.items():
-#         # Find the function in the plugin's functions array
-#         function = next((f for f in plugin.function_instances if f.name == function_name), None)
-
-#         if function:
-#             if function.settings_values is None:
-#                 # If the current settings are None, replace them with the new settings
-#                 function.settings_values = function_settings
-#             else:
-#                 # If the current settings are not None, update them with the new settings
-#                 function.settings_values.update(function_settings)
-
-#             await function.save()
-
-#     await plugin.save()
-
-#     return {"detail": "success"}
+    return result

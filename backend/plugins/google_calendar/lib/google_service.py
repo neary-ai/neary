@@ -65,10 +65,12 @@ class GoogleService:
         self.creds = None
 
     def authenticate(self):
+        print("Authenticating!")
         try:
             self.creds = Credentials(
                 self.access_token,
             )
+            print("Successfully authenticated.")
             return True
         except Exception as error:
             raise error
@@ -292,7 +294,7 @@ class GoogleService:
             print(f"An error occurred: {error}")
             return "Creating event."
 
-    async def get_calendar_events(self, days=7, filter_recurring=True):
+    def get_calendar_events(self, days=7, filter_recurring=True):
         calendar_service = build("calendar", "v3", credentials=self.creds)
         try:
             # Get the calendar metadata

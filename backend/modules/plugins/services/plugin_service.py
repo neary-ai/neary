@@ -1,9 +1,9 @@
 from typing import TYPE_CHECKING, List
 
-import os
 import inspect
 import importlib
 from sqlalchemy.orm import Session
+from sqlalchemy.orm.attributes import flag_modified
 
 from backend.plugins import BasePlugin
 
@@ -63,6 +63,13 @@ class PluginService:
     def get_function_by_name(self, function_name: str) -> FunctionModel:
         return self.db.query(FunctionModel).filter_by(name=function_name).first()
 
+    def get_function_instance_by_id(self, id: int):
+        return (
+            self.db.query(FunctionInstanceModel)
+            .filter(FunctionInstanceModel.id == id)
+            .first()
+        )
+
     def enable_plugin(self, plugin_entry: PluginModel):
         plugin_entry.is_enabled = True
         self.db.commit()
@@ -103,22 +110,41 @@ class PluginService:
         return functions
 
     def _parse_parameter(self, param_data):
+        # Prepare the base parameter structure
+        parameter = {"type": param_data.get("type")}
+
+        # Add a description if it exists and is not None, otherwise exclude the field
+        description = param_data.get("description")
+        if description is not None:
+            parameter["description"] = description
+
+        # Handle 'array' type parameters
         if param_data["type"] == "array" and "items" in param_data:
-            items_properties = self._parse_parameter(param_data["items"])
-            return {"type": "array", "items": items_properties}
+            # Ensure the 'items' structure does not contain 'null' for the 'description' field
+            items_data = param_data["items"]
+            items_parameter = self._parse_parameter(items_data)
+            if (
+                "description" in items_parameter
+                and items_parameter["description"] is None
+            ):
+                del items_parameter[
+                    "description"
+                ]  # Remove the 'description' field if it's None
+            parameter["items"] = items_parameter
+
+        # Handle 'object' type parameters
         elif param_data["type"] == "object" and "properties" in param_data:
             properties = {}
             required = []
             for item_name, item_data in param_data["properties"].items():
+                properties[item_name] = self._parse_parameter(item_data)
                 if item_data.get("required"):
                     required.append(item_name)
-                properties[item_name] = self._parse_parameter(item_data)
-            return {"type": "object", "properties": properties, "required": required}
-        else:
-            return {
-                "type": param_data.get("type"),
-                "description": param_data.get("description"),
-            }
+            parameter["properties"] = properties
+            if required:
+                parameter["required"] = required
+
+        return parameter
 
     async def execute_tool(
         self,
@@ -127,8 +153,6 @@ class PluginService:
         conversation: ConversationModel,
         bypass_approval=False,
     ):
-        tool = None
-
         plugin_instances = conversation.plugins
 
         # Find the function in the conversation's list of plugins
@@ -136,44 +160,51 @@ class PluginService:
             for function_instance in plugin_instance.function_instances:
                 if function_instance.name == tool_name:
                     tool = function_instance
-                    break
-
-        if tool:
-            if (
-                tool.settings_values["requires_approval"]["value"]
-                and bypass_approval is False
-            ):
-                approval_service = ApprovalService(self.db, self.message_handler)
-                await approval_service.request_approval(
-                    tool, tool_args, conversation.id
-                )
-                return None, False
-            else:
-                await self.message_handler.send_alert_to_ui(
-                    tool.function.display_name, "tool_start"
-                )
-                try:
-                    tool_method = self._load_function_instance(
-                        tool_name, plugin_instance, conversation
-                    )
-                    result = await tool_method(**tool_args)
-                    await self.message_handler.send_alert_to_ui(
-                        tool.function.display_name, "tool_success"
-                    )
-                    function_message = FunctionMessage(
-                        function_call={"name": tool_name, "arguments": tool_args},
-                        content=result,
-                        conversation_id=conversation.id,
-                    )
-                    return (
-                        function_message,
-                        tool.settings_values["follow_up_on_output"]["value"],
-                    )
-                except Exception as e:
-                    await self.message_handler.send_alert_to_ui(
-                        tool.function.display_name, "tool_error"
-                    )
-                    print(f"An error occurred while using tool `{tool_name}`: {e}")
+                    if (
+                        tool.settings_values["requires_approval"]["value"]
+                        and bypass_approval is False
+                    ):
+                        approval_service = ApprovalService(
+                            self.db, self.message_handler
+                        )
+                        await approval_service.request_approval(
+                            tool, tool_args, conversation.id
+                        )
+                        return None, False
+                    else:
+                        await self.message_handler.send_alert_to_ui(
+                            tool.function.display_name, "tool_start"
+                        )
+                        try:
+                            tool_method = self._load_function_instance(
+                                tool_name, plugin_instance, conversation
+                            )
+                            if inspect.iscoroutinefunction(tool_method):
+                                result = await tool_method(**tool_args)
+                            else:
+                                result = tool_method(**tool_args)
+                            await self.message_handler.send_alert_to_ui(
+                                tool.function.display_name, "tool_success"
+                            )
+                            function_message = FunctionMessage(
+                                function_call={
+                                    "name": tool_name,
+                                    "arguments": tool_args,
+                                },
+                                content=result,
+                                conversation_id=conversation.id,
+                            )
+                            return (
+                                function_message,
+                                tool.settings_values["follow_up_on_output"]["value"],
+                            )
+                        except Exception as e:
+                            await self.message_handler.send_alert_to_ui(
+                                tool.function.display_name, "tool_error"
+                            )
+                            print(
+                                f"An error occurred while using tool `{tool_name}`: {e}"
+                            )
 
         return None, False
 
@@ -184,7 +215,10 @@ class PluginService:
                     snippet_method = self._load_function_instance(
                         function_instance.name, plugin_instance, conversation
                     )
-                    await snippet_method(context)
+                    if inspect.iscoroutinefunction(snippet_method):
+                        await snippet_method(context)
+                    else:
+                        snippet_method(context)
 
     def _load_function_instance(self, function_name, plugin_instance, conversation):
         try:
@@ -206,7 +240,7 @@ class PluginService:
                     class_instance = cls(
                         plugin_instance.id,
                         conversation.id,
-                        PluginServices(self.db),
+                        PluginServices(self.db, conversation.id),
                         self._compile_settings(plugin_instance),
                         plugin_instance.data,
                     )
@@ -283,13 +317,31 @@ class PluginService:
             self.db.add(function_instance)
             self.db.commit()
 
+    def update_plugin_instance(self, plugin_id: int, settings: dict):
+        # Currently just updates settings for individual functions, as there are no plugin-level settings
+        for function_name, function_settings in settings.items():
+            function_instance = self.get_function_instance_by_id(
+                function_settings.pop("id", None)
+            )
+
+            if function_instance:
+                self.update_function_instance(function_instance, function_settings)
+
+        self.db.commit()
+
     def update_function_instance(
         self, function_instance: FunctionInstanceModel, settings: dict
     ):
         for setting_key in settings:
-            function_instance.settings_values[setting_key] = settings[setting_key]
+            if isinstance(settings[setting_key], dict):
+                value = settings[setting_key].get("value", settings[setting_key])
+            else:
+                value = settings[setting_key]
+            function_instance.settings_values[setting_key]["value"] = value
 
+        flag_modified(function_instance, "settings_values")
         self.db.commit()
+        self.db.refresh(function_instance)
 
     def delete_function_instance(
         self, function_name: str, conversation: ConversationModel
@@ -331,14 +383,16 @@ class PluginService:
 class PluginServices:
     """This class contains all services that are passed to the plugin on instantiation"""
 
-    def __init__(self, db: Session):
+    def __init__(self, db: Session, conversation_id: int = None):
         self.db = db
+        self.conversation_id = conversation_id
         self._populate_service()
 
     def _populate_service(self):
         self._add_user_services()
         self._add_credentials_services()
         self._add_message_services()
+        self._add_file_services()
 
     def _add_user_services(self):
         from users.services import UserService
@@ -361,107 +415,11 @@ class PluginServices:
 
         message_handler = MessageHandler(db=self.db)
         self.send_alert_to_ui = message_handler.send_alert_to_ui
+        self.send_message_to_ui = message_handler.send_message_to_ui
+        self.send_file_to_ui = message_handler.send_file_to_ui
 
-    # def get_plugin_instances(
-    #     self, plugin_instance: PluginInstanceModel, loaded_plugin: dict
-    # ):
-    #     tools = []
-    #     snippets = []
+    def _add_file_services(self):
+        from core.services.core_service import FileService
 
-    #     all_function_settings = {
-    #         function.name: function.settings_values
-    #         for function in plugin_instance.function_instances
-    #         if function.name
-    #         in loaded_plugin["functions"].get(function.function.type + "s", {})
-    #     }
-
-    #     for function in plugin_instance.function_instances:
-    #         function_name = function.name
-    #         function_type = function.function.type + "s"
-
-    #         # Check if the function name exists in the loaded plugin
-    #         if function_name in loaded_plugin["functions"].get(function_type, {}):
-    #             function_method = loaded_plugin["functions"][function_type][
-    #                 function_name
-    #             ]["method"]
-    #             function_definition = loaded_plugin["functions"][function_type][
-    #                 function_name
-    #             ].get("definition", None)
-
-    #             # Create an instance of the plugin class
-    #             plugin_instance = loaded_plugin["class"](
-    #                 id=plugin_instance.id,
-    #                 conversation_id=plugin_instance.conversation_id,
-    #                 settings=all_function_settings,
-    #                 data=plugin_instance.data,
-    #             )
-
-    #             # Store the function method and its instance
-    #             function_data = {
-    #                 "name": function_name,
-    #                 "instance": plugin_instance,
-    #                 "method": function_method,
-    #                 "definition": function_definition,
-    #                 "settings": function.settings_values,
-    #                 "metadata": function.function.meta_data,
-    #             }
-
-    #             # Append the function data to the appropriate list
-    #             if function_type == "tools":
-    #                 tools.append(function_data)
-    #             elif function_type == "snippets":
-    #                 snippets.append(function_data)
-    #         else:
-    #             print(f"No matching function loaded for config entry: {function_name}")
-
-    #     return tools, snippets
-
-    # def clear_plugin_instance_data(self, plugin_instance: PluginInstanceModel):
-    #     plugin_instance.data = {}
-    #     self.db.commit()
-
-    # def get_function_instance_by_name(
-    #     self, function_name: str, conversation: ConversationModel
-    # ) -> FunctionInstanceModel:
-    #     return (
-    #         self.db.query(FunctionInstanceModel).filter_by(name=function_name).first()
-    #     )
-
-    # def update_conversation_plugins(
-    #     self, conversation: ConversationModel, new_plugin_data: list
-    # ):
-    #     existing_plugin_names = [plugin.name for plugin in conversation.plugins]
-    #     new_plugin_names = [plugin["name"] for plugin in new_plugin_data]
-    #     plugins_to_remove = set(existing_plugin_names) - set(new_plugin_names)
-
-    #     self.remove_plugins(conversation, plugins_to_remove)
-
-    #     plugin_service = plugin_services.PluginService(self.db)
-    #     function_service = plugin_services.FunctionService(self.db)
-
-    #     for plugin in new_plugin_data:
-    #         plugin_instance = plugin_service.update_plugin_instance(
-    #             conversation, plugin
-    #         )
-    #         if plugin_instance:
-    #             plugin_service.enable_plugin(self.db, plugin_instance.plugin)
-    #             function_service.update_function_instances(
-    #                 self.db, plugin_instance, plugin["functions"]
-    #             )
-    #             function_service.remove_function_instances(
-    #                 self.db, plugin_instance, plugin["functions"]
-    #             )
-
-    # def remove_plugins(self, conversation: ConversationModel, plugins_to_remove: set):
-    #     plugin_service = plugin_services.PluginService(self.db)
-
-    #     for plugin_name in plugins_to_remove:
-    #         plugin = plugin_service.get_plugin_by_name(plugin_name=plugin_name)
-
-    #         # Remove related instances
-    #         instances = plugin.instances
-
-    #         for instance in instances:
-    #             if instance.conversation == conversation:
-    #                 self.db.delete(instance)
-    #                 self.db.commit()
+        file_service = FileService(conversation_id=self.conversation_id)
+        self.save_file = file_service.save_file

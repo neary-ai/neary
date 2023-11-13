@@ -1,6 +1,5 @@
 from typing import Optional, List
 from pydantic import BaseModel, ConfigDict
-from pydantic.types import Json
 
 
 class Preset(BaseModel):

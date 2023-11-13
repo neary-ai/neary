@@ -141,8 +141,6 @@ class MessageChain:
             else:
                 self.messages.append(function_message)
 
-        print("FN: ", function_message.model_dump())
-
     def add_snippet(self, message, id=None, tokens=None, index=None):
         # Add snippet to the list at a specified index or at the end
         if message:

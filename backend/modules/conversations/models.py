@@ -13,7 +13,6 @@ from sqlalchemy.sql import func
 
 from database import Base
 
-# Define the document association table
 conversation_document = Table(
     "conversation_document",
     Base.metadata,

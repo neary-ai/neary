@@ -33,7 +33,7 @@ class FunctionInstanceModel(Base):
         if settings_metadata:
             for key, meta in settings_metadata.items():
                 if settings_values and key in settings_values:
-                    meta["value"] = settings_values[key]
+                    meta["value"] = settings_values[key]["value"]
             return settings_metadata
 
         return None

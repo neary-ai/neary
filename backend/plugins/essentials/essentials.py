@@ -15,7 +15,7 @@ class Essentials(BasePlugin):
             self.data["notepad"] = []
 
     @snippet
-    def insert_date_time(self, context):
+    async def insert_date_time(self, context):
         profile_tz = self.services.get_profile_field("timezone")
         settings_tz = self.settings["insert_date_time"]["timezone"]
 
@@ -45,7 +45,7 @@ class Essentials(BasePlugin):
 
         if credentials is None:
             await self.services.send_alert_to_ui(
-                "OpenWeatherMap integration is required", self.conversation_id
+                "OpenWeatherMap integration is required", "error"
             )
 
         # First try to get a location from plugin settings, then from profile
@@ -70,11 +70,11 @@ class Essentials(BasePlugin):
             except Exception as e:
                 print(e)
                 await self.services.send_alert_to_ui(
-                    "Weather error! Check location and API key.", self.conversation_id
+                    "Weather error! Check location and API key.", "error"
                 )
         else:
             await self.services.send_alert_to_ui(
-                "The Local Weather snippet requires a location!", self.conversation_id
+                "The Local Weather snippet requires a location!", "error"
             )
 
     """
@@ -156,4 +156,4 @@ class Essentials(BasePlugin):
             file_info["url"],
             self.conversation_id,
         )
-        return file_info
+        return f"File saved to {file_info['filepath']}"

@@ -6,24 +6,24 @@ class GithubPlugin(BasePlugin):
     def __init__(self, id, conversation_id, services, settings=None, data=None):
         super().__init__(id, conversation_id, services, settings, data)
 
+        credentials = self.services.get_credentials("github")
+        self.g = Github(credentials["access_token"])
+
         self.active_repo = self.settings.get("set_active_repo", {}).get(
             "repo_name", None
         )
 
     @tool
-    async def get_repos(self):
-        credentials = await self.services.get_credentials("github")
-        g = Github(credentials["access_token"])
-
+    def get_repos(self):
         repos = ""
-        for repo in g.get_user().get_repos():
+        for repo in self.g.get_user().get_repos():
             repos += f"{repo.name}\n"
         return repos
 
     @tool
     async def set_active_repo(self, repo_name):
         self.settings["set_active_repo"]["repo_name"] = repo_name
-        await self.save_state()
+        self.save_state()
         return f"Active repository set to `{repo_name}`."
 
     @snippet
@@ -41,10 +41,7 @@ class GithubPlugin(BasePlugin):
             else:
                 return "No active repository is set; a repo_name is required."
 
-        credentials = await self.services.get_credentials("github")
-        g = Github(credentials["access_token"])
-
-        repo = g.get_user().get_repo(repo_name)
+        repo = self.g.get_user().get_repo(repo_name)
 
         # Get file and directory structure at the root
         contents = repo.get_contents("")
@@ -71,10 +68,7 @@ class GithubPlugin(BasePlugin):
             else:
                 return "No active repository is set; a repo_name is required."
 
-        credentials = await self.services.get_credentials("github")
-        g = Github(credentials["access_token"])
-
-        repo = g.get_user().get_repo(repo_name)
+        repo = self.g.get_user().get_repo(repo_name)
         directory_contents = repo.get_contents(directory_path)
 
         # Get names of all files in the directory
@@ -92,10 +86,7 @@ class GithubPlugin(BasePlugin):
             else:
                 return "No active repository is set; a repo_name is required."
 
-        credentials = await self.services.get_credentials("github")
-        g = Github(credentials["access_token"])
-
-        repo = g.get_user().get_repo(repo_name)
+        repo = self.g.get_user().get_repo(repo_name)
         file_content = repo.get_contents(file_path)
 
         return file_content.decoded_content.decode()

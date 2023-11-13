@@ -10,23 +10,24 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.docstore.document import Document
 
 from database import SessionLocal
-import modules.conversations.services as conversation_services
+from modules.conversations.services.llm_connector import get_embeddings
+from modules.conversations.services.conversation_service import ConversationService
 from modules.conversations.models import ConversationModel
 from ..models import *
 from ..utils import *
 
 
 class DocumentManager:
-    def __init__(self, conversation_id):
+    def __init__(self, db=None, conversation_id=None):
+        self.db = db if db else SessionLocal()
         self.conversation_id = conversation_id
-        self.db = SessionLocal()
         self.faiss_path = None
         self.faiss_index = None
         self.load_faiss_index()
 
     def load_faiss_index(self):
         current_path = os.path.dirname(os.path.realpath(__file__))
-        data_path = os.path.join(current_path, "..", "..", "data")
+        data_path = os.path.join(current_path, "..", "..", "..", "data")
         self.faiss_path = os.path.join(data_path, "faiss_index.bin")
 
         if os.path.exists(self.faiss_path):
@@ -47,6 +48,7 @@ class DocumentManager:
     """
 
     async def save_documents(self, documents, split=True, chunk_size=1500):
+        document_service = DocumentService(self.db)
         embeddings = []
         metadatas = []
         print(f"Saving {len(documents)} documents")
@@ -72,7 +74,7 @@ class DocumentManager:
             for text_chunk in text_chunks:
                 chunk_hash_id = str(hashlib.sha256(text_chunk.encode()).hexdigest())
                 print("Creating embeddings..")
-                embedding = await conversation_services.get_embeddings(text_chunk)
+                embedding = get_embeddings(text_chunk)
 
                 # Store the embedding and metadata
                 embeddings.append(embedding)
@@ -89,29 +91,26 @@ class DocumentManager:
                 metadatas.append(metadata)
 
         # Add embeddings to the Faiss index
-        print("Adding to FAISS")
         if embeddings:
             self.faiss_index.add(np.array(embeddings, dtype=np.float32))
         else:
             raise Exception("No usuable text extracted!")
 
         # Save the Faiss index to disk
-        print("Saving to faiss..")
         self.save_index_to_disk()
 
         for i, metadata in enumerate(metadatas):
-            doc_chunk = DocumentService(self.db).create_document(
-                self.db, metadata, self.faiss_index.ntotal - len(metadatas) + i
+            doc_chunk = document_service.create_document(
+                metadata, self.faiss_index.ntotal - len(metadatas) + i
             )
 
             # Associate the document with the conversation
-            conversation = conversation_services.ConversationService(
-                self.db
-            ).get_conversation_by_id(self.db, id=metadata["conversation_id"])
+            conversation = ConversationService(self.db).get_conversation_by_id(
+                self.conversation_id
+            )
+
             if conversation:
-                conversation_services.ConversationService(
-                    self.db
-                ).add_document_to_conversation(self.db, conversation, doc_chunk)
+                document_service.add_document_to_conversation(conversation, doc_chunk)
 
     """
     Loader methods
@@ -160,7 +159,6 @@ class DocumentManager:
 
         # Retrieve the associated metadata for the most similar embeddings from the database
         found_documents = DocumentService(self.db).get_documents_by_faiss_indices(
-            self.db,
             index_positions[0],
             self.conversation_id if conversation_filter else None,
         )
@@ -181,15 +179,15 @@ class DocumentManager:
         Get a list of available documents for management on frontend
         """
         if conversation_only:
-            conversation = conversation_services.ConversationService(
-                self.db
-            ).get_conversation_by_id(self.db, conversation_id=self.conversation_id)
+            conversation = ConversationService(self.db).get_conversation_by_id(
+                self.conversation_id
+            )
             if conversation:
                 document_chunks = conversation.documents
             else:
                 document_chunks = []
         else:
-            document_chunks = DocumentService(self.db).get_all_documents(self.db)
+            document_chunks = DocumentService(self.db).get_all_documents()
 
         output = []
         seen_document_keys = set()
@@ -217,42 +215,42 @@ class DocumentManager:
     Utility methods
     """
 
-    def add_conversation_id(self, document_key, conversation_id):
+    def add_conversation_id(self, document_key):
         documents = DocumentService(self.db).get_documents_by_key(
-            self.db, document_key=document_key
+            document_key=document_key
         )
 
         if documents:
-            conversation = conversation_services.ConversationService(
-                self.db
-            ).get_conversation_by_id(self.db, conversation_id=conversation_id)
+            conversation = ConversationService(self.db).get_conversation_by_id(
+                self.conversation_id
+            )
 
             if conversation:
                 for document in documents:
-                    conversation_services.ConversationService(
-                        self.db
-                    ).add_document_to_conversation(self.db, conversation, document)
+                    DocumentService(self.db).add_document_to_conversation(
+                        conversation, document
+                    )
 
-    def remove_conversation_id(self, document_key, conversation_id):
+    def remove_conversation_id(self, document_key):
         documents = DocumentService(self.db).get_documents_by_key(
-            self.db, document_key=document_key
+            document_key=document_key
         )
 
         if documents:
-            conversation = conversation_services.ConversationService(
-                self.db
-            ).get_conversation_by_id(self.db, conversation_id=conversation_id)
+            conversation = ConversationService(self.db).get_conversation_by_id(
+                self.conversation_id
+            )
 
             if conversation:
                 for document in documents:
-                    conversation_services.ConversationService(
-                        self.db
-                    ).remove_document_from_conversation(self.db, conversation, document)
+                    DocumentService(self.db).remove_document_from_conversation(
+                        conversation, document
+                    )
 
     def delete_documents(self, document_key):
         # Get all documents with the given document key
         documents_to_delete = DocumentService(self.db).get_documents_by_key(
-            self.db, document_key=document_key
+            document_key=document_key
         )
 
         # Remove the corresponding documents from the Faiss index
@@ -260,9 +258,7 @@ class DocumentManager:
         self.faiss_index.remove_ids(np.array(faiss_indexes_to_remove, dtype=np.int64))
 
         # Delete the filtered documents from database
-        DocumentService(self.db).delete_documents_by_key(
-            self.db, document_key=document_key
-        )
+        DocumentService(self.db).delete_documents_by_key(document_key=document_key)
 
 
 class DocumentService:
@@ -271,25 +267,24 @@ class DocumentService:
 
     def create_document(self, metadata: dict, faiss_index: int):
         try:
-            doc_chunk = self.db.add(
-                DocumentModel(
-                    chunk_hash_id=metadata["id"],
-                    faiss_index=faiss_index,
-                    type=metadata["type"],
-                    collection=metadata["collection"],
-                    title=metadata["title"],
-                    content=metadata["content"],
-                    source=metadata["source"],
-                    document_key=metadata["document_key"],
-                )
+            doc_model = DocumentModel(
+                chunk_hash_id=metadata["id"],
+                faiss_index=faiss_index,
+                type=metadata["type"],
+                collection=metadata["collection"],
+                title=metadata["title"],
+                content=metadata["content"],
+                source=metadata["source"],
+                document_key=metadata["document_key"],
             )
+            self.db.add(doc_model)
             self.db.commit()
+            return doc_model
         except IntegrityError:
             print(
                 f'Document with chunk_hash_id {metadata["id"]} already exists. Skipping.'
             )
             self.db.rollback()
-        return doc_chunk
 
     def get_all_documents(self):
         return self.db.query(DocumentModel).all()
@@ -297,14 +292,16 @@ class DocumentService:
     def get_documents_by_faiss_indices(
         self, faiss_indices: List[int], conversation_id: Optional[int] = None
     ):
+        faiss_indices = [int(index) for index in faiss_indices if index != -1]
+
         base_query = self.db.query(DocumentModel).filter(
             DocumentModel.faiss_index.in_(faiss_indices)
         )
 
         if conversation_id is not None:
-            base_query = base_query.join(ConversationModel).filter(
-                ConversationModel.id == conversation_id
-            )
+            base_query = base_query.join(
+                ConversationModel, DocumentModel.conversations
+            ).filter(ConversationModel.id == conversation_id)
 
         return base_query.all()
 
@@ -323,4 +320,16 @@ class DocumentService:
         )
         for document in documents:
             self.db.delete(document)
+        self.db.commit()
+
+    def add_document_to_conversation(
+        self, conversation: ConversationModel, document: DocumentModel
+    ):
+        conversation.documents.append(document)
+        self.db.commit()
+
+    def remove_document_from_conversation(
+        self, conversation: ConversationModel, document: DocumentModel
+    ):
+        conversation.documents.remove(document)
         self.db.commit()

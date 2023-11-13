@@ -6,7 +6,8 @@ class GoogleCalendar(BasePlugin):
     def __init__(self, id, conversation_id, services, settings=None, data=None):
         super().__init__(id, conversation_id, services, settings, data)
 
-        access_token = self.services.get_credentials("google_calendar")
+        credentials = self.services.get_credentials("google_calendar")
+        access_token = credentials["access_token"]
         self.google_service = GoogleService(access_token=access_token)
 
     @snippet
@@ -20,7 +21,7 @@ class GoogleCalendar(BasePlugin):
         except Exception as e:
             print("Error: ", e)
             await self.services.send_alert_to_ui(
-                "Invalid Google Calendar credentials", self.conversation_id
+                "Invalid Google Calendar credentials", "error"
             )
             return
 
@@ -32,7 +33,7 @@ class GoogleCalendar(BasePlugin):
             print("Error: ", e)
             await self.services.send_alert_to_ui(
                 "Unable to retrieve events. Check your Google Calendar integration.",
-                self.conversation_id,
+                "error",
             )
             return
 
@@ -59,7 +60,7 @@ class GoogleCalendar(BasePlugin):
         except Exception as e:
             print(e)
             await self.services.send_alert_to_ui(
-                "Invalid Google Calendar credentials", self.conversation_id
+                "Invalid Google Calendar credentials", "error"
             )
             return "Unable to create calendar event. Invalid Google Calendar credentials. The user should ensure their Google Calendar integration is setup correctly."
 
@@ -77,15 +78,15 @@ class GoogleCalendar(BasePlugin):
         filter_recurring = self.settings["get_calendar_events"]["filter_recurring"]
         concise = self.settings["get_calendar_events"]["concise"]
         try:
-            await self.google_service.authenticate()
+            self.google_service.authenticate()
         except Exception as e:
-            print(e)
+            print("Calendar error: ", e)
             await self.services.send_alert_to_ui(
-                message="Invalid Google Calendar credentials"
+                "Invalid Google Calendar credentials", "error"
             )
             return "Unable to retrieve calendar events. Invalid Google Calendar credentials. The user should ensure their Google Calendar integration is setup correctly."
 
-        events = await self.google_service.get_calendar_events(
+        events = self.google_service.get_calendar_events(
             days=days, filter_recurring=filter_recurring
         )
         if events:

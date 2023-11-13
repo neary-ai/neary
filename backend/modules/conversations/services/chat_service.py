@@ -1,7 +1,8 @@
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING
 
 import tiktoken
 from sqlalchemy.orm import Session
+
 from modules.conversations.models import ConversationModel
 from modules.messages.schemas import UserMessage, FunctionMessage, AssistantMessage
 from modules.plugins.services.plugin_service import PluginService
@@ -48,7 +49,7 @@ class ChatService:
 
             metadata = context.get_metadata()
 
-            # Save user message / tool output and AI response to database
+            # Save messages to database
             message_service = MessageService(self.db)
 
             if user_message:
@@ -118,7 +119,11 @@ class ChatService:
         max_input_tokens = conversation.settings["max_input_tokens"]
 
         for message in sorted_messages:
-            if not message.content and not message.metadata:
+            if (
+                not message.content
+                and not message.function_call
+                and not message.metadata
+            ):
                 continue
 
             new_message_tokens = len(list(tokenizer.encode(message.content)))

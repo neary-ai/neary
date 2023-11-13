@@ -1,5 +1,5 @@
 import json
-from typing import TYPE_CHECKING, List
+from typing import List
 
 from sqlalchemy.orm import Session
 

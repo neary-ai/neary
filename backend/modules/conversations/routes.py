@@ -7,7 +7,6 @@ from fastapi.responses import JSONResponse, FileResponse
 from database import get_db
 from .schemas import *
 from .models import *
-from core.services.message_handler import MessageHandler
 from modules.messages.schemas import MessageBase
 from modules.messages.services.message_service import MessageService
 from modules.approvals.services.approval_service import ApprovalService
@@ -65,8 +64,8 @@ async def get_settings_options():
                 },
             ],
             "model": [
-                {"option": "gpt-4", "value": "gpt-4"},
                 {"option": "gpt-4-turbo", "value": "gpt-4-1106-preview"},
+                {"option": "gpt-4", "value": "gpt-4"},
                 {"option": "gpt-3.5-turbo", "value": "gpt-3.5-turbo"},
             ],
         }

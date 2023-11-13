@@ -13,16 +13,18 @@ class BasePlugin(ABC):
         self.conversation_id = conversation_id
         self.settings, self.metadata = self.load_config()
 
-        print("Instantiated plugin with ID: ", id)
-
         # Simplify settings
         if settings is not None:
-            for function_name in settings:
-                if settings[function_name] and function_name in self.settings:
-                    for setting_key in settings[function_name]:
-                        self.settings[function_name][setting_key] = settings[
-                            function_name
-                        ][setting_key]["value"]
+            for function_name, function_settings in settings.items():
+                if (
+                    function_name
+                    and function_settings
+                    and function_name in self.settings
+                ):
+                    for setting_key, setting_data in function_settings.items():
+                        self.settings[function_name][setting_key] = setting_data[
+                            "value"
+                        ]
 
         self.data = {} if data is None else data
 

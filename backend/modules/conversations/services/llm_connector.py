@@ -1,14 +1,11 @@
 import json
-import asyncio
 from typing import TYPE_CHECKING
-
-import openai
-from openai.error import Timeout, RateLimitError
+from openai import AsyncOpenAI, OpenAI, AsyncAzureOpenAI
 
 from ..models import *
 from ..schemas import *
-from modules.messages.schemas import AssistantMessage
 from config import settings
+from modules.messages.schemas import AssistantMessage
 
 if TYPE_CHECKING:
     from core.services.message_handler import MessageHandler
@@ -26,37 +23,41 @@ class LLMConnector:
         self.message_handler = message_handler
         self.context = context
 
+        self.create_client()
+
+    def create_client(self):
         # Azure config
         if self.api_type == "azure":
-            openai.api_type = api_type
             api_key = settings.chat_models.get("azure_openai_key", None)
-            api_base = settings.chat_models.get("azure_openai_endpoint", None)
-            api_version = settings.chat_models.get("azure_openai_api_version", None)
+            base_url = settings.chat_models.get("azure_openai_endpoint", None)
+            api_version = settings.chat_models.get(
+                "azure_openai_api_version", "2023-05-15"
+            )
 
-            if not api_key or not api_base:
+            if not api_key or not base_url:
                 raise ValueError(
                     "AZURE_OPENAI_KEY and AZURE_OPENAI_ENDPOINT must be set"
                 )
 
-            openai.api_key = api_key
-            openai.api_base = api_base
-            openai.api_version = "2023-05-15" if not api_version else api_version
-
+            self.client = AsyncAzureOpenAI(
+                api_key=api_key, base_url=base_url, api_version=api_version
+            )
         # Custom config
         elif self.api_type == "custom":
-            api_base = settings.chat_models.get("custom_endpoint", None)
+            base_url = settings.chat_models.get("custom_endpoint", None)
 
-            if not api_base:
+            if not base_url:
                 raise ValueError(
                     "CUSTOM_ENDPOINT must be set in environment variables."
                 )
 
-            openai.api_base = api_base
+            self.client = AsyncOpenAI(base_url=base_url)
 
-        # Default OpenAI config
         else:
-            openai.api_key = settings.chat_models.get("openai_api_key", None)
-            openai.api_base = "https://api.openai.com/v1"
+            api_key = settings.chat_models.get("openai_api_key", None)
+            base_url = "https://api.openai.com/v1"
+
+            self.client = AsyncOpenAI(api_key=api_key, base_url=base_url)
 
     async def create_chat(
         self,
@@ -74,10 +75,13 @@ class LLMConnector:
         frequency_penalty=0,
     ) -> AssistantMessage | None:
         model_key = "deployment_id" if self.api_type == "azure" else "model"
-        print(f"\n\nMESSAGES: {messages}\n\n")
         for attempt in range(3):
             try:
                 print(f"\n\nUsing model: {model}\n\n")
+
+                import pprint
+
+                pprint.pprint(messages)
 
                 params = {
                     model_key: model,
@@ -97,43 +101,38 @@ class LLMConnector:
                 if max_tokens and max_tokens > 0:
                     params["max_tokens"] = max_tokens
 
-                response = await openai.ChatCompletion.acreate(**params)
+                response = await self.client.chat.completions.create(**params)
+
                 if not stream:
-                    return response["choices"][0]["message"]["content"]
+                    serialized_response = response.model_dump()
+                    return serialized_response["choices"][0]["message"]["content"]
                 else:
                     collected_tokens = ""
                     function_name = ""
                     function_arguments = ""
-                    async for chunk in response:
+                    async for response_chunk in response:
                         try:
-                            if (
-                                "content" in chunk["choices"][0]["delta"]
-                                and chunk["choices"][0]["delta"]["content"] is not None
-                            ):
-                                collected_tokens += chunk["choices"][0]["delta"][
-                                    "content"
-                                ]
-                            if "function_call" in chunk["choices"][0]["delta"]:
-                                if (
-                                    "name"
-                                    in chunk["choices"][0]["delta"]["function_call"]
-                                ):
-                                    function_name = chunk["choices"][0]["delta"][
-                                        "function_call"
-                                    ]["name"]
-                                if (
-                                    "arguments"
-                                    in chunk["choices"][0]["delta"]["function_call"]
-                                ):
-                                    function_arguments += chunk["choices"][0]["delta"][
-                                        "function_call"
-                                    ]["arguments"]
+                            chunk = response_chunk.model_dump()
+                            delta = chunk["choices"][0]["delta"]
+
+                            if delta:
+                                collected_tokens += delta.get("content", "") or ""
+                                function_call = delta.get("function_call")
+
+                                if function_call:
+                                    function_name = (
+                                        function_call.get("name") or function_name
+                                    )
+                                    function_arguments += (
+                                        function_call.get("arguments", "") or ""
+                                    )
 
                             ai_message = AssistantMessage(
                                 conversation_id=conversation_id,
                                 content=collected_tokens,
                                 status="incomplete",
                             )
+
                             await self.message_handler.send_message_to_ui(
                                 message=ai_message.content,
                                 conversation_id=ai_message.conversation_id,
@@ -169,10 +168,6 @@ class LLMConnector:
                     )
 
                     return ai_message
-            except (Timeout, RateLimitError):
-                wait_time = 3**attempt
-                print(f"Error. Retrying in {wait_time} seconds...")
-                await asyncio.sleep(wait_time)
             except Exception as e:
                 await self.message_handler.send_alert_to_ui(
                     message=str(e).replace("OpenAI", "chat model"), type="error"
@@ -187,8 +182,10 @@ class LLMConnector:
         return None
 
 
-async def get_embeddings(doc):
-    openai.api_key = settings.chat_models.get("openai_api_key", None)
-    response = openai.Embedding.create(input=doc, model="text-embedding-ada-002")
-    embeddings = response["data"][0]["embedding"]
+def get_embeddings(doc):
+    api_key = settings.chat_models.get("openai_api_key", None)
+    client = OpenAI(api_key=api_key)
+    response = client.embeddings.create(input=doc, model="text-embedding-ada-002")
+    serialized = response.model_dump()
+    embeddings = serialized["data"][0]["embedding"]
     return embeddings

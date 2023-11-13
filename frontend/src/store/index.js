@@ -71,8 +71,12 @@ export const useAppStore = defineStore('appstore', {
                                 name: function_info.name,
                                 display_name: function_info.display_name,
                                 description: function_info.description,
-                                plugin_id: plugin_instance.plugin_id,
                                 plugin_icon: plugin_instance.plugin.icon,
+                                plugin_id: plugin_instance.plugin_id,
+                                plugin_instance_id: plugin_instance.id,
+                                function_id: function_info.id,
+                                function_instance_id: func.id
+
                             });
                         }
                     });

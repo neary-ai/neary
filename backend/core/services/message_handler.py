@@ -112,20 +112,29 @@ class MessageHandler:
             print("No websocket available!")
 
     async def send_file_to_ui(
-        self, filename: str, filesize: str, file_url: str, conversation_id: int
+        self,
+        filename: str,
+        filesize: str,
+        file_url: str,
+        conversation_id: int,
+        save_to_db: bool = True,
     ):
         content = json.dumps(
             {"filename": filename, "filesize": filesize, "url": file_url}
         )
+
+        message_dict = {
+            "role": "file",
+            "content": content,
+            "conversation_id": conversation_id,
+            "status": None,
+        }
+
+        if save_to_db:
+            MessageService(self.db).create_message(**message_dict)
+
         if self.websocket:
-            await self.websocket.send_json(
-                {
-                    "role": "file",
-                    "content": content,
-                    "conversation_id": conversation_id,
-                    "status": None,
-                }
-            )
+            await self.websocket.send_json(message_dict)
         else:
             print("No websocket available!")
 
@@ -163,11 +172,6 @@ class MessageHandler:
     ):
         """Queries the LLM and streams the response to the UI"""
         llm_settings = conversation.settings["llm"]
-
-        if self.websocket and streaming is True:
-            websocket = self.websocket
-        else:
-            websocket = None
 
         try:
             llm = LLMConnector(

@@ -1,7 +1,6 @@
 import os
 import inspect
 import importlib
-from typing import List
 from toml import load
 
 from sqlalchemy.orm import Session
@@ -22,7 +21,7 @@ from ..models import (
 class PluginLoader:
     def __init__(self, db: Session):
         self.db = db
-        self.default_plugins = ["essentials"]
+        self.default_plugins = ["essentials", "document_search"]
         self.plugin_service = PluginService(self.db)
 
     def load_plugins(self):

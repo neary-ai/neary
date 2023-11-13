@@ -6,7 +6,6 @@ from fastapi import (
     Request,
     APIRouter,
     WebSocket,
-    WebSocketDisconnect,
     Depends,
 )
 from fastapi.responses import JSONResponse, FileResponse
@@ -36,9 +35,9 @@ async def websocket_endpoint(websocket: WebSocket):
         )
 
 
-@router.get("/files/{conversation_id}/{filename}")
+@router.get("/api/files/{conversation_id}/{filename}")
 async def serve_file(conversation_id: int, filename: str):
-    base_directory = Path(__file__).resolve().parent.parent.parent / "data" / "files"
+    base_directory = Path(__file__).resolve().parent.parent / "data" / "files"
     file_path = base_directory / str(conversation_id) / filename
     return FileResponse(
         str(file_path),
