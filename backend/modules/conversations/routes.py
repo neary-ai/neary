@@ -64,8 +64,9 @@ async def get_settings_options():
                 },
             ],
             "model": [
-                {"option": "gpt-4-turbo", "value": "gpt-4-1106-preview"},
                 {"option": "gpt-4", "value": "gpt-4"},
+                {"option": "gpt-4-turbo", "value": "gpt-4-1106-preview"},
+                # {"option": "gpt-4-vision", "value": "gpt-4-vision-preview"},
                 {"option": "gpt-3.5-turbo", "value": "gpt-3.5-turbo"},
             ],
         }

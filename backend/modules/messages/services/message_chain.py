@@ -88,7 +88,10 @@ class MessageChain:
                 )
             elif message.role in ["assistant", "user"]:
                 formatted_chain.append(
-                    {"role": message.role, "content": message.content}
+                    {
+                        "role": message.role,
+                        "content": message.content,
+                    }
                 )
 
         return formatted_chain

@@ -71,6 +71,7 @@ export default function useWebSocket() {
         }
 
         else if (message.role == 'status') {
+            console.log("Received status message: ", message)
             await handleStatus(message);
             return
         }
