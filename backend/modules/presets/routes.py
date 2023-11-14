@@ -10,7 +10,7 @@ from .services.preset_service import PresetService
 router = APIRouter()
 
 
-@router.post("/import", response_model=Preset)
+@router.post("/presets/import", response_model=Preset)
 def import_preset(preset: PresetCreate, db: Session = Depends(get_db)):
     service = PresetService(db)
     db_preset = service.create_preset(
@@ -19,8 +19,8 @@ def import_preset(preset: PresetCreate, db: Session = Depends(get_db)):
         icon=preset.icon,
         plugins=preset.plugins,
         settings=preset.settings,
-        is_default=preset.is_default,
-        is_custom=preset.is_custom,
+        is_default=False,
+        is_custom=True,
     )
 
     if db_preset is None:
@@ -29,7 +29,7 @@ def import_preset(preset: PresetCreate, db: Session = Depends(get_db)):
     return db_preset
 
 
-@router.post("/from_conversation/{conversation_id}", response_model=Preset)
+@router.post("/presets/from_conversation/{conversation_id}", response_model=Preset)
 def create_preset_from_conversation(
     conversation_id: int, preset: PresetFromConversation, db: Session = Depends(get_db)
 ):
@@ -47,7 +47,7 @@ def create_preset_from_conversation(
     return db_preset
 
 
-@router.get("", response_model=List[Preset])
+@router.get("/presets", response_model=List[Preset])
 def get_presets(db: Session = Depends(get_db)):
     service = PresetService(db)
     presets = service.get_presets()
@@ -58,10 +58,13 @@ def get_presets(db: Session = Depends(get_db)):
     return presets
 
 
-@router.put("/{preset_id}/from_conversation/{conversation_id}", response_model=Preset)
+@router.put(
+    "/presets/{preset_id}/from_conversation/{conversation_id}", response_model=Preset
+)
 def update_preset_from_conversation(
     preset_id: int, conversation_id: int, db: Session = Depends(get_db)
 ):
+    print("Updating preset from convo!")
     service = PresetService(db)
     db_preset = service.update_preset_from_conversation(preset_id, conversation_id)
 
@@ -71,8 +74,9 @@ def update_preset_from_conversation(
     return db_preset
 
 
-@router.put("/{preset_id}", response_model=Preset)
+@router.put("/presets/{preset_id}", response_model=Preset)
 def update_preset(preset_id: int, preset: PresetUpdate, db: Session = Depends(get_db)):
+    print("In route: ", preset.model_dump())
     service = PresetService(db)
     db_preset = service.update_preset(preset_id, preset)
 
@@ -82,7 +86,7 @@ def update_preset(preset_id: int, preset: PresetUpdate, db: Session = Depends(ge
     return db_preset
 
 
-@router.delete("/{preset_id}")
+@router.delete("/presets/{preset_id}")
 def delete_preset(preset_id: int, db: Session = Depends(get_db)):
     service = PresetService(db)
     service.delete_preset(preset_id)
@@ -90,7 +94,7 @@ def delete_preset(preset_id: int, db: Session = Depends(get_db)):
     return {"detail": f"Preset {preset_id} deleted"}
 
 
-@router.get("/{preset_id}/export", response_model=PresetExport)
+@router.get("/presets/{preset_id}/export", response_model=PresetExport)
 def export_preset(preset_id: int, db: Session = Depends(get_db)):
     service = PresetService(db)
     db_preset = service.get_preset_by_id(preset_id)

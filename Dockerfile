@@ -11,10 +11,10 @@ COPY ./frontend .
 RUN npm run build
 
 # Build stage for backend
-FROM python:3.9-slim
+FROM python:3.10-slim
 
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends libmagic1 && \
+    apt-get install -y --no-install-recommends libmagic1 gcc g++ make libffi-dev && \
     rm -rf /var/lib/apt/lists/*
 
 WORKDIR /backend

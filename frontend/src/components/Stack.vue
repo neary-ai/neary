@@ -175,31 +175,10 @@
                                     New
                                     Preset</Button>
                                 <Button class="shrink-0"
-                                    @buttonClick="updateSelectedPreset(store.selectedConversation.preset)"
+                                    @buttonClick="updateSelectedPreset()"
                                     button-type="btn-outline-light">Update Current Preset</Button>
                             </div>
                         </div>
-                        <Modal :isOpen="isOpen" @keyup.enter="save" @save="save" @close="close">
-                            <template v-slot:title>
-                                Create Preset
-                            </template>
-                            <div class="flex-grow w-full my-5">
-                                <div class="flex flex-col mb-6">
-                                    <label class="text-sm font-semibold text-slate-300 w-full mb-2">Preset Name</label>
-                                    <TextInputField v-model="createPresetName" class="w-full"
-                                        placeholderText="Enter a name for your preset" />
-                                </div>
-                                <div class="flex flex-col mb-6">
-                                    <label class="text-sm font-semibold text-slate-300 w-full mb-2">Description</label>
-                                    <TextInputField v-model="createPresetDescription" class="w-full"
-                                        placeholderText="Enter a short description" />
-                                </div>
-                            </div>
-                            <template v-slot:buttons>
-                                <Button @buttonClick="save" button-type="btn-light" class="w-full">Save Preset</Button>
-                                <Button @buttonClick="close" button-type="btn-outline-light" class="w-full">Cancel</Button>
-                            </template>
-                        </Modal>
                     </div>
                 </div>
             </div>
@@ -215,10 +194,8 @@ import api from '@/services/apiService';
 import Button from './common/Button.vue';
 import { Popover, PopoverButton, PopoverPanel } from '@headlessui/vue';
 import TextareaField from './common/TextareaField.vue';
-import TextInputField from './common/TextInputField.vue';
 import SectionHeading from './common/SectionHeading.vue'
 import Card from './common/Card.vue';
-import Modal from './common/Modal.vue';
 import { Icon } from '@iconify/vue';
 import { ChevronRightIcon } from '@heroicons/vue/20/solid';
 
@@ -252,10 +229,10 @@ const save = async () => {
 
 }
 
-const updateSelectedPreset = async (preset) => {
+const updateSelectedPreset = async () => {
     try {
-        preset['rebuild_from_conversation'] = store.selectedConversationId;
-        await api.updatePreset(preset);
+        let preset = store.conversationPreset(store.selectedConversation)
+        await api.updatePresetFromConversation(preset.id, store.selectedConversationId);
         store.newNotification("Preset updated");
     }
     catch {
@@ -274,7 +251,6 @@ const onBackButtonClick = () => {
 watch(() => store.selectedConversationId, async (newId) => {
     if (newId) {
         store.settingsOptions = await api.getAvailableSettings();
-        console.log('PLUGINS: ', store.selectedConversation.plugins)
     }
 }, { immediate: true });
 

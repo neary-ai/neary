@@ -1,5 +1,5 @@
 import json
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Union
 from openai import AsyncOpenAI, OpenAI, AsyncAzureOpenAI
 
 from ..models import *
@@ -73,16 +73,10 @@ class LLMConnector:
         stop=None,
         presence_penalty=0,
         frequency_penalty=0,
-    ) -> AssistantMessage | None:
+    ) -> Union[AssistantMessage, None]:
         model_key = "deployment_id" if self.api_type == "azure" else "model"
         for attempt in range(3):
             try:
-                print(f"\n\nUsing model: {model}\n\n")
-
-                import pprint
-
-                pprint.pprint(messages)
-
                 params = {
                     model_key: model,
                     "messages": messages,

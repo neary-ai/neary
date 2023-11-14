@@ -81,6 +81,14 @@ const api = {
             throw error;
         }
     },
+    async getConversations() {
+        try {
+            const response = await axios.get(`${apiBaseUrl}/api/conversations`, { withCredentials: true });
+            return response.data;
+        } catch (error) {
+            console.error('Error getting conversations:', error);
+        }
+    },
     async getMessages(conversationId, archived) {
         try {
             const response = await axios.get(`${apiBaseUrl}/api/conversations/${conversationId}/messages`, { withCredentials: true, params: { archived: archived } });
@@ -215,12 +223,20 @@ const api = {
             console.error('Error getting presets:', error);
         }
     },
-    async createPreset(newPreset) {
+    async createPresetFromConversation(conversationId, presetValues) {
         try {
-            const response = await axios.post(`${apiBaseUrl}/api/presets`, newPreset, { withCredentials: true });
+            const response = await axios.post(`${apiBaseUrl}/api/presets/from_conversation/${conversationId}`, presetValues, { withCredentials: true });
             return response.data;
         } catch (error) {
             console.error('Error adding preset:', error);
+        }
+    },
+    async updatePresetFromConversation(presetId, conversationId) {
+        try {
+            const response = await axios.put(`${apiBaseUrl}/api/presets/${presetId}/from_conversation/${conversationId}`, {}, { withCredentials: true });
+            return response.data;
+        } catch (error) {
+            console.error('Error updating preset:', error);
         }
     },
     async exportPreset(preset) {
@@ -233,15 +249,15 @@ const api = {
     },
     async deletePreset(preset) {
         try {
-            const response = await axios.post(`${apiBaseUrl}/api/presets/${preset.id}`, {}, { withCredentials: true });
+            const response = await axios.delete(`${apiBaseUrl}/api/presets/${preset.id}`, { withCredentials: true });
             return response.data;
         } catch (error) {
             console.error('Error deleting preset:', error);
         }
     },
-    async updatePreset(preset) {
+    async updatePreset(presetId, presetValues) {
         try {
-            const response = await axios.put(`${apiBaseUrl}/api/presets/${preset.id}`, { preset }, { withCredentials: true });
+            const response = await axios.put(`${apiBaseUrl}/api/presets/${presetId}`, presetValues, { withCredentials: true });
             return response.data;
         } catch (error) {
             console.error('Error updating preset:', error);

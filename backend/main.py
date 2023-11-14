@@ -2,6 +2,7 @@ import uvicorn
 import os
 import sys
 from pathlib import Path
+from contextlib import asynccontextmanager
 
 current_dir = Path(__file__).resolve().parent
 sys.path.append(str(Path(__file__).parent.parent))
@@ -15,15 +16,18 @@ from core.setup import run_setup
 from auth.middleware import AuthMiddleware
 from database import SQLALCHEMY_DATABASE_URL
 
-app = FastAPI()
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    run_setup(SQLALCHEMY_DATABASE_URL)
+    yield
+
+
+app = FastAPI(lifespan=lifespan)
+
+# Register our routes
 for route, prefix in routes:
     app.include_router(route, prefix=prefix)
-
-
-@app.on_event("startup")
-async def app_startup():
-    run_setup(SQLALCHEMY_DATABASE_URL)
 
 
 # Serve our static files from the frontend

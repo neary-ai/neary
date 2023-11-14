@@ -82,12 +82,14 @@ const preset = ref({
 const savePreset = async () => {
     const id = Number(router.currentRoute.value.params.id);
     if (id !== 0) {
-        await api.updatePreset(preset.value)
+        await api.updatePreset(id, preset.value);
         store.newNotification("Preset updated");
     }
     else {
-        preset.value['conversation_id'] = store.selectedConversationId;
-        await api.createPreset(preset.value);
+        let new_preset = await api.createPresetFromConversation(store.selectedConversationId, preset.value);
+        store.availablePresets.push(new_preset)
+        console.log("Avail: ", store.availablePresets)
+        await store.updateConversationPreset(store.selectedConversation, new_preset);
         store.newNotification("New preset saved");
     }
 };

@@ -1,4 +1,4 @@
-from typing import Optional, Dict, List
+from typing import Optional, Dict, List, Union
 
 from pydantic import BaseModel, ConfigDict
 
@@ -30,5 +30,5 @@ class Conversation(ConversationBase):
 class ActionResponse(BaseModel):
     name: str
     conversation_id: int
-    message_id: str | int
+    message_id: Union[str, int]
     data: dict

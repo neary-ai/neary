@@ -211,6 +211,12 @@ export const useAppStore = defineStore('appstore', {
             }
             this.messagesLoading = false;
         },
+        async getConversations() {
+            let conversations = await api.getConversations()
+            for (let conversation of conversations) {
+                this.conversations[conversation.id] = this.initConversation(conversation);
+            }
+        },
         async loadSpace(spaceId) {
             this.selectedSpaceId = spaceId;
             await this.saveState();
@@ -461,5 +467,14 @@ export const useAppStore = defineStore('appstore', {
                 console.log('Error disabling plugin: ', e)
             }
         },
+        async getAvailablePresets() {
+            this.availablePresets = await api.getAvailablePresets();
+        },
+        async deletePreset(preset) {
+            await api.deletePreset(preset);
+            this.getAvailablePresets();
+            this.getConversations();
+
+        }
     },
 });

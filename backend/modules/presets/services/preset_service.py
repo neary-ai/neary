@@ -76,12 +76,13 @@ class PresetService:
         if conversation is None:
             raise ValueError(f"Conversation {conversation_id} not found")
 
-        # Create a new preset using the conversation data
+        serialized_plugins = self._serialize_plugins_for_preset(conversation.plugins)
+
         preset = PresetModel(
             name=name,
             description=description,
             icon=icon,
-            plugins=conversation.plugins,
+            plugins=serialized_plugins,
             settings=conversation.settings,
             is_default=False,
             is_custom=True,
@@ -91,6 +92,24 @@ class PresetService:
         self.db.commit()
         self.db.refresh(preset)
         return preset
+
+    def _serialize_plugins_for_preset(self, plugins):
+        serialized_plugins = []
+        for plugin_instance in plugins:
+            serialized_plugin = {
+                "name": plugin_instance.plugin.name,
+                "data": plugin_instance.data,
+                "functions": [],
+            }
+            for function_instance in plugin_instance.function_instances:
+                serialized_function = {
+                    "name": function_instance.function.name,
+                    "settings": function_instance.get_merged_settings(),
+                    "type": function_instance.function.type,
+                }
+                serialized_plugin["functions"].append(serialized_function)
+            serialized_plugins.append(serialized_plugin)
+        return serialized_plugins
 
     def get_presets(self):
         return self.db.query(PresetModel).all()
@@ -114,6 +133,15 @@ class PresetService:
                 if isinstance(preset_data, PresetUpdate)
                 else preset_data
             )
+
+            if "is_default" in update_data and update_data["is_default"]:
+                # Set all presets is_default to False
+                for p in self.get_presets():
+                    if p.is_default:
+                        p.is_default = False
+                        self.db.commit()
+                        self.db.refresh(p)
+
             for var, value in update_data.items():
                 if value is not None:
                     setattr(preset, var, value)
@@ -139,7 +167,8 @@ class PresetService:
             raise ValueError(f"Preset {preset_id} not found")
 
         # Update the preset with the conversation data
-        preset.plugins = conversation.plugins
+        serialized_plugins = self._serialize_plugins_for_preset(conversation.plugins)
+        preset.plugins = serialized_plugins
         preset.settings = conversation.settings
 
         self.db.commit()
@@ -153,7 +182,6 @@ class PresetService:
             raise ValueError(f"Preset {preset_id} not found")
 
         if preset.is_default:
-            # Find the first preset that's not the current default one
             new_default = (
                 self.db.query(PresetModel).filter(PresetModel.id != preset_id).first()
             )
@@ -162,6 +190,18 @@ class PresetService:
                 new_default.is_default = True
 
         self.db.delete(preset)
+
+        default_preset = self.get_default_preset()
+
+        conversations_with_deleted_preset = (
+            self.db.query(ConversationModel)
+            .filter(ConversationModel.preset_id == preset_id)
+            .all()
+        )
+
+        for conversation in conversations_with_deleted_preset:
+            self.apply_preset(conversation, default_preset.id)
+
         self.db.commit()
 
     def load_presets(self, file_path=None):

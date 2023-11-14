@@ -1,6 +1,7 @@
 import os
 import inspect
 import importlib
+from typing import Union
 from toml import load
 
 from sqlalchemy.orm import Session
@@ -113,7 +114,7 @@ class PluginLoader:
         self.db.commit()
 
     def _register_function(
-        self, name: str, function: Tool | Snippet, plugin: PluginModel
+        self, name: str, function: Union[Tool, Snippet], plugin: PluginModel
     ):
         function_model = self.plugin_service.get_function_by_name(name)
         serialized_function = function.model_dump(exclude={"integrations"})

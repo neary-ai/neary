@@ -51,7 +51,7 @@
                         <Icon icon="heroicons:pencil" class="w-5 h-5" />
                         <div>Edit Preset</div>
                       </li>
-                      <li @click.stop="deletePreset(preset, close)"
+                      <li @click.stop="store.deletePreset(preset, close)"
                         class="cursor-pointer flex items-center rounded-b gap-2 px-3 py-2 text-sm hover:bg-nearygray-300">
                         <Icon icon="heroicons:x-mark" class="w-5 h-5" />
                         <div>Delete Preset</div>
@@ -130,7 +130,7 @@ const importPreset = async (event) => {
         const isValidPreset = requiredKeys.every(key => key in preset);
 
         // Check if a preset with the same name already exists
-        const presetExists = presets.value.some(existingPreset => existingPreset.name === preset.name);
+        const presetExists = store.availablePresets.some(existingPreset => existingPreset.name === preset.name);
 
         if (!isValidPreset) {
           store.newNotification("Invalid preset! Check the file format.");
@@ -141,7 +141,8 @@ const importPreset = async (event) => {
           store.newNotification("A preset with this name already exists");
           return;
         }
-        store.availablePresets = await api.importPreset(preset);
+        let new_preset = await api.importPreset(preset);
+        store.availablePresets.push(new_preset)
       } catch (err) {
         console.log(err)
         store.newNotification("Unable to import preset");
@@ -151,13 +152,9 @@ const importPreset = async (event) => {
   }
 };
 
-const deletePreset = async (preset) => {
-  store.availablePresets = await api.deletePreset(preset);
-}
-
 const setDefault = async (preset) => {
   preset['is_default'] = true;
-  store.availablePresets = await api.updatePreset(preset);
+  await api.updatePreset(preset.id, preset);
 }
 
 const onBackButtonClick = () => {

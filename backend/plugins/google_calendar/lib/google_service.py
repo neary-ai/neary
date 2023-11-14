@@ -65,12 +65,10 @@ class GoogleService:
         self.creds = None
 
     def authenticate(self):
-        print("Authenticating!")
         try:
             self.creds = Credentials(
                 self.access_token,
             )
-            print("Successfully authenticated.")
             return True
         except Exception as error:
             raise error
