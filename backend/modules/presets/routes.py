@@ -76,7 +76,6 @@ def update_preset_from_conversation(
 
 @router.put("/presets/{preset_id}", response_model=Preset)
 def update_preset(preset_id: int, preset: PresetUpdate, db: Session = Depends(get_db)):
-    print("In route: ", preset.model_dump())
     service = PresetService(db)
     db_preset = service.update_preset(preset_id, preset)
 

@@ -15,6 +15,7 @@ from .schemas import InitialData
 from users.services import UserService
 from core.services.message_handler import MessageHandler
 from modules.conversations.services.chat_service import ChatService
+from modules.approvals.services.approval_service import ApprovalService
 
 router = APIRouter()
 
@@ -26,13 +27,23 @@ async def websocket_endpoint(websocket: WebSocket):
 
     message_handler = MessageHandler(websocket)
 
-    async for user_message in message_handler.receive_messages():
-        chat_service = ChatService(
-            db=message_handler.db, message_handler=message_handler
-        )
-        await chat_service.handle_message(
-            conversation_id=user_message.conversation_id, user_message=user_message
-        )
+    async for message in message_handler.receive_messages():
+        if message.role == "user":
+            chat_service = ChatService(
+                db=message_handler.db, message_handler=message_handler
+            )
+            await chat_service.handle_message(
+                conversation_id=message.conversation_id, user_message=message
+            )
+        elif message.role == "action":
+            approval_service = ApprovalService(
+                db=message_handler.db, message_handler=message_handler
+            )
+            await approval_service.handle_approval_response(
+                data=message.content["data"],
+                message_id=message.content["message_id"],
+                conversation_id=message.conversation_id,
+            )
 
 
 @router.get("/api/files/{conversation_id}/{filename}")

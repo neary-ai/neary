@@ -226,8 +226,6 @@ export const useAppStore = defineStore('appstore', {
             await api.archiveMessages(conversationId)
             const conversation = this.conversations[conversationId]
             conversation.message_ids.forEach((id) => {
-                console.log("Archiving message ID: ", id)
-                console.log("this.messages: ", this.messages)
                 if (this.messages[id]) {
                     this.messages[id].is_archived = true;
                 }

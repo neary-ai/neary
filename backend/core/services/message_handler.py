@@ -7,7 +7,7 @@ from database import SessionLocal
 from modules.conversations.services.llm_connector import LLMConnector
 from modules.conversations.models import ConversationModel
 from modules.messages.services.message_service import MessageService
-from modules.messages.schemas import UserMessage
+from modules.messages.schemas import MessageBase
 
 if typing.TYPE_CHECKING:
     from modules.messages.services.message_chain import MessageChain
@@ -35,8 +35,8 @@ class MessageHandler:
             try:
                 input_data = await self.websocket.receive_json()
                 try:
-                    user_message = UserMessage(**input_data)
-                    yield user_message
+                    message = MessageBase(**input_data)
+                    yield message
                 except ValueError as e:
                     print(f"Received message does not match expected format: {e}")
                     continue
@@ -99,7 +99,9 @@ class MessageHandler:
             print("No websocket available!")
 
     async def send_status_to_ui(self, message: str, conversation_id: int):
+        print("Sending status to UI..")
         if self.websocket:
+            print("With websocket: ", self.websocket)
             await self.websocket.send_json(
                 {
                     "role": "status",

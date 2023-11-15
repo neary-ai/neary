@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Union
 from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -10,7 +10,7 @@ class MessageBase(BaseModel):
     id: Optional[int] = None
     role: str
     conversation_id: Optional[int] = None
-    content: str
+    content: Union[str, dict]
     function_call: Optional[dict] = None
     metadata: Optional[list] = Field(None, alias="meta_data")
     tokens: Optional[int] = None

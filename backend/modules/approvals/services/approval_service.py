@@ -103,7 +103,7 @@ class ApprovalService:
     ):
         request_id = data.get("request_id")
         response = data.get("response")
-
+        print("Handling approval response.")
         if response.lower() not in ["approve", "reject"]:
             print("Invalid action. Use 'approve' or 'reject'")
 
@@ -115,13 +115,14 @@ class ApprovalService:
 
         if response.lower() == "approve":
             self.update_approval_request_status(approval_request, "approved")
-
+            print("Sending update status message: accepted.")
             await self.message_handler.send_status_to_ui(
                 message={"approval_response_processed": message_id},
                 conversation_id=conversation_id,
             )
 
         elif response.lower() == "reject":
+            print("Sending update status message: rejected.")
             await self.message_handler.send_status_to_ui(
                 message={"approval_response_processed": message_id},
                 conversation_id=conversation_id,
@@ -184,6 +185,7 @@ class ApprovalService:
             )
 
     async def handle_action(self, name, data, message_id, conversation_id):
+        print("handling action: ", message_id)
         action_handler = self.actions.get(name)
         if action_handler:
             response = await action_handler(data, message_id, conversation_id)

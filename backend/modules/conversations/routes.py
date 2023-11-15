@@ -209,13 +209,3 @@ async def export_conversation_data(
     return FileResponse(
         file_name, media_type="application/octet-stream", filename=file_name
     )
-
-
-@router.post("/action/response")
-async def action_response(action: ActionResponse, db: Session = Depends(get_db)):
-    try:
-        result = await ApprovalService(db=db).handle_action(**action.model_dump())
-        return JSONResponse(content={"detail": result})
-    except Exception as e:
-        print(e)
-        return JSONResponse(content={"detail": "An error occured"})

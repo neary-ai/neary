@@ -57,11 +57,13 @@ import DOMPurify from 'dompurify';
 import 'prismjs/components/prism-python';
 import 'prismjs/themes/prism-tomorrow.css';
 import { ChevronDownIcon, InformationCircleIcon, } from '@heroicons/vue/20/solid';
+import useWebSocket from '@/composables/websocket.js';
 import { scrollToBottom } from '../services/scrollFunction.js';
 import { useAppStore } from '@/store/index.js';
 import api from '@/services/apiService';
 
 const store = useAppStore();
+const { sendMessageThroughWebSocket } = useWebSocket();
 
 const props = defineProps({
     message: Object,
@@ -95,8 +97,19 @@ const handleActionButton = async (action, messageId) => {
         window.open(action.data.url, '_blank');
     } else {
         actionResponseLoading.value = true;
-        try {
-            const response = await api.postActionResponse(action, messageId);
+        try {            
+            const content = {
+                name: action.name,
+                conversation_id: action.conversation_id,
+                data: action.data,
+                message_id: messageId
+            }
+            const message = {
+                role: "action",
+                content: content,
+                conversation_id: store.selectedConversationId
+            }
+            sendMessageThroughWebSocket(message);
         } catch (error) {
             console.error('Error sending action response:', error);
         }
