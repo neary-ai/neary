@@ -86,7 +86,12 @@ watch(() => props.chatWindowHeight, (newVal) => {
 });
 
 const convertedContent = computed(() => {
-    return renderMarkdown(props.message.content);
+    if (props.message.content.text) {
+        return renderMarkdown(props.message.content.text);
+    }
+    else {
+        return ""
+    }
 });
 
 const renderMarkdown = (markdownText) => {

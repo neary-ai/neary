@@ -27,7 +27,7 @@ export const useAppStore = defineStore('appstore', {
         conversationsLoading: false,
         messagesLoading: false,
         textInputHeight: 0,
-        currentMessage: "",
+        currentMessage: { "text": "", "images": [] },
         appState: {},
         userProfile: {},
         showXray: false,
@@ -83,7 +83,10 @@ export const useAppStore = defineStore('appstore', {
                 }
             });
             return functions;
-        }
+        },
+        isMessageEmpty(state) {
+            return !state.currentMessage.text && (!state.currentMessage.images || state.currentMessage.images.length === 0)
+        },
     },
     actions: {
         async initialize() {
@@ -210,6 +213,12 @@ export const useAppStore = defineStore('appstore', {
                 }
             }
             this.messagesLoading = false;
+        },
+        resetCurrentMessage() {
+            this.currentMessage = {
+                text: '',
+                images: [],
+            }
         },
         async getConversations() {
             let conversations = await api.getConversations()
@@ -421,7 +430,7 @@ export const useAppStore = defineStore('appstore', {
             }
             this.messages[message.id] = message;
             this.conversations[conversationId].message_ids.push(message.id);
-            this.conversations[conversationId].excerpt = message.content
+            this.conversations[conversationId].excerpt = message.content.text
         },
         removeMessage(messageId, conversationId) {
             delete this.messages[messageId];
@@ -433,7 +442,7 @@ export const useAppStore = defineStore('appstore', {
         updateLastMessage(message, messageId) {
             message.id = messageId
             this.messages[messageId] = message
-            this.conversations[message.conversation_id].excerpt = message.content
+            this.conversations[message.conversation_id].excerpt = message.content.text
         },
         // Plugins
         async enablePlugin(pluginId) {

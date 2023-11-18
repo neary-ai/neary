@@ -1,10 +1,17 @@
 <template>
   <div class="relative flex items-center bg-nearyblue-300">
-    <textarea ref="textInputRef" v-model="currentMessage"
+    <img v-if="store.currentMessage.images.length"
+         @click="removeImage"
+         :src="store.currentMessage.images[0]" 
+         alt="Image thumbnail" 
+         class="absolute w-16 h-16 ml-6 object-cover rounded hover:opacity-70 hover:cursor-pointer" />
+    <textarea ref="textInputRef" v-model="store.currentMessage.text"
       @keydown.enter="!$event.shiftKey ? (sendMessage(), $event.preventDefault()) : ''" @input="resize"
       @focus="isFocused = true" @blur="isFocused = false" placeholder="What do you say?" spellcheck="false"
       :disabled="!store.isWebSocketActive && !initializing"
-      :class="store.isWebSocketActive || initializing ? ' border-nearyblue-300' : 'border-2 border-nearypink-300/50'"
+      :class="{ 'border-nearyblue-300': store.isWebSocketActive || initializing,
+                'border-2 border-nearypink-300/50': !(store.isWebSocketActive || initializing),
+                'pl-[6.5rem]': store.currentMessage.images.length }"
       class="border bg-nearygray-200/5 resize-none rounded-lg mx-0 sm:mx-1 mb-0.5 sm:mb-1.5 w-full p-6 pt-7 text-slate-200 shadow focus:border-nearygray-800/5 focus:ring-0 placeholder-slate-400/80"></textarea>
     <div @click="sendMessage()"
       class="absolute right-4 cursor-pointer text-slate-400 hover:text-slate-300 rounded-full h-9 w-9 flex items-center justify-center">
@@ -26,7 +33,6 @@ const router = useRouter();
 const route = useRoute();
 const { sendMessageThroughWebSocket } = useWebSocket();
 
-const currentMessage = ref("");
 const textInputRef = ref(null);
 const isFocused = ref(false);
 
@@ -59,6 +65,10 @@ const resize = () => {
   }
 }
 
+const removeImage = () => {
+  store.currentMessage.images = [];
+}
+
 const sendMessage = async () => {
   scrollToBottom(store.highlighting, true);
 
@@ -66,14 +76,14 @@ const sendMessage = async () => {
     textInputRef.value.blur();
   }
 
-  if (currentMessage.value == "") {
+  if (store.isMessageEmpty) {
     return;
   }
 
-  if (currentMessage.value.startsWith('/')) {
-    let result = await handleCommand(currentMessage.value.slice(1));
+  if (store.currentMessage.text.startsWith('/')) {
+    let result = await handleCommand(store.currentMessage.text.slice(1));
     if (result == true) {
-      currentMessage.value = "";
+      store.resetCurrentMessage()
       await nextTick();
       resize();
       return;
@@ -85,14 +95,14 @@ const sendMessage = async () => {
 
   const message = {
     role: "user",
-    content: currentMessage.value,
+    content: store.currentMessage,
     conversation_id: store.selectedConversationId
   }
 
   const conversation = store.selectedConversation;
 
   if (!('title' in conversation) || conversation.title == null || conversation.title == 'New Conversation') {
-    let title = message.content.slice(0, 50);
+    let title = message.content.text.slice(0, 50);
     store.selectedConversation.title = title
     await store.updateConversation(store.selectedConversation);
   }
@@ -100,7 +110,7 @@ const sendMessage = async () => {
   try {
     sendMessageThroughWebSocket(message);
     await store.addMessage(message, conversation.id);
-    currentMessage.value = "";
+    store.resetCurrentMessage();
     await nextTick();
     resize();
 
@@ -170,10 +180,6 @@ const focusTextInput = async () => {
     textInputRef.value.focus();
   }
 };
-
-watch(currentMessage, (newMessage) => {
-  store.currentMessage = newMessage;
-});
 
 watch(() => store.selectedConversationId, async () => {
   if (store.selectedConversation) {

@@ -109,13 +109,13 @@ export default function useWebSocket() {
     };
 
     const handleCommand = async (message) => {
-        if (message.content == 'reload') {
+        if (message.content.command == 'reload') {
             await store.reinitialize();
         }
     }
 
     const handleAlert = async (message) => {
-        store.newNotification(message.content, false, message.type);
+        store.newNotification(message.content.text, false, message.type);
     }
 
     const handleStatus = async (message) => {

@@ -64,7 +64,6 @@ def get_presets(db: Session = Depends(get_db)):
 def update_preset_from_conversation(
     preset_id: int, conversation_id: int, db: Session = Depends(get_db)
 ):
-    print("Updating preset from convo!")
     service = PresetService(db)
     db_preset = service.update_preset_from_conversation(preset_id, conversation_id)
 

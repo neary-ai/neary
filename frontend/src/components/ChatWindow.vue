@@ -17,7 +17,7 @@
       <component :is="selectMessageComponent(message)" :chatWindowHeight="chatWindowHeight"
         v-for="(message, index) in nonArchivedMessages" :key="'non-archived-' + index" :message="message" />
     </div>
-    <EmptyState v-if="emptyState && (store.currentMessage == '')" />
+    <EmptyState v-if="emptyState && store.isMessageEmpty" />
   </div>
 </template>
 

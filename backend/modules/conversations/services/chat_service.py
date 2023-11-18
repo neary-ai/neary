@@ -1,3 +1,4 @@
+import json
 from typing import TYPE_CHECKING
 
 import tiktoken
@@ -109,7 +110,7 @@ class ChatService:
         token_count = 0
 
         for message in context.get_chain():
-            tokens = len(list(tokenizer.encode(message.content)))
+            tokens = len(list(tokenizer.encode(message.content.text)))
             message.tokens = tokens
             token_count += tokens
 
@@ -126,7 +127,7 @@ class ChatService:
             ):
                 continue
 
-            new_message_tokens = len(list(tokenizer.encode(message.content)))
+            new_message_tokens = len(list(tokenizer.encode(message.content.text)))
 
             if token_count + new_message_tokens > max_input_tokens:
                 break

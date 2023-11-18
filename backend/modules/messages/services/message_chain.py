@@ -1,4 +1,7 @@
 import json
+import base64
+from PIL import Image
+from io import BytesIO
 
 from ..schemas import (
     UserMessage,
@@ -26,12 +29,12 @@ class MessageChain:
         self.metadata = []
 
         if system_message:
-            self.messages.append(SystemMessage(content=system_message))
+            self.messages.append(SystemMessage(content={"text": system_message}))
 
-        self.user_message = user_message
+        self.user_message = self._process_user_message(user_message)
         self.function_message = function_message
 
-    def _compiled_chain(self):
+    def compiled_chain(self):
         compiled_chain = list(self.messages)
         if self.function_message:
             compiled_chain += [self.function_message]
@@ -41,60 +44,24 @@ class MessageChain:
 
     def get_chain(self):
         # Public method to get the complete list of messages
-        return self._compiled_chain()
+        return self.compiled_chain()
 
     def get_chain_as_dict(self):
         # Get the list of messages as a list of dictionaries
-        to_dict = [message.model_dump() for message in self._compiled_chain()]
+        to_dict = [message.model_dump() for message in self.compiled_chain()]
         return to_dict
+
+    def get_chain_as_plain_text(self):
+        # Get the message chain as a single plain text string with roles
+        plain_text_chain = ""
+        for message in self.compiled_chain():
+            if "text" in message.content:
+                plain_text_chain += f"{message.role.upper()}: {message.content.text}\n"
+        return plain_text_chain.strip()
 
     def get_precompiled_chain(self):
         # Get the list of messages without the user message and/or tool output
         return self.messages
-
-    def get_formatted_chain(self):
-        # Get the list of messages formatted for API call
-        formatted_chain = []
-        snippet_content = ""
-
-        # First pass: compile all snippet content
-        for message in self._compiled_chain():
-            if message.role == "snippet":
-                snippet_content += "\n\n" + message.content
-
-        # Second pass: construct the formatted chain
-        for message in self._compiled_chain():
-            if message.role == "system":
-                # Append the snippet_content to the system message content
-                system_message_content = message.content + snippet_content
-                formatted_chain.append(
-                    {"role": message.role, "content": system_message_content}
-                )
-            elif message.role == "assistant" and message.function_call:
-                formatted_chain.append(
-                    {
-                        "role": message.role,
-                        "content": None,
-                        "function_call": message.function_call,
-                    }
-                )
-            elif message.role == "function":
-                formatted_chain.append(
-                    {
-                        "role": message.role,
-                        "content": message.content,
-                        "name": message.function_call["name"],
-                    }
-                )
-            elif message.role in ["assistant", "user"]:
-                formatted_chain.append(
-                    {
-                        "role": message.role,
-                        "content": message.content,
-                    }
-                )
-
-        return formatted_chain
 
     def add_system_message(self, message, id=None, tokens=None, index=None):
         # Add a system message to the list if there is no existing system message
@@ -147,7 +114,7 @@ class MessageChain:
     def add_snippet(self, message, id=None, tokens=None, index=None):
         # Add snippet to the list at a specified index or at the end
         if message:
-            snippet = SnippetMessage(content=message, id=id, tokens=tokens)
+            snippet = SnippetMessage(content={"text": message}, id=id, tokens=tokens)
             if index is not None:
                 self.messages.insert(index, snippet)
             else:
@@ -166,3 +133,32 @@ class MessageChain:
         if self.user_message:
             return self.user_message.content
         return None
+
+    def _process_user_message(self, user_message):
+        if hasattr(user_message.content, "images") and user_message.content.images:
+            for i, image in enumerate(user_message.content.images):
+                # Resize base64 string
+                user_message.content.images[i] = self._resize_image(image)
+        return user_message
+
+    def _resize_image(self, base64_string, max_size=(768, 768)):
+        # Extract data and image format from base64 string
+        header, base64_encoded = base64_string.split(",", 1)
+        img_format = header.split(";")[0].split("/")[
+            1
+        ]  # "data:image/png;base64" => "png"
+
+        # Convert base64 string to bytes
+        img_data = base64.b64decode(base64_encoded)
+        img = Image.open(BytesIO(img_data))
+
+        # Only resize if the image is larger than max_size
+        if img.size[0] > max_size[0] or img.size[1] > max_size[1]:
+            img.thumbnail(max_size)  # Resize while maintaining aspect ratio
+
+        # Convert the image back to base64 string
+        buffered = BytesIO()
+        img.save(buffered, format=img_format)
+        img_str = base64.b64encode(buffered.getvalue()).decode()
+
+        return f"data:image/{img_format};base64,{img_str}"

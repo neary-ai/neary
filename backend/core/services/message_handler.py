@@ -4,7 +4,7 @@ import typing
 from fastapi import WebSocket, WebSocketDisconnect
 from database import SessionLocal
 
-from modules.conversations.services.llm_connector import LLMConnector
+from modules.llms.services.llm_service import LLMFactory
 from modules.conversations.models import ConversationModel
 from modules.messages.services.message_service import MessageService
 from modules.messages.schemas import MessageBase
@@ -46,7 +46,7 @@ class MessageHandler:
 
     async def send_message_to_ui(
         self,
-        message: str,
+        message: dict,
         conversation_id: int,
         metadata: list = None,
         xray: dict = None,
@@ -72,7 +72,7 @@ class MessageHandler:
         else:
             print("No websocket available!")
 
-    async def send_alert_to_ui(self, message: str, type: str = None):
+    async def send_alert_to_ui(self, message: dict, type: str = None):
         if self.websocket:
             await self.websocket.send_json(
                 {
@@ -85,7 +85,7 @@ class MessageHandler:
         else:
             print("No websocket available!")
 
-    async def send_command_to_ui(self, message: str, conversation_id: int):
+    async def send_command_to_ui(self, message: dict, conversation_id: int):
         if self.websocket:
             await self.websocket.send_json(
                 {
@@ -98,7 +98,7 @@ class MessageHandler:
         else:
             print("No websocket available!")
 
-    async def send_status_to_ui(self, message: str, conversation_id: int):
+    async def send_status_to_ui(self, message: dict, conversation_id: int):
         print("Sending status to UI..")
         if self.websocket:
             print("With websocket: ", self.websocket)
@@ -121,9 +121,7 @@ class MessageHandler:
         conversation_id: int,
         save_to_db: bool = True,
     ):
-        content = json.dumps(
-            {"filename": filename, "filesize": filesize, "url": file_url}
-        )
+        content = {"filename": filename, "filesize": filesize, "url": file_url}
 
         message_dict = {
             "role": "file",
@@ -142,7 +140,7 @@ class MessageHandler:
 
     async def send_notification_to_ui(
         self,
-        message: str,
+        message: dict,
         conversation_id: int,
         actions: dict = None,
         metadata: list = None,
@@ -176,26 +174,18 @@ class MessageHandler:
         llm_settings = conversation.settings["llm"]
 
         try:
-            llm = LLMConnector(
-                context=context,
-                message_handler=self,
-                api_type=llm_settings["api_type"],
-            )
+            llm = LLMFactory.create_llm(llm_settings=llm_settings, message_handler=self)
         except Exception as e:
             await self.send_notification_to_ui(
                 message=str(e), conversation_id=conversation.id, save_to_db=False
             )
             return
 
-        messages = context.get_formatted_chain()
-
         ai_response = await llm.create_chat(
+            context=context,
             conversation_id=conversation.id,
-            model=llm_settings["model"],
-            max_tokens=llm_settings["max_tokens"],
-            messages=messages,
             functions=functions,
-            temperature=llm_settings["temperature"],
+            stream=streaming,
         )
 
         return ai_response

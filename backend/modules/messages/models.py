@@ -19,7 +19,7 @@ class MessageModel(Base):
 
     id = Column(Integer, primary_key=True)
     role = Column(String)
-    content = Column(Text, nullable=True)
+    content = Column(JSON, nullable=True)
     actions = Column(JSON, nullable=True)
     status = Column(String, nullable=True)
     function_call = Column(JSON, nullable=True)

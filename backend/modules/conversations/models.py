@@ -56,5 +56,5 @@ class ConversationModel(Base):
     def excerpt(self):
         if self.messages:
             last_message = self.messages[-1]
-            return last_message.content
+            return last_message.content["text"]
         return None

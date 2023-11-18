@@ -3,7 +3,10 @@
       <div class="not-prose flex-shrink-0 font-bold rounded h-7 w-7 flex items-center justify-center mr-5 text-sm bg-nearyblue-50/90 text-nearygray-100">
         {{ firstLetterOfName }}
       </div>
-      <div class="whitespace-pre-wrap [overflow-wrap:anywhere]" :class="[message.is_archived ? 'text-nearygray-100' : 'text-slate-300/80']">{{ message.content }}</div>
+      <div v-if="message.content.images && message.content.images.length" class="mr-4">
+        <img :src="message.content.images[0]" alt="message image" class="w-16 h-16 object-cover my-0" />
+      </div>
+      <div class="whitespace-pre-wrap [overflow-wrap:anywhere]" :class="[message.is_archived ? 'text-nearygray-100' : 'text-slate-300/80']">{{ message.content.text }}</div>
     </div>
   </template>
   

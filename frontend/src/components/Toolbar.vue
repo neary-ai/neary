@@ -2,17 +2,12 @@
     <div
         class="absolute left-1/2 z-10 transform -translate-x-1/2 -translate-y-1/2 gap-3 py-1 bg-neutral-100/90 border border-nearyblue-300 text-nearylight-200 shadow rounded-md">
         <ul class="flex items-center divide-x divide-nearygray-600/50">
+            <li @click="addImage()" class="px-2.5 py-0.5 hover:text-nearylight-200/90 cursor-pointer group relative">
+                <Icon icon="heroicons:photo-solid" class="w-[1.1rem] h-[1.1rem]" />
+            </li>
+            <input type="file" ref="fileInput" class="hidden" @change="convertToBase64" />
             <li @click="toggleDocuments()" class="px-2.5 py-0.5 hover:text-nearylight-200/90 cursor-pointer group relative">
                 <Icon icon="heroicons:paper-clip-20-solid" class="w-[1.1rem] h-[1.1rem]" />
-            </li>
-            <li @click="toggleArchivedMessages()"
-                class="px-2.5 py-0.5 hover:text-nearylight-200/70 cursor-pointer group relative">
-                <template v-if="store.selectedConversation && !store.selectedConversation.showArchivedMessages">
-                    <Icon icon="heroicons:eye-20-solid" class="w-[1.1rem] h-[1.1rem]" />
-                </template>
-                <template v-else>
-                    <Icon icon="heroicons:eye-slash-20-solid" class="w-[1.1rem] h-[1.1rem]" />
-                </template>
             </li>
             <li @click="toggleStack()" class="px-2.5 py-0.5 hover:text-nearylight-200/90 cursor-pointer group relative">
                 <Icon icon="heroicons:square-3-stack-3d-20-solid" class="w-[1.1rem] h-[1.1rem]" />
@@ -37,15 +32,15 @@
                                     <Icon icon="tabler:square-toggle" class="w-5 h-5" />
                                     <div>Show X-Ray</div>
                                 </li>
-                                <li @click="toggleGrowMode(close)"
+                                <li @click="toggleArchivedMessages(close)"
                                     class="cursor-pointer flex rounded-t-md items-center gap-2 px-3 py-2 text-sm hover:bg-field-active hover:text-field-active-foreground">
-                                    <template v-if="store.growMode">
-                                        <Icon icon="heroicons:arrows-pointing-in-20-solid" class="w-[1.1rem] h-[1.1rem]" />
+                                    <template v-if="store.selectedConversation && !store.selectedConversation.showArchivedMessages">
+                                        <Icon icon="heroicons:eye-20-solid" class="w-[1.1rem] h-[1.1rem]" />
                                     </template>
                                     <template v-else>
-                                        <Icon icon="heroicons:arrows-pointing-out-20-solid" class="w-[1.1rem] h-[1.1rem]" />
+                                        <Icon icon="heroicons:eye-slash-20-solid" class="w-[1.1rem] h-[1.1rem]" />
                                     </template>
-                                    <div>Room to Grow</div>
+                                    <div>Toggle Messages</div>
                                 </li>
                                 <li @click="archiveMessages(close)"
                                     class="cursor-pointer flex rounded-t-md items-center gap-2 px-3 py-2 text-sm hover:bg-field-active hover:text-field-active-foreground">
@@ -67,7 +62,7 @@
 </template>
 
 <script setup>
-import { watch } from 'vue';
+import { ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { Icon } from '@iconify/vue';
 import { Popover, PopoverButton, PopoverPanel } from '@headlessui/vue';
@@ -77,7 +72,30 @@ const store = useAppStore();
 const route = useRoute();
 const router = useRouter();
 
-const toggleArchivedMessages = () => {
+const fileInput = ref(null)
+
+const addImage = () => {
+  fileInput.value.click()
+}
+
+const convertToBase64 = (event) => {
+  const file = event.target.files[0]
+  const reader = new FileReader()
+
+  reader.onloadend = () => {
+    if (!store.currentMessage.images.includes(reader.result)) {
+        store.currentMessage.images = [reader.result]
+        console.log('cmessage: ', store.currentMessage)
+    }
+  }
+
+  if (file) {
+    reader.readAsDataURL(file)
+  }
+}
+
+const toggleArchivedMessages = (close) => {
+    close();
     if (store.selectedConversation.showArchivedMessages) {
         store.selectedConversation.showArchivedMessages = false;
         store.newNotification('Hiding archived messages');
@@ -87,17 +105,6 @@ const toggleArchivedMessages = () => {
         store.newNotification('Showing archived messages');
     }
     store.getMessages(store.selectedConversationId)
-}
-const toggleGrowMode = (close) => {
-    close();
-    if (store.growMode) {
-        store.growMode = false;
-        store.newNotification('Messages grow normally');
-    }
-    else {
-        store.growMode = true;
-        store.newNotification('Messages have room to grow');
-    }
 }
 
 const toggleSettings = () => {

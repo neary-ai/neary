@@ -15,5 +15,22 @@
         },
         "plugins": [],
         "is_default": false
+    },
+    {
+        "name": "Vision",
+        "description": "Chat with the AI about images",
+        "icon": "tabler:photo-filled",
+        "plugins": [],
+        "settings": {
+            "llm": {
+                "api_type": "openai",
+                "model": "gpt-4-vision-preview",
+                "system_message": "You are a helpful assistant.",
+                "temperature": 0.7,
+                "max_tokens": 3000
+            },
+            "max_input_tokens": 3000
+        },
+        "is_default": false
     }
 ]
