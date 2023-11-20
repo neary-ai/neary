@@ -68,6 +68,7 @@ class MessageService:
             .options(
                 joinedload(BookmarkModel.message).joinedload(MessageModel.conversation)
             )
+            .order_by(BookmarkModel.id.desc())
             .all()
         )
 

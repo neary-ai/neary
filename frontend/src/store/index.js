@@ -528,7 +528,7 @@ export const useAppStore = defineStore('appstore', {
         // Bookmarks
         async addBookmark(messageId) {
             let bookmark = await api.addBookmark(messageId);
-            this.bookmarks.push(bookmark);
+            this.bookmarks.unshift(bookmark);
         },
         async removeBookmark(messageId) {
             await api.removeBookmark(messageId);
