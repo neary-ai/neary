@@ -4,7 +4,7 @@
     <div v-if="!emptyState" class="flex flex-col items-start divide-y divide-neutral-500/60 px-0">
       <div v-if="showArchivedMessages" class="divide-y divide-neutral-500/60 w-full">
         <component :is="selectMessageComponent(message)" :chatWindowHeight="chatWindowHeight"
-          v-for="(message, index) in archivedMessages" :key="'archived-' + index" :message="message" />
+          v-for="(message, index) in archivedMessages" :key="message.id" :id="message.id" :message="message" />
         <div class="relative">
           <div class="absolute inset-0 flex items-center" aria-hidden="true">
             <div class="w-full border-t border-slate-500" />
@@ -15,7 +15,7 @@
         </div>
       </div>
       <component :is="selectMessageComponent(message)" :chatWindowHeight="chatWindowHeight"
-        v-for="(message, index) in nonArchivedMessages" :key="'non-archived-' + index" :message="message" />
+        v-for="(message, index) in nonArchivedMessages" :key="message.id" :id="message.id" :message="message" />
     </div>
     <EmptyState v-if="emptyState && store.isMessageEmpty" />
   </div>
@@ -29,7 +29,6 @@ import ChatMessageFile from "./ChatMessageFile.vue";
 import ChatMessageAssistant from "./ChatMessageAssistant.vue";
 import ChatMessageNotification from "./ChatMessageNotification.vue";
 import EmptyState from "./EmptyState.vue";
-import { scrollToBottom } from '../services/scrollFunction.js';
 
 const store = useAppStore();
 
@@ -100,14 +99,20 @@ const updateHeight = () => {
 };
 
 watch(nonArchivedMessages, () => {
-  scrollToBottom(store.highlighting);
+  store.scrollChatWindow();
 })
 
 watch(() => store.selectedConversation?.showArchivedMessages, (newValue) => {
   if (newValue !== undefined) {
-    scrollToBottom(store.highlighting, true);
+    store.scrollChatWindow(true)
   }
 })
+
+watch(() => store.scrollToMessage, (newMessageId) => {
+  if (newMessageId) {
+    store.scrollChatWindow();
+  }
+}, { immediate: true });
 
 onMounted(() => {
   window.addEventListener('resize', updateHeight);

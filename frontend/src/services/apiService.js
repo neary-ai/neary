@@ -105,6 +105,31 @@ const api = {
             console.error('Error archiving messages:', error);
         }
     },
+    // Bookmark calls
+    async getBookmarks() {
+        try {
+            const response = await axios.get(`${apiBaseUrl}/api/bookmarks`, { withCredentials: true });
+            return response.data;
+        } catch (error) {
+            console.error('Error getting bookmarks:', error);
+        }
+    },
+    async addBookmark(messageId) {
+        try {
+            const response = await axios.post(`${apiBaseUrl}/api/bookmarks/${messageId}`, null, { withCredentials: true });
+            return response.data;
+        } catch (error) {
+            console.error('Error adding bookmark:', error);
+        }
+    },
+    async removeBookmark(bookmarkId) {
+        try {
+            const response = await axios.delete(`${apiBaseUrl}/api/bookmarks/${bookmarkId}`, { withCredentials: true });
+            return response.data;
+        } catch (error) {
+            console.error('Error removing bookmark:', error);
+        }
+    },
     async createSpace(spaceData) {
         try {
             const response = await axios.post(`${apiBaseUrl}/api/spaces`, spaceData, { withCredentials: true });

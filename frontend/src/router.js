@@ -17,6 +17,7 @@ import Tools from './components/Tools.vue';
 import Conversations from './components/Conversations.vue';
 import Plugin from './components/Plugin.vue';
 import Preset from './components/Preset.vue';
+import Bookmarks from './components/Bookmarks.vue';
 
 const routes = [
   {
@@ -50,6 +51,12 @@ const routes = [
         path: 'setup',
         name: 'Setup',
         component: Setup
+
+      },
+      {
+        path: 'bookmarks',
+        name: 'Bookmarks',
+        component: Bookmarks
 
       },
       {

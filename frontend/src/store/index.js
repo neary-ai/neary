@@ -1,7 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
 import { defineStore, storeToRefs } from 'pinia';
 import api from '../services/apiService'
-import { scrollToBottom } from '../services/scrollFunction.js';
 import router from '../router';
 
 export const useAppStore = defineStore('appstore', {
@@ -10,6 +9,7 @@ export const useAppStore = defineStore('appstore', {
         spaces: {},
         conversations: {},
         messages: {},
+        bookmarks: [],
         selectedSpaceId: null,
         selectedConversationId: null,
         conversationSettings: {},
@@ -37,6 +37,7 @@ export const useAppStore = defineStore('appstore', {
         availablePlugins: null,
         integrations: null,
         bufferedMessages: [],
+        scrollToMessage: null
     }),
     getters: {
         selectedSpace(state) {
@@ -133,6 +134,9 @@ export const useAppStore = defineStore('appstore', {
                 initialConversationId = null;
             }
 
+            // Set bookmarks
+            this.bookmarks = initial_data.bookmarks;
+
             // Set presets
             this.availablePresets = initial_data.presets;
 
@@ -193,7 +197,7 @@ export const useAppStore = defineStore('appstore', {
                 await this.saveState();
                 router.push('/');
                 await Promise.resolve();
-                scrollToBottom(this.highlighting, true);
+                this.scrollChatWindow(true);
             }
         },
         async getMessages(conversationId) {
@@ -239,6 +243,33 @@ export const useAppStore = defineStore('appstore', {
                     this.messages[id].is_archived = true;
                 }
             });
+        },
+        scrollChatWindow(force = true) {
+            if (this.highlighting) {
+                return;
+            }
+            const chatWindow = document.getElementById('chat-window');
+            if (!chatWindow) {
+                return;
+            }
+            if (this.scrollToMessage) {
+                const messageElement = document.getElementById(this.scrollToMessage.toString());
+                if (messageElement) {
+                    setTimeout(() => {
+                        const rect = messageElement.getBoundingClientRect();
+                        const navbarHeight = 50;
+                        chatWindow.scrollTop = rect.top + chatWindow.scrollTop - navbarHeight;
+                        this.scrollToMessage = null;
+                    }, 100);
+                }
+            } else {
+                const distanceFromBottom = chatWindow.scrollHeight - chatWindow.scrollTop - chatWindow.clientHeight;
+                if (distanceFromBottom < 100 || force) {
+                    setTimeout(() => {
+                        chatWindow.scrollTop = chatWindow.scrollHeight;
+                    }, 100);
+                }
+            }
         },
         // App State
         async getState() {
@@ -419,9 +450,6 @@ export const useAppStore = defineStore('appstore', {
                 console.log(error);
             }
         },
-        async updateConversationPlugin(conversation, plugin) {
-
-        },
         // Messages
         addMessage(message, conversationId) {
             if (!message.id) {
@@ -439,9 +467,19 @@ export const useAppStore = defineStore('appstore', {
                 this.conversations[conversationId].message_ids.splice(index, 1);
             }
         },
-        updateLastMessage(message, messageId) {
-            message.id = messageId
-            this.messages[messageId] = message
+        updateIncompleteMessage(message, lastMessageId) {
+            if (!message.id) {
+                message.id = lastMessageId
+            }
+            else {
+                const conversation = this.conversations[message.conversation_id];
+                const index = conversation.message_ids.indexOf(lastMessageId);
+                console.log(conversation.message_ids)
+                if (index !== -1) {
+                    conversation.message_ids.splice(index, 1, message.id);
+                }
+            }
+            this.messages[message.id] = message
             this.conversations[message.conversation_id].excerpt = message.content.text
         },
         // Plugins
@@ -486,6 +524,16 @@ export const useAppStore = defineStore('appstore', {
             this.getAvailablePresets();
             this.getConversations();
 
-        }
+        },
+        // Bookmarks
+        async addBookmark(messageId) {
+            let bookmark = await api.addBookmark(messageId);
+            this.bookmarks.push(bookmark);
+        },
+        async removeBookmark(messageId) {
+            await api.removeBookmark(messageId);
+            this.bookmarks = this.bookmarks.filter(bookmark => bookmark.message_id !== messageId)
+        },
+
     },
 });

@@ -26,7 +26,6 @@ import { useRouter, useRoute } from 'vue-router';
 import { useAppStore } from '@/store/index.js';
 import { Icon } from '@iconify/vue';
 import useWebSocket from '@/composables/websocket.js';
-import { scrollToBottom } from '../services/scrollFunction.js';
 
 const store = useAppStore();
 const router = useRouter();
@@ -61,7 +60,7 @@ const resize = () => {
   store.textInputHeight = newHeight;
 
   if (element.style.height !== oldHeight) {
-    scrollToBottom(store.highlighting, true);
+    store.scrollChatWindow(true)
   }
 }
 
@@ -70,7 +69,7 @@ const removeImage = () => {
 }
 
 const sendMessage = async () => {
-  scrollToBottom(store.highlighting, true);
+  store.scrollChatWindow(true)
 
   if (store.isMobile) {
     textInputRef.value.blur();

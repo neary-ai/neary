@@ -12,6 +12,7 @@ from modules.plugins.services.plugin_service import PluginService
 from modules.presets.services.preset_service import PresetService
 from modules.integrations.services.integration_service import IntegrationService
 from modules.conversations.services.conversation_service import ConversationService
+from modules.messages.services.message_service import MessageService
 
 from modules.conversations.schemas import *
 from modules.conversations.models import *
@@ -42,6 +43,7 @@ class InitService:
             plugins=PluginService(self.db).get_plugins(),
             presets=PresetService(self.db).get_presets(),
             integrations=IntegrationService(self.db).get_integrations(),
+            bookmarks=MessageService(self.db).get_bookmarks_with_details(),
         )
 
         return initial_data

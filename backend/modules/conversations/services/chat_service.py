@@ -43,14 +43,9 @@ class ChatService:
                 conversation.plugins
             )
 
-            # Send to LLM for response
-            ai_response = await self.message_handler.get_ai_response(
-                conversation, context, functions
-            )
-
+            # Save messages to database
             metadata = context.get_metadata()
 
-            # Save messages to database
             message_service = MessageService(self.db)
 
             if user_message:
@@ -60,10 +55,14 @@ class ChatService:
                 function_message.metadata = metadata
                 message_service.create_message(**function_message.model_dump())
 
+            # Send to LLM for response
+            ai_response = await self.message_handler.get_ai_response(
+                conversation, context, functions
+            )
+
             follow_up_requested = False
 
             if ai_response:
-                message_service.create_message(**ai_response.model_dump())
                 function_message, follow_up_requested = await self.handle_tool_request(
                     ai_response, conversation
                 )

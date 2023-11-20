@@ -50,6 +50,7 @@ export default function useWebSocket() {
         }
 
         const message = JSON.parse(event.data);
+
         if (!message) {
             return;
         }
@@ -71,7 +72,6 @@ export default function useWebSocket() {
         }
 
         else if (message.role == 'status') {
-            console.log("Received status message: ", message)
             await handleStatus(message);
             return
         }
@@ -92,7 +92,7 @@ export default function useWebSocket() {
                 let lastMessage = store.messages[lastMessageId];
 
                 if (lastMessage && lastMessage.role === 'assistant' && lastMessage.status == 'incomplete') {
-                    store.updateLastMessage(message, lastMessageId);
+                    store.updateIncompleteMessage(message, lastMessageId);
                 } else {
                     store.addMessage(message, message.conversation_id);
                 }

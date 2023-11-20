@@ -5,6 +5,7 @@ from modules.spaces.schemas import Space
 from modules.plugins.schemas import Plugin
 from modules.presets.schemas import Preset
 from modules.conversations.schemas import Conversation
+from modules.messages.schemas import BookmarkDetails
 from modules.integrations.schemas import Integration
 
 
@@ -16,3 +17,4 @@ class InitialData(BaseModel):
     plugins: List[Plugin]
     presets: List[Preset]
     integrations: List[Integration]
+    bookmarks: List[BookmarkDetails]

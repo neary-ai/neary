@@ -7,6 +7,7 @@
       <Icon icon="heroicons:squares-2x2-solid" @click="toggleManageSpaces()" class="hover:text-slate-300/80 cursor-pointer w-5 h-5" />
       <Icon icon="heroicons:cog-6-tooth-solid" @click="toggleSetup()" class="hover:text-slate-300/80 cursor-pointer w-5 h-5" />
       <Icon icon="heroicons:user-solid" @click="toggleAccount()" class="hover:text-slate-300/80 cursor-pointer w-5 h-5" />
+      <Icon icon="heroicons:bookmark-solid" @click="toggleBookmarks()" class="hover:text-slate-300/80 cursor-pointer w-5 h-5" />
     </div>
   </aside>
   <!-- Compact slide-over -->
@@ -50,7 +51,6 @@
 import Spaces from './Spaces.vue';
 import logo from '@/assets/images/neary.svg';
 import { Icon } from '@iconify/vue';
-import { XMarkIcon } from '@heroicons/vue/20/solid';
 import { Dialog, DialogPanel, TransitionRoot, TransitionChild } from '@headlessui/vue';
 import { useAppStore } from '@/store/index.js';
 import { useRouter } from 'vue-router';
@@ -91,6 +91,18 @@ const toggleSetup = () => {
     router.go(-1);
   } else {
     router.push(`/setup`);
+  }
+
+  if (store.isMobile) {
+    store.toggleSidebar();
+  }
+};
+
+const toggleBookmarks = () => {
+  if (router.currentRoute.value.path.startsWith('/bookmarks')) {
+    router.go(-1);
+  } else {
+    router.push(`/bookmarks`);
   }
 
   if (store.isMobile) {

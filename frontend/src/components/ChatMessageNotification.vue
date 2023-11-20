@@ -58,7 +58,6 @@ import 'prismjs/components/prism-python';
 import 'prismjs/themes/prism-tomorrow.css';
 import { ChevronDownIcon, InformationCircleIcon, } from '@heroicons/vue/20/solid';
 import useWebSocket from '@/composables/websocket.js';
-import { scrollToBottom } from '../services/scrollFunction.js';
 import { useAppStore } from '@/store/index.js';
 import api from '@/services/apiService';
 
@@ -132,7 +131,7 @@ const renderMarkdown = (markdownText) => {
 
 const showToolArgs = () => {
     showArgs.value = true;
-    scrollToBottom(store.highlighting, true);
+    store.scrollChatWindow(true);
 }
 
 </script>

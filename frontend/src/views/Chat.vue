@@ -14,7 +14,6 @@
 <script setup>
 import { onMounted, watch, ref, computed, nextTick } from 'vue';
 import { useRoute } from 'vue-router';
-import { scrollToBottom } from '@/services/scrollFunction.js';
 import { useAppStore } from '@/store/index.js';
 import useWebSocket from '@/composables/websocket.js';
 import Sidebar from '@/components/Sidebar.vue';
@@ -37,7 +36,7 @@ const inChatWindow = computed(() => {
 watch(route, async (to) => {
   await nextTick();
   if (to.path === '/') {
-    scrollToBottom(store.highlighting, true);
+    store.scrollChatWindow(true)
   }
 }, { immediate: true });
 

@@ -15,6 +15,20 @@
                     class="text-slate-400/80 text-sm py-4 mt-4 border-t border-slate-700">
                     Sources: {{ uniqueSources.join(', ') }}
                 </div>
+                <div v-if="message.status != 'incomplete'" class="flex gap-2.5 mb-2 -mt-2">
+                    <Icon 
+                        v-if="message.status != 'incomplete'"
+                        icon="octicon:paste-16"
+                        class="cursor-pointer hover:opacity-80 w-4 h-4 text-nearygray-800"
+                        @click="copyToClipboard"
+                    />
+                    <Icon 
+                        v-if="message.status != 'incomplete'"
+                        :icon="isBookmarked ? 'octicon:bookmark-slash-16' : 'octicon:bookmark-16'"
+                        class="cursor-pointer hover:opacity-80 w-4 h-4 text-nearygray-800"
+                        @click="toggleBookmark"
+                    />
+                </div>
             </div>
         </div>
     </div>
@@ -26,6 +40,7 @@ import MarkdownIt from 'markdown-it';
 import DOMPurify from 'dompurify';
 import ClipboardJS from 'clipboard';
 import Prism from 'prismjs';
+import { Icon } from '@iconify/vue';
 import 'prismjs/components/prism-python';
 import 'prismjs/themes/prism-tomorrow.css';
 import { useAppStore } from '@/store/index.js';
@@ -40,6 +55,23 @@ const props = defineProps({
 let chatWindowHeight = ref(props.chatWindowHeight);
 let messageContainer = ref(null);
 let isExpanded = ref(false);
+
+const isBookmarked = computed(() => {
+  return store.bookmarks.some(bookmark => bookmark.message_id === props.message.id)
+})
+
+const toggleBookmark = async () => {
+    try {
+        if (isBookmarked.value) {
+            store.removeBookmark(props.message.id)
+        } else {
+            store.addBookmark(props.message.id)
+            store.newNotification('Bookmark added!');
+        }
+    } catch (error) {
+        console.error('Error toggling bookmark:', error);
+    }
+};
 
 const uniqueSources = computed(() => {
     if (props.message.metadata) {
@@ -125,11 +157,24 @@ const renderMarkdown = (markdownText) => {
     return sanitizedHtml;
 }
 
-const initCopyButtons = async () => {
+const copyToClipboard = async () => {
+    try {
+        await navigator.clipboard.writeText(props.message.content.text);
+        store.newNotification('Message copied!');
+    } catch (err) {
+        console.error('Failed to copy text: ', err);
+    }
+};
+
+const initCopyButtons = async (copyData) => {
     await nextTick();
     const clipboard = new ClipboardJS('.copy-button', {
-        target: function (trigger) {
-            return trigger.nextElementSibling;
+        text: function (trigger) {
+            if (copyData) {
+                return copyData;
+            } else {
+                return trigger.nextElementSibling.textContent;
+            }
         },
     });
 

@@ -1,4 +1,4 @@
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from ..models import *
 from ..schemas import *
@@ -57,3 +57,63 @@ class MessageService:
             query = query.filter(MessageModel.is_archived == False)
 
         return query.order_by(MessageModel.id.desc()).all()
+
+    def get_bookmarks(self):
+        bookmarks = self.db.query(BookmarkModel).all()
+        return bookmarks
+
+    def get_bookmarks_with_details(self):
+        bookmarks = (
+            self.db.query(BookmarkModel)
+            .options(
+                joinedload(BookmarkModel.message).joinedload(MessageModel.conversation)
+            )
+            .all()
+        )
+
+        result = []
+        for bookmark in bookmarks:
+            bookmark_data = {
+                "id": bookmark.id,
+                "message_id": bookmark.message.id,
+                "message_content": bookmark.message.content,
+                "conversation_id": bookmark.message.conversation.id,
+                "conversation_title": bookmark.message.conversation.title,
+                "created_at": bookmark.created_at,
+            }
+            result.append(bookmark_data)
+
+        print("Returning results: ", result)
+
+        return result
+
+    def add_bookmark(self, message_id: int):
+        bookmark = BookmarkModel(message_id=message_id)
+
+        self.db.add(bookmark)
+        self.db.commit()
+        self.db.refresh(bookmark)
+
+        bookmark_data = {
+            "id": bookmark.id,
+            "message_id": bookmark.message.id,
+            "message_content": bookmark.message.content,
+            "conversation_id": bookmark.message.conversation_id,
+            "conversation_title": bookmark.message.conversation.title,
+            "created_at": bookmark.created_at,
+        }
+
+        return bookmark_data
+
+    def remove_bookmark(self, message_id: int):
+        bookmark = (
+            self.db.query(BookmarkModel)
+            .filter(BookmarkModel.message_id == message_id)
+            .first()
+        )
+
+        if bookmark is not None:
+            self.db.delete(bookmark)
+            self.db.commit()
+
+        return bookmark

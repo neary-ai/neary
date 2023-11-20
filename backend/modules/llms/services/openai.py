@@ -95,7 +95,7 @@ class OpenAI(LLMInterface):
                         function_call=ai_message.function_call,
                         status=ai_message.status,
                         xray=ai_message.xray,
-                        save_to_db=False,
+                        save_to_db=True,
                     )
 
                     return ai_message

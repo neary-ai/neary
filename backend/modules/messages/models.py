@@ -29,3 +29,14 @@ class MessageModel(Base):
     conversation_id = Column(Integer, ForeignKey("conversation_model.id"))
 
     conversation = relationship("ConversationModel", back_populates="messages")
+    bookmark = relationship("BookmarkModel", back_populates="message")
+
+
+class BookmarkModel(Base):
+    __tablename__ = "bookmark_model"
+
+    id = Column(Integer, primary_key=True)
+    message_id = Column(Integer, ForeignKey("message_model.id"))
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    message = relationship("MessageModel", back_populates="bookmark")

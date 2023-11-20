@@ -6,7 +6,7 @@ export const scrollToBottom = (highlighting, force = false) => {
     if (!chatWindow) {
         return;
     }
-    
+
     const distanceFromBottom = chatWindow.scrollHeight - chatWindow.scrollTop - chatWindow.clientHeight;
 
     if (distanceFromBottom < 100 || force) {

@@ -65,7 +65,8 @@ class MessageHandler:
         }
 
         if save_to_db:
-            MessageService(self.db).create_message(**message_dict)
+            saved_message = MessageService(self.db).create_message(**message_dict)
+            message_dict["id"] = saved_message.id
 
         if self.websocket:
             await self.websocket.send_json(message_dict)

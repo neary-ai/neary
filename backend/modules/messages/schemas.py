@@ -62,3 +62,17 @@ class AssistantMessage(MessageBase):
     role: str = "assistant"
     status: Optional[str] = None
     xray: Optional[dict] = None
+
+
+class Bookmark(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    message_id: int
+    created_at: datetime
+
+
+class BookmarkDetails(Bookmark):
+    conversation_id: int
+    message_content: Content
+    conversation_title: str
