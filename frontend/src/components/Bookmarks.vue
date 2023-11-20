@@ -2,7 +2,7 @@
     <div id="alt-window" class="font-mulish flex flex-col gap-3 w-full overflow-y-scroll">
         <div class="p-8 pt-[5.5rem] max-w-3xl">
             <SectionHeading section-name="Bookmarks" @on-click="onBackButtonClick" />
-            <div class="flex flex-col divide-y divide-neutral-500 mt-2">
+            <div v-if="store.bookmarks && store.bookmarks.length > 0" class="flex flex-col divide-y divide-neutral-500 mt-2">
                 <div v-for="bookmark in store.bookmarks" :key="bookmark.message_id" class="text-sm py-6">
                     <div class="text-sm text-nearylight-100 font-bold mb-1">{{ bookmark.conversation_title }}</div>
                     <div class="text-xs text-nearylight-300">
@@ -19,6 +19,8 @@
                     </div>
                 </div>
             </div>
+            <div v-else class="text-nearygray-300 mt-4">There's nothing here, yet! Messages you bookmark will appear here.</div>
+            
         </div>
     </div>
 </template>
