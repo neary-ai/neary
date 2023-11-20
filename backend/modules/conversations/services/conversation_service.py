@@ -135,6 +135,21 @@ class ConversationService:
 
         return messages
 
+    def delete_conversation(self, conversation_id: int):
+        conversation = (
+            self.db.query(ConversationModel)
+            .filter(ConversationModel.id == conversation_id)
+            .first()
+        )
+
+        if not conversation:
+            return False
+
+        self.db.delete(conversation)
+        self.db.commit()
+
+        return True
+
     def export_conversation(self, conversation_id: int, export_format: str = "plain"):
         messages = MessageService(self.db).get_messages_by_conversation_id(
             conversation_id

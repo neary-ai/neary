@@ -71,19 +71,15 @@ async def get_settings_options():
     return options
 
 
-@router.patch("/conversations/{conversation_id}")
-async def archive_conversation(conversation_id: int, db: Session = Depends(get_db)):
-    """Archive a conversation"""
+@router.delete("/conversations/{conversation_id}")
+def delete_conversation(conversation_id: int, db: Session = Depends(get_db)):
+    service = ConversationService(db)
+    is_deleted = service.delete_conversation(conversation_id)
 
-    conversation = ConversationService(db).get_conversation_by_id(conversation_id)
-    if not conversation:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Conversation not found"
-        )
+    if not is_deleted:
+        raise HTTPException(status_code=400, detail="Conversation could not be deleted")
 
-    ConversationService(db).archive_conversation(conversation)
-
-    return {"detail": "Conversation archived"}
+    return {"detail": "Conversation deleted successfully"}
 
 
 @router.put("/conversations/{conversation_id}", response_model=Conversation)

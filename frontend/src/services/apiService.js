@@ -184,7 +184,7 @@ const api = {
     },
     async deleteConversation(conversationId) {
         try {
-            const response = await axios.patch(`${apiBaseUrl}/api/conversations/${conversationId}`, {}, { withCredentials: true });
+            const response = await axios.delete(`${apiBaseUrl}/api/conversations/${conversationId}`, { withCredentials: true });
             return response.data;
         } catch (error) {
             console.error('Error deleting conversation:', error);

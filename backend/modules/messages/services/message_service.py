@@ -84,8 +84,6 @@ class MessageService:
             }
             result.append(bookmark_data)
 
-        print("Returning results: ", result)
-
         return result
 
     def add_bookmark(self, message_id: int):
