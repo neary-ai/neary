@@ -114,7 +114,7 @@ const sendMessage = async () => {
     resize();
 
     store.messageTimeout = setTimeout(() => {
-      store.newNotification('Waiting for response from chat server..');
+      store.newNotification('Waiting for response from chat server');
     }, 8000);
   } catch (error) {
     store.newNotification('Connecting to server. Wait a moment and try again.');

@@ -15,7 +15,7 @@
                     class="text-slate-400/80 text-sm py-4 mt-4 border-t border-slate-700">
                     Sources: {{ uniqueSources.join(', ') }}
                 </div>
-                <div v-if="message.status != 'incomplete'" class="flex gap-2.5 mb-2 -mt-2">
+                <div v-if="message.status != 'incomplete'" class="flex gap-2.5 mb-2 -mt-1.5">
                     <Icon 
                         v-if="message.status != 'incomplete'"
                         icon="octicon:paste-16"

@@ -19,8 +19,7 @@
                     </div>
                 </div>
             </div>
-            <div v-else class="text-nearygray-300 mt-4">There's nothing here, yet! Messages you bookmark will appear here.</div>
-            
+            <div v-else class="text-nearygray-300 mt-4">There's nothing here, yet!</div>
         </div>
     </div>
 </template>

@@ -176,7 +176,7 @@ class LLMConnector:
         return None
 
 
-def get_embeddings(doc):
+def get_embeddings(doc: str):
     api_key = settings.chat_models.get("openai_api_key", None)
     client = OpenAI(api_key=api_key)
     response = client.embeddings.create(input=doc, model="text-embedding-ada-002")
