@@ -115,7 +115,7 @@ export default function useWebSocket() {
     }
 
     const handleAlert = async (message) => {
-        store.newNotification(message.content.text, false, message.type);
+        store.newNotification(message.content, false, message.type);
     }
 
     const handleStatus = async (message) => {

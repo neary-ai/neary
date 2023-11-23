@@ -4,6 +4,7 @@ import inspect
 from abc import ABC
 
 from backend.database import SessionLocal
+from backend.modules.messages.schemas import AssistantMessage, NotificationMessage
 
 
 class BasePlugin(ABC):

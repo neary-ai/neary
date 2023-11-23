@@ -270,16 +270,18 @@ class GoogleService:
         self, event_title, event_description, start_time, end_time, attendees=[]
     ):
         calendar_service = build("calendar", "v3", credentials=self.creds)
+
+        timezone = self.get_calendar_timezone()
+
         event_data = {
             "summary": event_title,
             "description": event_description,
-            "start": {"dateTime": start_time},
-            "end": {"dateTime": end_time},
+            "start": {"dateTime": start_time, "timeZone": timezone},
+            "end": {"dateTime": end_time, "timeZone": timezone},
             "attendees": attendees,
         }
 
         try:
-            print(event_data)
             event = (
                 calendar_service.events()
                 .insert(calendarId="primary", body=event_data, sendUpdates="all")
@@ -290,7 +292,6 @@ class GoogleService:
             return link
         except HttpError as error:
             print(f"An error occurred: {error}")
-            return "Creating event."
 
     def get_calendar_events(self, days=7, filter_recurring=True):
         calendar_service = build("calendar", "v3", credentials=self.creds)
@@ -380,3 +381,9 @@ class GoogleService:
         }
 
         return clean_event
+
+    def get_calendar_timezone(self):
+        calendar_service = build("calendar", "v3", credentials=self.creds)
+        calendar = calendar_service.calendars().get(calendarId="primary").execute()
+        timezone = calendar["timeZone"]
+        return timezone

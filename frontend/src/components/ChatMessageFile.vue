@@ -37,22 +37,19 @@ const props = defineProps({
 
 const fileName = computed(() => {
     if (props.message) {
-        let fileInfo = JSON.parse(props.message.content)
-        return fileInfo.filename;
+        return props.message.content.filename;
     }
 })
 
 const fileUrl = computed(() => {
     if (props.message) {
-        let fileInfo = JSON.parse(props.message.content)
-        return fileInfo.url;
+        return props.message.content.file_url;
     }
 })
 
 const fileSize = computed(() => {
     if (props.message) {
-        let fileInfo = JSON.parse(props.message.content)
-        return fileInfo.filesize;
+        return props.message.content.filesize;
     }
 })
 

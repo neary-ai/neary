@@ -2,7 +2,12 @@ from sqlalchemy.orm import Session
 from sqlalchemy import cast, String
 
 from core.services.message_handler import MessageHandler
-from modules.messages.schemas import FunctionMessage
+from modules.messages.schemas import (
+    NotificationMessage,
+    FunctionMessage,
+    StatusMessage,
+    Content,
+)
 from modules.plugins.models import FunctionInstanceModel
 from modules.messages.models import MessageModel
 from modules.messages.services.message_service import MessageService
@@ -70,11 +75,15 @@ class ApprovalService:
 
         metadata = [{"approval_request": pending_request.id}]
 
-        await self.message_handler.send_notification_to_ui(
-            message=notification,
+        message = NotificationMessage(
+            content=Content(text=notification),
             conversation_id=conversation_id,
             actions=actions,
-            metadata=metadata,
+            meta_data=metadata,
+        )
+
+        await self.message_handler.send_notification_to_ui(
+            message,
             save_to_db=True,
         )
 
@@ -99,11 +108,10 @@ class ApprovalService:
         self,
         data: dict,
         message_id: int,
-        conversation_id: int,
     ):
         request_id = data.get("request_id")
         response = data.get("response")
-        print("Handling approval response.")
+
         if response.lower() not in ["approve", "reject"]:
             print("Invalid action. Use 'approve' or 'reject'")
 
@@ -115,18 +123,13 @@ class ApprovalService:
 
         if response.lower() == "approve":
             self.update_approval_request_status(approval_request, "approved")
-            print("Sending update status message: accepted.")
-            await self.message_handler.send_status_to_ui(
-                message={"approval_response_processed": message_id},
-                conversation_id=conversation_id,
-            )
+            message = StatusMessage(content={"approval_response_processed": message_id})
+            await self.message_handler.send_status_to_ui(message)
 
         elif response.lower() == "reject":
-            print("Sending update status message: rejected.")
-            await self.message_handler.send_status_to_ui(
-                message={"approval_response_processed": message_id},
-                conversation_id=conversation_id,
-            )
+            message = StatusMessage(content={"approval_response_processed": message_id})
+            await self.message_handler.send_status_to_ui(message)
+
             approval_request = self.update_approval_request_status(
                 approval_request, "rejected"
             )
@@ -162,7 +165,9 @@ class ApprovalService:
         if status == "rejected":
             function_message = FunctionMessage(
                 conversation_id=conversation_id,
-                content="User rejected function approval request; function not executed.",
+                content={
+                    "text": "User rejected function approval request; function not executed."
+                },
                 function_call={"name": tool_name, "arguments": tool_args},
                 metadata=[],
             )
@@ -185,7 +190,6 @@ class ApprovalService:
             )
 
     async def handle_action(self, name, data, message_id, conversation_id):
-        print("handling action: ", message_id)
         action_handler = self.actions.get(name)
         if action_handler:
             response = await action_handler(data, message_id, conversation_id)

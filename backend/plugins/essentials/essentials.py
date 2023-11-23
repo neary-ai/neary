@@ -4,6 +4,7 @@ import pytz
 
 from pyowm import OWM
 
+from backend.modules.messages.schemas import AlertMessage, FileMessage, FileContent
 from backend.plugins import BasePlugin, snippet, tool
 
 
@@ -44,9 +45,10 @@ class Essentials(BasePlugin):
         credentials = self.services.get_credentials("openweathermap")
 
         if credentials is None:
-            await self.services.send_alert_to_ui(
-                "OpenWeatherMap integration is required", "error"
+            message = AlertMessage(
+                content="OpenWeatherMap integration is required", type="error"
             )
+            await self.services.send_alert_to_ui(message)
 
         # First try to get a location from plugin settings, then from profile
         profile_location = self.services.get_profile_field("location")
@@ -69,13 +71,17 @@ class Essentials(BasePlugin):
                 )
             except Exception as e:
                 print(e)
-                await self.services.send_alert_to_ui(
-                    "Weather error! Check location and API key.", "error"
+                message = AlertMessage(
+                    content="Weather error! Check location and API key.",
+                    type="error",
                 )
+                await self.services.send_alert_to_ui(message)
         else:
-            await self.services.send_alert_to_ui(
-                "The Local Weather snippet requires a location!", "error"
+            message = AlertMessage(
+                content="The Local Weather snippet requires a location",
+                type="error",
             )
+            await self.services.send_alert_to_ui(message)
 
     """
     Make & insert custom notes
@@ -150,10 +156,16 @@ class Essentials(BasePlugin):
         # Save the file and get the file info
         file_info = self.services.save_file(file_obj, filename, extension)
         # Return the file info
-        await self.services.send_file_to_ui(
-            file_info["filename"],
-            file_info["filesize"],
-            file_info["url"],
-            self.conversation_id,
+
+        file_content = FileContent(
+            filename=file_info["filename"],
+            filesize=file_info["filesize"],
+            file_url=file_info["url"],
         )
+
+        message = FileMessage(
+            content=file_content, conversation_id=self.conversation_id
+        )
+
+        await self.services.send_file_to_ui(message)
         return f"File saved to {file_info['filepath']}"

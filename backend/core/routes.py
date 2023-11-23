@@ -40,9 +40,8 @@ async def websocket_endpoint(websocket: WebSocket):
                 db=message_handler.db, message_handler=message_handler
             )
             await approval_service.handle_approval_response(
-                data=message.content["data"],
-                message_id=message.content["message_id"],
-                conversation_id=message.conversation_id,
+                data=message.content.data,
+                message_id=message.content.message_id,
             )
 
 

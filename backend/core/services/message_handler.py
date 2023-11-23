@@ -7,7 +7,7 @@ from database import SessionLocal
 from modules.llms.services.llm_service import LLMFactory
 from modules.conversations.models import ConversationModel
 from modules.messages.services.message_service import MessageService
-from modules.messages.schemas import MessageBase
+from modules.messages.schemas import *
 
 if typing.TYPE_CHECKING:
     from modules.messages.services.message_chain import MessageChain
@@ -46,23 +46,10 @@ class MessageHandler:
 
     async def send_message_to_ui(
         self,
-        message: dict,
-        conversation_id: int,
-        metadata: list = None,
-        xray: dict = None,
-        function_call: dict = None,
-        status: str = None,
+        message: AssistantMessage,
         save_to_db: bool = True,
     ):
-        message_dict = {
-            "role": "assistant",
-            "content": message,
-            "conversation_id": conversation_id,
-            "metadata": metadata,
-            "xray": xray,
-            "function_call": function_call,
-            "status": status,
-        }
+        message_dict = message.model_dump()
 
         if save_to_db:
             saved_message = MessageService(self.db).create_message(**message_dict)
@@ -73,66 +60,34 @@ class MessageHandler:
         else:
             print("No websocket available!")
 
-    async def send_alert_to_ui(self, message: dict, type: str = None):
+    async def send_alert_to_ui(self, message: AlertMessage):
         if self.websocket:
-            await self.websocket.send_json(
-                {
-                    "role": "alert",
-                    "content": message,
-                    "type": type,
-                    "status": None,
-                }
-            )
+            await self.websocket.send_json(message.model_dump())
         else:
             print("No websocket available!")
 
-    async def send_command_to_ui(self, message: dict, conversation_id: int):
+    async def send_command_to_ui(self, message: CommandMessage):
         if self.websocket:
-            await self.websocket.send_json(
-                {
-                    "role": "command",
-                    "content": message,
-                    "conversation_id": conversation_id,
-                    "status": None,
-                }
-            )
+            await self.websocket.send_json(message.model_dump())
         else:
             print("No websocket available!")
 
-    async def send_status_to_ui(self, message: dict, conversation_id: int):
-        print("Sending status to UI..")
+    async def send_status_to_ui(self, message: StatusMessage):
         if self.websocket:
-            print("With websocket: ", self.websocket)
-            await self.websocket.send_json(
-                {
-                    "role": "status",
-                    "content": message,
-                    "conversation_id": conversation_id,
-                    "status": None,
-                }
-            )
+            await self.websocket.send_json(message.model_dump())
         else:
             print("No websocket available!")
 
     async def send_file_to_ui(
         self,
-        filename: str,
-        filesize: str,
-        file_url: str,
-        conversation_id: int,
+        message: FileMessage,
         save_to_db: bool = True,
     ):
-        content = {"filename": filename, "filesize": filesize, "url": file_url}
-
-        message_dict = {
-            "role": "file",
-            "content": content,
-            "conversation_id": conversation_id,
-            "status": None,
-        }
+        message_dict = message.model_dump()
 
         if save_to_db:
-            MessageService(self.db).create_message(**message_dict)
+            saved_message = MessageService(self.db).create_message(**message_dict)
+            message_dict["id"] = saved_message.id
 
         if self.websocket:
             await self.websocket.send_json(message_dict)
@@ -141,23 +96,14 @@ class MessageHandler:
 
     async def send_notification_to_ui(
         self,
-        message: dict,
-        conversation_id: int,
-        actions: dict = None,
-        metadata: list = None,
+        message: NotificationMessage,
         save_to_db: bool = False,
     ):
-        message_dict = {
-            "role": "notification",
-            "content": message,
-            "conversation_id": conversation_id,
-            "actions": actions,
-            "metadata": metadata,
-            "status": None,
-        }
+        message_dict = message.model_dump()
 
         if save_to_db:
-            MessageService(self.db).create_message(**message_dict)
+            saved_message = MessageService(self.db).create_message(**message_dict)
+            message_dict["id"] = saved_message.id
 
         if self.websocket:
             await self.websocket.send_json(message_dict)
@@ -177,9 +123,10 @@ class MessageHandler:
         try:
             llm = LLMFactory.create_llm(llm_settings=llm_settings, message_handler=self)
         except Exception as e:
-            await self.send_notification_to_ui(
-                message=str(e), conversation_id=conversation.id, save_to_db=False
+            message = NotificationMessage(
+                message=Content(text=str(e)), conversation_id=conversation.id
             )
+            await self.send_notification_to_ui(message=message, save_to_db=False)
             return
 
         ai_response = await llm.create_chat(

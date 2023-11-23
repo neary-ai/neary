@@ -460,11 +460,13 @@ export const useAppStore = defineStore('appstore', {
             this.conversations[conversationId].message_ids.push(message.id);
             this.conversations[conversationId].excerpt = message.content.text
         },
-        removeMessage(messageId, conversationId) {
+        removeMessage(messageId) {
             delete this.messages[messageId];
-            const index = this.conversations[conversationId].message_ids.indexOf(messageId);
-            if (index !== -1) {
-                this.conversations[conversationId].message_ids.splice(index, 1);
+            for (let conversationId in this.conversations) {
+                const index = this.conversations[conversationId].message_ids.indexOf(messageId);
+                if (index !== -1) {
+                    this.conversations[conversationId].message_ids.splice(index, 1);
+                }
             }
         },
         updateIncompleteMessage(message, lastMessageId) {
@@ -474,7 +476,6 @@ export const useAppStore = defineStore('appstore', {
             else {
                 const conversation = this.conversations[message.conversation_id];
                 const index = conversation.message_ids.indexOf(lastMessageId);
-                console.log(conversation.message_ids)
                 if (index !== -1) {
                     conversation.message_ids.splice(index, 1, message.id);
                 }

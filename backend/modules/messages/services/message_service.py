@@ -1,3 +1,4 @@
+from pydantic import ValidationError
 from sqlalchemy.orm import Session, joinedload
 
 from ..models import *
@@ -11,15 +12,21 @@ class MessageService:
     def create_message(
         self,
         role: str,
-        content: str,
+        content: dict,
         conversation_id: int,
         actions: list = None,
         function_call: dict = None,
         status: str = None,
         metadata: list = None,
         *args,
-        **kwargs
+        **kwargs,
     ):
+        try:
+            Content.model_validate(content)
+        except ValidationError as e:
+            print(f"Invalid content format: {e}")
+            return
+
         message = MessageModel(
             role=role,
             content=content,

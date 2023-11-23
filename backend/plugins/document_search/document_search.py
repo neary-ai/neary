@@ -12,7 +12,7 @@ class DocumentSearch(BasePlugin):
         max_results = self.settings["insert_similar_documents"]["max_results"]
         query = context.get_user_message()
 
-        if query.text:
+        if query and query.text:
             document_data = []
             context_docs = self.document_manager.similar_search(query.text)
             context_str = "The following document snippets have been provided as context to this conversation, reference as needed:\n\n"

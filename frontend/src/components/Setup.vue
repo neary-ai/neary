@@ -32,7 +32,6 @@ const router = useRouter();
 const activeTab = ref('plugins')
 
 const onBackButtonClick = () => {
-    console.log('Going back!')
     router.go(-1);
 };
 

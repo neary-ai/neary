@@ -135,7 +135,11 @@ class MessageChain:
         return None
 
     def _process_user_message(self, user_message):
-        if hasattr(user_message.content, "images") and user_message.content.images:
+        if (
+            user_message
+            and hasattr(user_message.content, "images")
+            and user_message.content.images
+        ):
             for i, image in enumerate(user_message.content.images):
                 # Resize base64 string
                 user_message.content.images[i] = self._resize_image(image)

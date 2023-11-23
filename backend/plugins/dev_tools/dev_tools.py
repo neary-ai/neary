@@ -2,6 +2,7 @@ from pathlib import Path
 from pydantic import ValidationError
 import toml
 
+from backend.modules.messages.schemas import AssistantMessage
 from backend.plugins import BasePlugin, tool
 from backend.plugins.schemas import *
 
@@ -115,11 +116,16 @@ class DevTools(BasePlugin):
 
             # Add the function template to the response
             response += f"\n\nAnd here's your function template:\n\n```python{function_template}\n```"
-
-            await self.services.send_message_to_ui(response, self.conversation_id)
+            message = AssistantMessage(
+                content={"text": response}, conversation_id=self.conversation_id
+            )
+            await self.services.send_message_to_ui(message)
             return toml_string
         except ValidationError as e:
-            await self.services.send_message_to_ui(e, self.conversation_id)
+            message = AssistantMessage(
+                content={"text": str(e)}, conversation_id=self.conversation_id
+            )
+            await self.services.send_message_to_ui(message)
             return f"Error creating new snippet: {e}"
 
     @tool
@@ -213,9 +219,14 @@ class DevTools(BasePlugin):
 
             # Add the function template to the response
             response += f"\n\nAnd here's your function template:\n\n```python{function_template}\n```"
-
-            await self.services.send_message_to_ui(response, self.conversation_id)
+            message = AssistantMessage(
+                content={"text": response}, conversation_id=self.conversation_id
+            )
+            await self.services.send_message_to_ui(message)
             return response
         except ValidationError as e:
-            await self.services.send_message_to_ui(e, self.conversation_id)
+            message = AssistantMessage(
+                content={"text": str(e)}, conversation_id=self.conversation_id
+            )
+            await self.services.send_message_to_ui(message)
             return f"Error creating new tool: {e}"

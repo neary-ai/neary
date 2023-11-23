@@ -4,7 +4,7 @@ from openai import AsyncOpenAI
 
 from .llm_interface import LLMInterface
 from config import settings
-from modules.messages.schemas import AssistantMessage
+from modules.messages.schemas import AssistantMessage, AlertMessage, Content
 
 
 class OpenAI(LLMInterface):
@@ -60,14 +60,12 @@ class OpenAI(LLMInterface):
 
                             ai_message = AssistantMessage(
                                 conversation_id=conversation_id,
-                                content={"text": collected_tokens},
+                                content=Content(text=collected_tokens),
                                 status="incomplete",
                             )
 
                             await self.message_handler.send_message_to_ui(
-                                message=ai_message.content.model_dump(),
-                                conversation_id=ai_message.conversation_id,
-                                status=ai_message.status,
+                                ai_message,
                                 save_to_db=False,
                             )
                         except Exception as e:
@@ -89,26 +87,19 @@ class OpenAI(LLMInterface):
                     ai_message.xray = {"messages": context.get_chain_as_dict()}
 
                     await self.message_handler.send_message_to_ui(
-                        message=ai_message.content.model_dump(),
-                        conversation_id=ai_message.conversation_id,
-                        metadata=ai_message.metadata,
-                        function_call=ai_message.function_call,
-                        status=ai_message.status,
-                        xray=ai_message.xray,
+                        ai_message,
                         save_to_db=True,
                     )
 
                     return ai_message
             except Exception as e:
-                await self.message_handler.send_alert_to_ui(
-                    message=str(e).replace("OpenAI", "chat model"), type="error"
-                )
+                message = AlertMessage(content=str(e), type="error")
+                await self.message_handler.send_alert_to_ui(message)
+
                 print("An exception occured: ", e)
                 return None
-
-        await self.message_handler.send_alert_to_ui(
-            message="Error connecting to chat model!", type="error"
-        )
+        message = AlertMessage(content="Error connecting to chat model", type="error")
+        await self.message_handler.send_alert_to_ui(message)
         print("Failed after 3 retries.")
         return None
 

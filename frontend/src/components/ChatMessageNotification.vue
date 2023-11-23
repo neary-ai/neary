@@ -49,7 +49,6 @@
 </template>
 
 <script setup>
-import { Icon } from '@iconify/vue';
 import { ref, computed } from 'vue';
 import MarkdownIt from 'markdown-it';
 import DOMPurify from 'dompurify';
@@ -59,7 +58,6 @@ import 'prismjs/themes/prism-tomorrow.css';
 import { ChevronDownIcon, InformationCircleIcon, } from '@heroicons/vue/20/solid';
 import useWebSocket from '@/composables/websocket.js';
 import { useAppStore } from '@/store/index.js';
-import api from '@/services/apiService';
 
 const store = useAppStore();
 const { sendMessageThroughWebSocket } = useWebSocket();
@@ -73,7 +71,7 @@ let showArgs = ref(false);
 
 const content = computed(() => {
     if (props.message) {
-        const parsedContent = parseArguments(props.message.content);
+        const parsedContent = parseArguments(props.message.content.text);
         return parsedContent;
     }
 })

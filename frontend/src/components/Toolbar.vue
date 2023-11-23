@@ -85,7 +85,6 @@ const convertToBase64 = (event) => {
   reader.onloadend = () => {
     if (!store.currentMessage.images.includes(reader.result)) {
         store.currentMessage.images = [reader.result]
-        console.log('cmessage: ', store.currentMessage)
     }
   }
 

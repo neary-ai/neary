@@ -7,7 +7,7 @@ from sqlalchemy.orm.attributes import flag_modified
 
 from backend.plugins import BasePlugin
 
-from modules.messages.schemas import FunctionMessage
+from modules.messages.schemas import AlertMessage, FunctionMessage, Content
 from modules.conversations.models import ConversationModel
 from modules.approvals.services.approval_service import ApprovalService
 
@@ -172,9 +172,11 @@ class PluginService:
                         )
                         return None, False
                     else:
-                        await self.message_handler.send_alert_to_ui(
-                            tool.function.display_name, "tool_start"
+                        message = AlertMessage(
+                            content=tool.function.display_name,
+                            type="tool_start",
                         )
+                        await self.message_handler.send_alert_to_ui(message)
                         try:
                             tool_method = self._load_function_instance(
                                 tool_name, plugin_instance, conversation
@@ -183,15 +185,17 @@ class PluginService:
                                 result = await tool_method(**tool_args)
                             else:
                                 result = tool_method(**tool_args)
-                            await self.message_handler.send_alert_to_ui(
-                                tool.function.display_name, "tool_success"
+                            message = AlertMessage(
+                                content=tool.function.display_name,
+                                type="tool_success",
                             )
+                            await self.message_handler.send_alert_to_ui(message)
                             function_message = FunctionMessage(
                                 function_call={
                                     "name": tool_name,
                                     "arguments": tool_args,
                                 },
-                                content=result,
+                                content={"text": result},
                                 conversation_id=conversation.id,
                             )
                             return (
@@ -199,9 +203,11 @@ class PluginService:
                                 tool.settings_values["follow_up_on_output"]["value"],
                             )
                         except Exception as e:
-                            await self.message_handler.send_alert_to_ui(
-                                tool.function.display_name, "tool_error"
+                            message = AlertMessage(
+                                content=tool.function.display_name,
+                                type="tool_error",
                             )
+                            await self.message_handler.send_alert_to_ui(message)
                             print(
                                 f"An error occurred while using tool `{tool_name}`: {e}"
                             )
