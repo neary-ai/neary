@@ -100,7 +100,7 @@ const sendMessage = async () => {
 
   const conversation = store.selectedConversation;
 
-  if (!('title' in conversation) || conversation.title == null || conversation.title == 'New Conversation') {
+  if (!('title' in conversation) || conversation.title == null || conversation.title == 'New conversation') {
     let title = message.content.text.slice(0, 50);
     store.selectedConversation.title = title
     await store.updateConversation(store.selectedConversation);
