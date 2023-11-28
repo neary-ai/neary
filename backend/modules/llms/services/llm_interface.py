@@ -6,3 +6,7 @@ class LLMInterface(ABC):
     @abstractmethod
     async def create_chat(self):
         pass
+
+    @abstractmethod
+    def get_models(self):
+        pass

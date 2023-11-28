@@ -13,6 +13,7 @@ from modules.presets.services.preset_service import PresetService
 from modules.integrations.services.integration_service import IntegrationService
 from modules.conversations.services.conversation_service import ConversationService
 from modules.messages.services.message_service import MessageService
+from modules.llms.services.llm_service import LLMService
 
 from modules.conversations.schemas import *
 from modules.conversations.models import *
@@ -40,6 +41,7 @@ class InitService:
             user_profile=user.profile,
             spaces=SpaceService(self.db).get_spaces(),
             conversations=conversations,
+            models=LLMService(self.db).get_models(),
             plugins=PluginService(self.db).get_plugins(),
             presets=PresetService(self.db).get_presets(),
             integrations=IntegrationService(self.db).get_integrations(),

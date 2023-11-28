@@ -35,6 +35,7 @@ export const useAppStore = defineStore('appstore', {
         isWebSocketActive: false,
         availablePresets: null,
         availablePlugins: null,
+        availableModels: null,
         integrations: null,
         bufferedMessages: [],
         scrollToMessage: null
@@ -145,6 +146,9 @@ export const useAppStore = defineStore('appstore', {
 
             // Set integrations
             this.integrations = initial_data.integrations;
+
+            // Set models
+            this.availableModels = initial_data.models;
 
             // Load conversation or space if none
             if (initialConversationId) {

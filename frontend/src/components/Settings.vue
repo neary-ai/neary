@@ -33,17 +33,16 @@
               </div>
             </div>
             <div class="col-span-full sm:col-span-4 flex flex-col text-slate-400">
-
               <div class="flex flex-col items-start">
                 <label class="text-sm font-semibold text-slate-300 w-full mb-1.5">API Type</label>
                 <ListBoxBasic @change="store.updateConversation(store.selectedConversation)" class="w-full mb-6"
                   v-model="store.selectedConversation.settings.llm.api_type"
-                  :options="store.settingsOptions.llm.api_type" />
+                  :options="apiOptions" />
               </div>
               <div class="flex flex-col items-start">
                 <label class="text-sm font-semibold text-slate-300 w-full mb-1.5">Model</label>
                 <ListBoxBasic @change="store.updateConversation(store.selectedConversation)" class="w-full mb-6"
-                  v-model="store.selectedConversation.settings.llm.model" :options="store.settingsOptions.llm.model" />
+                  v-model="store.selectedConversation.settings.llm.model" :options="modelOptions" />
               </div>
               <div class="flex flex-col items-start">
                 <label class="text-sm font-semibold text-slate-300 w-full mb-1.5">Temperature</label>
@@ -123,18 +122,23 @@ const exportOptions = [
   { value: 'json', option: 'JSON' }
 ]
 
-const enabledSnippets = computed(() => {
-  if (store.selectedConversation) {
-    return store.selectedConversation.plugins.filter(plugin => plugin.type === 'snippet');
-  }
-  return []
+const apiOptions = computed(() => {
+  const apis = store.availableModels.map(model => model.api);
+  const uniqueApis = Array.from(new Set(apis));
+  return uniqueApis.map(api => {
+    return { option: api, value: api };
+  });
 });
 
-const enabledTools = computed(() => {
-  if (store.selectedConversation) {
-    return store.selectedConversation.plugins.filter(plugin => plugin.type === 'tool');
-  }
-  return []
+const filteredModels = computed(() => {
+  const selectedApi = store.selectedConversation.settings.llm.api_type;
+  return store.availableModels.filter(model => model.api === selectedApi);
+});
+
+const modelOptions = computed(() => {
+  return filteredModels.value.map(model => {
+    return { option: model.model, value: model.model };
+  });
 });
 
 const disablePlugin = async (plugin) => {

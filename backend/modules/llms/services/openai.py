@@ -3,21 +3,27 @@ from typing import Union
 from openai import AsyncOpenAI
 
 from .llm_interface import LLMInterface
+from ..schemas import ChatModel
 from config import settings
 from modules.messages.schemas import AssistantMessage, AlertMessage, Content
 
 
 class OpenAI(LLMInterface):
-    def __init__(self, llm_settings, message_handler):
+    def __init__(self, llm_settings=None, message_handler=None):
         self.llm_settings = llm_settings
         self.message_handler = message_handler
         self.create_client()
 
-        model = llm_settings["model"]
+        model = llm_settings["model"] if llm_settings else None
         if model == "gpt-4-vision-preview":
             self.model = VisionModel(llm_settings, message_handler)
         else:
             self.model = OpenAIModel(llm_settings, message_handler)
+
+    def get_models(self):
+        models = ["gpt-3.5-turbo", "gpt-4", "gpt-4-1106-preview", "gpt-4-vision-preview"]
+        chat_models = [ChatModel(api="openai", model=model) for model in models]
+        return chat_models
 
     def create_client(self):
         api_key = settings.chat_models.get("openai_api_key", None)
