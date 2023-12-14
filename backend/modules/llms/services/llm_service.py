@@ -4,6 +4,7 @@ from typing import List
 from ..schemas import ChatModel
 from .ollama import Ollama
 from .openai import OpenAI
+from .googleai import GoogleAI
 
 class LLMFactory:
     @staticmethod
@@ -13,6 +14,8 @@ class LLMFactory:
             return OpenAI(llm_settings, message_handler)
         elif provider == "ollama":
             return Ollama(llm_settings, message_handler)
+        elif provider == "googleai":
+            return GoogleAI(llm_settings, message_handler)
         else:
             raise ValueError(f"Unknown LLM provider: {provider}")
 
@@ -23,4 +26,5 @@ class LLMService:
     def get_models(self) -> List[ChatModel]:
         models = OpenAI().get_models()
         models += Ollama().get_models()
+        models += GoogleAI().get_models()
         return models

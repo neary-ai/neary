@@ -4,6 +4,10 @@
 # https://platform.openai.com/account/api-keys
 openai_api_key = ""
 
+# Google AI setup
+# https://ai.google.dev/tutorials/python_quickstart
+googleai_api_key = ""
+
 # Azure OpenAI setup
 # https://learn.microsoft.com/en-us/azure/ai-services/openai/how-to/switching-endpoints
 azure_openai_key = ""

@@ -124,9 +124,9 @@ class MessageHandler:
             llm = LLMFactory.create_llm(llm_settings=llm_settings, message_handler=self)
         except Exception as e:
             message = NotificationMessage(
-                message=Content(text=str(e)), conversation_id=conversation.id
+                content=Content(text=str(e)), conversation_id=conversation.id
             )
-            await self.send_notification_to_ui(message=message, save_to_db=False)
+            await self.send_notification_to_ui(message, save_to_db=False)
             return
 
         ai_response = await llm.create_chat(
