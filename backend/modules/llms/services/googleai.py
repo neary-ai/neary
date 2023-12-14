@@ -13,7 +13,11 @@ class GoogleAI(LLMInterface):
         self.message_handler = message_handler
         self.create_client()
 
-        self.model = GoogleAIModel(llm_settings, message_handler)
+        model = llm_settings["model"] if llm_settings else None
+        if model and "vision" in model:
+            self.model = GeminiVisionModel(llm_settings, message_handler)
+        else:
+            self.model = GoogleAIModel(llm_settings, message_handler)
 
     def get_models(self):
         chat_models = []
@@ -117,6 +121,8 @@ class GoogleAIModel:
         # Get the list of messages formatted for API call
         formatted_chain = []
         snippet_content = ""
+        prev_role = None
+        prev_parts = []
 
         # First pass: compile all snippet content
         for message in context.compiled_chain():
@@ -126,25 +132,96 @@ class GoogleAIModel:
         # Second pass: construct the formatted chain
         for message in context.compiled_chain():
             if message.role == "system":
-                # Append the snippet_content to the system message content
-                # system_message_content = message.content.text + snippet_content
-                # formatted_chain.append(
-                #     {"role": "user", "parts": [system_message_content]}
-                # )
                 pass
             elif message.role == "assistant" and message.function_call:
-                # Not sure how to handle function calls in this case, so I'm just skipping them
                 continue
             elif message.role == "function":
-                # Not sure how to handle function calls in this case, so I'm just skipping them
                 continue
-            elif message.role == "assistant":
-                formatted_chain.append(
-                    {"role": "model", "parts": [message.content.text]}
-                )                
-            elif message.role in ["user"]:
-                formatted_chain.append(
-                    {"role": message.role, "parts": [message.content.text]}
-                )
+            else:
+                if message.role == "assistant":
+                    role = "model"
+                else:  # message.role == "user"
+                    role = "user"
+                
+                if role == prev_role:  # If the role is the same as the previous one, combine the parts
+                    prev_parts.append(message.content.text)
+                else:  # If the role is different, append the previous parts to the chain and update the current role and parts
+                    if prev_role is not None:
+                        formatted_chain.append({"role": prev_role, "parts": prev_parts})
+                    prev_role = role
+                    prev_parts = [message.content.text]
+
+        # Add the last message to the chain
+        if prev_role is not None:
+            formatted_chain.append({"role": prev_role, "parts": prev_parts})
 
         return formatted_chain
+
+class GeminiVisionModel(GoogleAIModel):
+    def __init__(self, llm_settings, message_handler):
+        self.llm_settings = llm_settings
+        self.message_handler = message_handler
+
+    def format_messages(self, context):
+        # Get the list of messages formatted for API call
+        formatted_chain = []
+        snippet_content = ""
+        prev_role = None
+        prev_parts = []
+
+        # First pass: compile all snippet content
+        for message in context.compiled_chain():
+            if message.role == "snippet":
+                snippet_content += "\n\n" + message.content.text
+
+        # Second pass: construct the formatted chain
+        for message in context.compiled_chain():
+            if message.role == "system":
+                pass
+            elif message.role == "assistant" and message.function_call:
+                continue
+            elif message.role == "function":
+                continue
+            else:
+                if message.role == "assistant":
+                    role = "model"
+                else:  # message.role == "user"
+                    role = "user"
+                
+                parts = []
+                if message.content.text:
+                    parts.append({"text": message.content.text})
+                if hasattr(message.content, "images") and message.content.images:
+                    for image in message.content.images:
+                        mime_type, image_data = self._extract_mime_and_data(image)
+                        parts.append(
+                            {
+                                "inline_data": {
+                                    "mime_type": mime_type,
+                                    "data": image_data,
+                                }
+                            }
+                        )
+
+                if role == prev_role:  # If the role is the same as the previous one, combine the parts
+                    prev_parts.extend(parts)
+                else:  # If the role is different, append the previous parts to the chain and update the current role and parts
+                    if prev_role is not None and prev_parts:
+                        formatted_chain.append({"role": prev_role, "parts": prev_parts})
+                    prev_role = role
+                    prev_parts = parts
+
+        # Add the last message to the chain
+        if prev_role is not None and prev_parts:
+            formatted_chain.append({"role": prev_role, "parts": prev_parts})
+
+        return formatted_chain
+
+    def _extract_mime_and_data(self, data_url):
+        # Split the data URL at the first comma
+        mime, data = data_url.split(',', 1)
+
+        # Remove the 'data:' prefix and the ';base64' suffix to get the MIME type
+        mime_type = mime[5:-7]
+
+        return mime_type, data
