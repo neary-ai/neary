@@ -97,6 +97,7 @@ class GoogleAIModel:
         params = {
             "contents": messages,
             "stream": stream,
+            "safety_settings": {'HARASSMENT':'block_none'}, 
             "generation_config": {
                 "temperature": self.llm_settings["temperature"],
                 "top_p": self.llm_settings.get("top_p", 1),

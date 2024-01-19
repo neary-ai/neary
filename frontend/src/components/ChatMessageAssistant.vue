@@ -43,6 +43,9 @@ import Prism from 'prismjs';
 import { Icon } from '@iconify/vue';
 import 'prismjs/components/prism-python';
 import 'prismjs/themes/prism-tomorrow.css';
+import 'katex/dist/katex.min.css';
+import katex from 'markdown-it-katex';
+
 import { useAppStore } from '@/store/index.js';
 
 const store = useAppStore();
@@ -149,7 +152,8 @@ const renderMarkdown = (markdownText) => {
             const tailwindClasses = 'p-4 rounded cursor-pointer relative';
             return `<pre class="${tailwindClasses}">${copyButton}<code class="${langClass}">${highlightedCode}</code></pre>`;
         }
-    });
+    })
+    .use(katex)
 
     let html = md.render(markdownText);
     html = html.replace(/^<p>|<\/p>$/g, '');
