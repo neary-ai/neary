@@ -37,14 +37,16 @@
 <script setup>
 import { onMounted, ref, watch, nextTick, computed } from 'vue';
 import MarkdownIt from 'markdown-it';
+import mditTexmath from 'markdown-it-texmath';
 import DOMPurify from 'dompurify';
 import ClipboardJS from 'clipboard';
 import Prism from 'prismjs';
+import katex from 'katex';
 import { Icon } from '@iconify/vue';
 import 'prismjs/components/prism-python';
 import 'prismjs/themes/prism-tomorrow.css';
 import 'katex/dist/katex.min.css';
-import katex from 'markdown-it-katex';
+import 'markdown-it-texmath/css/texmath.css';
 
 import { useAppStore } from '@/store/index.js';
 
@@ -136,6 +138,9 @@ const renderMarkdown = (markdownText) => {
     const copyButton = '<button class="copy-button absolute right-0 mr-2 mt-2 top-0 text-xs bg-gray-800 opacity-75 text-white py-1 px-2 rounded hover:bg-gray-700">Copy</button>';
 
     const md = new MarkdownIt({
+        html: true,
+        linkify: true,
+        typographer: true,
         highlight: function (str, lang) {
             let highlightedCode = str;
             let langClass = '';
@@ -153,7 +158,9 @@ const renderMarkdown = (markdownText) => {
             return `<pre class="${tailwindClasses}">${copyButton}<code class="${langClass}">${highlightedCode}</code></pre>`;
         }
     })
-    .use(katex)
+    .use(mditTexmath, { engine: katex, delimiters:'brackets' });
+
+    console.log('Rendering text: ', markdownText)
 
     let html = md.render(markdownText);
     html = html.replace(/^<p>|<\/p>$/g, '');
